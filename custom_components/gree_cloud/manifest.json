@@ -1,0 +1,12 @@
+{
+  "domain": "gree_cloud",
+  "name": "Gree Climate Cloud",
+  "codeowners": ["@dawidrashid"],
+  "config_flow": true,
+  "dependencies": [],
+  "documentation": "https://github.com/dawidrashid/homeassistant-gree-cloud",
+  "iot_class": "cloud_polling",
+  "loggers": ["greeclimate"],
+  "requirements": ["greeclimate @ git+https://github.com/dawidrashid/greeclimate.git@master", "pycryptodome>=3.20.0", "paho-mqtt>=2.1.0"],
+  "version": "0.1.0"
+}
