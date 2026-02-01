@@ -12,7 +12,7 @@
 
 1. Clone this repository:
 ```bash
-git clone https://github.com/dawidrashid/homeassistant-gree-cloud.git
+git clone https://github.com/davo22/homeassistant-gree-cloud.git
 cd homeassistant-gree-cloud
 ```
 
@@ -110,7 +110,7 @@ custom_components/gree_cloud/
 ### Dependencies
 
 The integration depends on the forked `greeclimate` library:
-- Repository: https://github.com/dawidrashid/greeclimate
+- Repository: https://github.com/davo22/greeclimate
 - Branch: master
 
 To update the library, modify the `requirements` field in `manifest.json`.

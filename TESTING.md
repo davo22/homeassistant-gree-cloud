@@ -11,7 +11,7 @@ pip install aiohttp pycryptodome aiomqtt netifaces
 ## Install forked greeclimate library
 
 ```bash
-pip install git+https://github.com/dawidrashid/greeclimate.git@master
+pip install git+https://github.com/davo22/greeclimate.git@master
 ```
 
 ## Test Script

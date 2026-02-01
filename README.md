@@ -37,7 +37,7 @@ Any Gree Smart device working with the Gree+ app should be supported, including 
 2. Go to "Integrations"
 3. Click the three dots in the top right corner
 4. Select "Custom repositories"
-5. Add this repository URL: `https://github.com/dawidrashid/homeassistant-gree-cloud`
+5. Add this repository URL: `https://github.com/davo22/homeassistant-gree-cloud`
 6. Select category: "Integration"
 7. Click "Add"
 8. Search for "Gree Climate Cloud" and install

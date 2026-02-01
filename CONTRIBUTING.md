@@ -10,7 +10,7 @@ Be respectful, inclusive, and constructive in all interactions.
 
 ### Reporting Bugs
 
-1. Check if the bug has already been reported in [Issues](https://github.com/dawidrashid/homeassistant-gree-cloud/issues)
+1. Check if the bug has already been reported in [Issues](https://github.com/davo22/homeassistant-gree-cloud/issues)
 2. If not, create a new issue with:
    - Clear, descriptive title
    - Steps to reproduce
