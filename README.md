@@ -4,6 +4,8 @@ Custom integration for Home Assistant that adds support for **cloud-only Gree de
 
 This integration is based on a fork of the [greeclimate](https://github.com/cmroche/greeclimate) library with added cloud support.
 
+> **🚀 Quick Start**: New to this integration? Check out the [Quick Start Guide](QUICKSTART.md) to get up and running in 5 minutes!
+
 ## Features
 
 - 🌐 **Cloud-only device support** - Works with Gree devices that only communicate via cloud
