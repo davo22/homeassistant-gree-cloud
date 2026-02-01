@@ -7,6 +7,6 @@
   "documentation": "https://github.com/dawidrashid/homeassistant-gree-cloud",
   "iot_class": "cloud_polling",
   "loggers": ["greeclimate"],
-  "requirements": ["greeclimate @ git+https://github.com/dawidrashid/greeclimate.git@master", "pycryptodome>=3.20.0", "paho-mqtt>=2.1.0"],
+  "requirements": ["greeclimate @ git+https://github.com/dawidrashid/greeclimate.git@master"],
   "version": "0.1.0"
 }
