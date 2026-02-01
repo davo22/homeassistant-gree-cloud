@@ -113,6 +113,19 @@ Select the appropriate region for your account:
 - Try reloading the integration
 - Check Home Assistant logs for error messages
 
+### Commands Not Working
+
+- Check if device is online in Gree+ app
+- Verify internet connectivity
+- Look for timeout errors in logs
+- Try reloading the integration
+
+### State Updates Delayed
+
+- This is normal - cloud polling occurs every 60 seconds
+- For immediate feedback, check the Gree+ app
+- Consider using local integration for local devices
+
 ### Enable Debug Logging
 
 Add this to your `configuration.yaml`:
@@ -124,6 +137,46 @@ logger:
     custom_components.gree_cloud: debug
     greeclimate: debug
 ```
+
+## FAQ
+
+### Q: What's the difference between this and the official Gree integration?
+
+**A:** The official integration only works with devices that support local UDP communication. This cloud integration works with **cloud-only devices** that can only be controlled via the Gree Cloud MQTT broker. If your device works with the official integration, use that instead for better responsiveness.
+
+### Q: Can I use both integrations at the same time?
+
+**A:** Yes! You can use both integrations simultaneously. Use the official integration for local devices and this cloud integration for cloud-only devices.
+
+### Q: How often does the integration update device state?
+
+**A:** The integration polls the cloud every 60 seconds. Changes made in the Gree+ app or locally on the device will be reflected in Home Assistant within 1 minute.
+
+### Q: Does this work offline?
+
+**A:** No, this integration requires an active internet connection to communicate with the Gree Cloud servers.
+
+### Q: Which cipher version should I use?
+
+**A:** Currently, the integration defaults to CipherV1 (AES-128-ECB) which works with most devices. CipherV2 support is implemented but not yet exposed in the UI.
+
+### Q: My device shows as unavailable
+
+**A:** This can happen if:
+- The device is offline or not connected to WiFi
+- Your internet connection is unstable
+- The Gree Cloud servers are experiencing issues
+- The device was removed from your Gree+ account
+
+Try power-cycling the device and ensuring it's connected in the Gree+ app.
+
+### Q: Can I control multiple devices?
+
+**A:** Yes! The integration automatically discovers all devices associated with your Gree+ account across all homes.
+
+### Q: Does this support Fahrenheit?
+
+**A:** Yes, the integration detects the temperature unit set on your device and displays temperatures accordingly.
 
 ## Credits
 
