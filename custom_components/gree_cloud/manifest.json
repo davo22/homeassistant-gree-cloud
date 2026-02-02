@@ -1,5 +1,5 @@
 {
-  "domain": "gree",
+  "domain": "gree_cloud",
   "name": "Gree Climate Cloud",
   "codeowners": ["@davo22"],
   "config_flow": true,
@@ -9,5 +9,5 @@
   "integration_type": "hub",
   "loggers": ["greeclimate"],
   "requirements": ["greeclimate @ git+https://github.com/davo22/greeclimate.git@1.0.0"],
-  "version": "1.0.0"
+  "version": "0.1.0"
 }
