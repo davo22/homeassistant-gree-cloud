@@ -6,7 +6,8 @@
   "dependencies": [],
   "documentation": "https://github.com/davo22/homeassistant-gree-cloud",
   "iot_class": "cloud_polling",
+  "integration_type": "hub",
   "loggers": ["greeclimate"],
-  "requirements": ["greeclimate @ git+https://github.com/davo22/greeclimate.git@master"],
-  "version": "0.1.0"
+  "requirements": ["greeclimate @ git+https://github.com/davo22/greeclimate.git@1.0.0"],
+  "version": "1.0.0"
 }
