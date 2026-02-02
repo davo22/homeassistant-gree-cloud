@@ -9,5 +9,6 @@
   "integration_type": "hub",
   "loggers": ["greeclimate"],
   "requirements": ["greeclimate @ git+https://github.com/davo22/greeclimate.git@1.0.0"],
-  "version": "0.1.0"
+  "version": "0.1.0",
+  "brand": "gree"
 }
