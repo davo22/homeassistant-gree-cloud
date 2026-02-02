@@ -1,5 +1,5 @@
 {
-  "domain": "gree_cloud",
+  "domain": "gree",
   "name": "Gree Climate Cloud",
   "codeowners": ["@davo22"],
   "config_flow": true,
