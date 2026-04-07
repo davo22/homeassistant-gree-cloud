@@ -10,7 +10,7 @@ from greeclimate.mqtt_client import GreeMqttClient
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 
-from .const import CONF_SERVER, DOMAIN
+from .const import CONF_SERVER, DOMAIN, GREE_MQTT_SERVERS
 from .coordinator import (
     CloudDiscoveryService,
     GreeCloudConfigEntry,
@@ -40,7 +40,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: GreeCloudConfigEntry) ->
 
         # Create MQTT client
         _LOGGER.debug("Connecting to Gree MQTT broker")
-        mqtt_client = GreeMqttClient(credentials.user_id, credentials.token)
+        mqtt_server = GREE_MQTT_SERVERS.get(entry.data[CONF_SERVER], "mqtt-eu.gree.com")
+        if entry.data[CONF_SERVER] not in GREE_MQTT_SERVERS:
+            _LOGGER.warning(
+                "Unknown server region '%s', falling back to Europe MQTT server",
+                entry.data[CONF_SERVER],
+            )
+        mqtt_client = GreeMqttClient(credentials.user_id, credentials.token, server=mqtt_server)
         await mqtt_client.connect()
 
         # Store runtime data
