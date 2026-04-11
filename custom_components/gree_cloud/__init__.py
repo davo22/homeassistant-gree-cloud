@@ -19,7 +19,7 @@ from .coordinator import (
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = [Platform.CLIMATE, Platform.SWITCH]
+PLATFORMS = [Platform.CLIMATE, Platform.SWITCH, Platform.WATER_HEATER]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: GreeCloudConfigEntry) -> bool:
