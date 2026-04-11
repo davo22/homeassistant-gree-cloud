@@ -34,6 +34,7 @@ _LOGGER = logging.getLogger(__name__)
 
 # Extra raw properties requested from the device in addition to the standard Props enum.
 # These cover Hot Water Heat Pump (HWHP) devices that expose different sensor keys.
+_STANDARD_PROPS: list[str] = [x.value for x in Props]
 _HWHP_EXTRA_PROPS = [HWHP_PROP_WATER_TEMP]
 
 
@@ -53,7 +54,7 @@ class HWHPAwareCloudDevice(CloudDevice):
             "Updating HWHP-aware cloud device state: %s", self.device_info.name
         )
 
-        props: list[str] = [x.value for x in Props] + _HWHP_EXTRA_PROPS
+        props: list[str] = _STANDARD_PROPS + _HWHP_EXTRA_PROPS
         if not self.hid:
             props.append("hid")
 

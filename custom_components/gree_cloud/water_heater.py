@@ -36,7 +36,7 @@ _OPERATION_TO_STATE = {
     HWHP_OPERATION_BOOST: STATE_PERFORMANCE,
 }
 
-HWHP_OPERATION_LIST = [HWHP_OPERATION_HEAT_PUMP, HWHP_OPERATION_BOOST]
+HWHP_OPERATION_LIST = [HWHP_OPERATION_HEAT_PUMP, HWHP_OPERATION_BOOST, STATE_OFF]
 
 
 async def async_setup_entry(
@@ -122,7 +122,7 @@ class GreeCloudWaterHeaterEntity(GreeCloudEntity, WaterHeaterEntity):
 
     async def async_set_operation_mode(self, operation_mode: str) -> None:
         """Set the operation mode."""
-        if operation_mode not in (*HWHP_OPERATION_LIST, STATE_OFF):
+        if operation_mode not in HWHP_OPERATION_LIST:
             raise ValueError(f"Invalid operation mode: {operation_mode}")
 
         _LOGGER.debug(
