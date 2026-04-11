@@ -25,6 +25,13 @@ FAN_MEDIUM_HIGH = "medium high"
 # Temperature settings
 TARGET_TEMPERATURE_STEP = 1
 
+# Gree HWHP (Hot Water Heat Pump) settings
+HWHP_PROP_WATER_TEMP = "WatTem"  # Current water temperature property key
+HWHP_TEMP_MIN = 40  # Minimum target temperature for hot water (°C)
+HWHP_TEMP_MAX = 80  # Maximum target temperature for hot water (°C)
+HWHP_OPERATION_HEAT_PUMP = "heat_pump"  # Normal heat pump operation
+HWHP_OPERATION_BOOST = "performance"  # Boost / turbo operation
+
 # Gree Cloud servers
 GREE_CLOUD_SERVERS = {
     "Europe": "https://eugrih.gree.com",

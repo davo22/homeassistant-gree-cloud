@@ -11,6 +11,7 @@ from typing import Any
 
 from greeclimate.cloud_api import CloudDeviceInfo, GreeCloudApi
 from greeclimate.cloud_device import CloudDevice
+from greeclimate.device import Props
 from greeclimate.deviceinfo import DeviceInfo
 from greeclimate.mqtt_client import GreeMqttClient
 
@@ -24,11 +25,74 @@ from .const import (
     CONF_SERVER,
     DISPATCH_DEVICE_DISCOVERED,
     DOMAIN,
+    HWHP_PROP_WATER_TEMP,
     MAX_ERRORS,
     UPDATE_INTERVAL,
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+# Extra raw properties requested from the device in addition to the standard Props enum.
+# These cover Hot Water Heat Pump (HWHP) devices that expose different sensor keys.
+_HWHP_EXTRA_PROPS = [HWHP_PROP_WATER_TEMP]
+
+
+class HWHPAwareCloudDevice(CloudDevice):
+    """CloudDevice subclass that also requests HWHP-specific properties.
+
+    The Gree WHIO Hot Water Heat Pump reports current water temperature under
+    the ``WatTem`` property key which is not part of the standard ``Props``
+    enum.  This subclass overrides ``update_state`` to include that key in the
+    status request so it is stored in ``raw_properties`` and can be read by the
+    water_heater entity.
+    """
+
+    async def update_state(self) -> None:
+        """Update device state, including HWHP-specific properties."""
+        _LOGGER.debug(
+            "Updating HWHP-aware cloud device state: %s", self.device_info.name
+        )
+
+        props: list[str] = [x.value for x in Props] + _HWHP_EXTRA_PROPS
+        if not self.hid:
+            props.append("hid")
+
+        self._response_event = asyncio.Event()
+        self._response_data = None
+
+        command = {"t": "status", "cols": props}
+
+        await self._mqtt_client.publish_command(
+            self._parent_mac,
+            command,
+            self.device_cipher,
+            self._child_mac,
+        )
+
+        try:
+            await asyncio.wait_for(
+                self._response_event.wait(), timeout=self._command_timeout
+            )
+            if self._response_data:
+                self.handle_state_update(**self._response_data)
+        except asyncio.TimeoutError:
+            _LOGGER.warning(
+                "Timeout waiting for state update from %s", self.device_info.name
+            )
+        finally:
+            self._response_event = None
+            self._response_data = None
+
+
+def is_hwhp_device(coordinator: "CloudDeviceDataUpdateCoordinator") -> bool:
+    """Return True if the device appears to be a Hot Water Heat Pump.
+
+    Detection is based on whether the device responded with the ``WatTem``
+    (water temperature) property after the initial state fetch.
+    """
+    return (
+        coordinator.device.raw_properties.get(HWHP_PROP_WATER_TEMP) is not None
+    )
 
 type GreeCloudConfigEntry = ConfigEntry[GreeCloudRuntimeData]
 
@@ -150,7 +214,7 @@ class CloudDiscoveryService:
                     )
 
                     # Create cloud device instance
-                    device = CloudDevice(
+                    device = HWHPAwareCloudDevice(
                         mqtt_client=mqtt_client,
                         device_info=device_info,
                         device_key=cloud_dev_info.key,
