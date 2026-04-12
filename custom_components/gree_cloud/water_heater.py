@@ -24,9 +24,12 @@ from .const import (
     HWHP_PROP_SET_TEM_DEC,
     HWHP_PROP_SET_TEM_INT,
     HWHP_PROP_WATER_TEMP,
+    HWHP_PROP_WMOD,
     HWHP_TEMP_ENCODING_OFFSET,
     HWHP_TEMP_MAX,
     HWHP_TEMP_MIN,
+    HWHP_WMOD_BOOST,
+    HWHP_WMOD_HEAT_PUMP,
 )
 from .coordinator import CloudDeviceDataUpdateCoordinator, GreeCloudConfigEntry, is_hwhp_device
 from .entity import GreeCloudEntity
@@ -136,7 +139,8 @@ class GreeCloudWaterHeaterEntity(GreeCloudEntity, WaterHeaterEntity):
         """Return the current operation mode."""
         if not self.coordinator.device.power:
             return STATE_OFF
-        if self.coordinator.device.turbo:
+        wmod = self.coordinator.device.raw_properties.get(HWHP_PROP_WMOD)
+        if wmod == HWHP_WMOD_BOOST:
             return STATE_PERFORMANCE
         return STATE_HEAT_PUMP
 
@@ -151,12 +155,15 @@ class GreeCloudWaterHeaterEntity(GreeCloudEntity, WaterHeaterEntity):
             self.coordinator.device.device_info.name,
         )
 
+        device = self.coordinator.device
         if operation_mode == STATE_OFF:
-            self.coordinator.device.power = False
-            self.coordinator.device.turbo = False
+            device.power = False
         else:
-            self.coordinator.device.power = True
-            self.coordinator.device.turbo = (operation_mode == HWHP_OPERATION_BOOST)
+            device.power = True
+            wmod = HWHP_WMOD_BOOST if operation_mode == HWHP_OPERATION_BOOST else HWHP_WMOD_HEAT_PUMP
+            device.raw_properties[HWHP_PROP_WMOD] = wmod
+            if HWHP_PROP_WMOD not in device._dirty:
+                device._dirty.append(HWHP_PROP_WMOD)
 
         await self.coordinator.push_state_update()
         self.async_write_ha_state()
