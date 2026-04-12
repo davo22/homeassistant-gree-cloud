@@ -21,7 +21,11 @@ from .const import (
     DISPATCH_DEVICE_DISCOVERED,
     HWHP_OPERATION_BOOST,
     HWHP_OPERATION_HEAT_PUMP,
+    HWHP_PROP_SET_TEM_DEC,
+    HWHP_PROP_SET_TEM_INT,
     HWHP_PROP_WATER_TEMP,
+    HWHP_TEMP_ENCODING_DIVISOR,
+    HWHP_TEMP_ENCODING_OFFSET,
     HWHP_TEMP_MAX,
     HWHP_TEMP_MIN,
 )
@@ -88,12 +92,20 @@ class GreeCloudWaterHeaterEntity(GreeCloudEntity, WaterHeaterEntity):
     @property
     def current_temperature(self) -> float | None:
         """Return the current water temperature reported by the device."""
-        return self.coordinator.device.raw_properties.get(HWHP_PROP_WATER_TEMP)
+        raw = self.coordinator.device.raw_properties.get(HWHP_PROP_WATER_TEMP)
+        if raw is None:
+            return None
+        return (raw - HWHP_TEMP_ENCODING_OFFSET) / HWHP_TEMP_ENCODING_DIVISOR
 
     @property
     def target_temperature(self) -> float | None:
         """Return the target water temperature."""
-        return self.coordinator.device.target_temperature
+        props = self.coordinator.device.raw_properties
+        int_part = props.get(HWHP_PROP_SET_TEM_INT)
+        if int_part is None:
+            return None
+        dec_part = props.get(HWHP_PROP_SET_TEM_DEC, 0)
+        return int_part + dec_part / 10
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set a new target water temperature."""

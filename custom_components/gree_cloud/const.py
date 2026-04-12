@@ -26,7 +26,11 @@ FAN_MEDIUM_HIGH = "medium high"
 TARGET_TEMPERATURE_STEP = 1
 
 # Gree HWHP (Hot Water Heat Pump) settings
-HWHP_PROP_WATER_TEMP = "WatTem"  # Current water temperature property key
+HWHP_PROP_WATER_TEMP = "WatTmp"  # Current water temperature property key
+HWHP_PROP_SET_TEM_INT = "SetTemInt"  # Target temperature (integer part)
+HWHP_PROP_SET_TEM_DEC = "SetTemDec"  # Target temperature (decimal part, tenths)
+HWHP_TEMP_ENCODING_OFFSET = 40  # Raw temp encoding: actual = (raw - offset) / 2
+HWHP_TEMP_ENCODING_DIVISOR = 2
 HWHP_TEMP_MIN = 40  # Minimum target temperature for hot water (°C)
 HWHP_TEMP_MAX = 80  # Maximum target temperature for hot water (°C)
 HWHP_OPERATION_HEAT_PUMP = "heat_pump"  # Normal heat pump operation

@@ -40,3 +40,6 @@ Thumbs.db
 *.bak
 *.swp
 *~
+
+# venv
+.venv
