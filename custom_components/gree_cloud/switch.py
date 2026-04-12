@@ -18,7 +18,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DISPATCH_DEVICE_DISCOVERED
-from .coordinator import CloudDeviceDataUpdateCoordinator, GreeCloudConfigEntry
+from .coordinator import CloudDeviceDataUpdateCoordinator, GreeCloudConfigEntry, is_hwhp_device
 from .entity import GreeCloudEntity
 
 
@@ -100,6 +100,8 @@ async def async_setup_entry(
     @callback
     def init_device(coordinator: CloudDeviceDataUpdateCoordinator) -> None:
         """Register the device."""
+        if is_hwhp_device(coordinator):
+            return
         async_add_entities(
             GreeCloudSwitch(coordinator=coordinator, description=description)
             for description in GREE_CLOUD_SWITCHES
