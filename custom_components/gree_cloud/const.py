@@ -32,9 +32,9 @@ HWHP_PROP_SET_TEM_DEC = "SetTemDec"  # Target temperature (decimal part, tenths)
 HWHP_TEMP_ENCODING_OFFSET = 100  # Raw temp encoding: actual = raw - offset
 HWHP_TEMP_MIN = 40  # Minimum target temperature for hot water (°C)
 HWHP_TEMP_MAX = 80  # Maximum target temperature for hot water (°C)
-HWHP_PROP_WMOD = "Wmod"  # Water heater mode: 0=heat pump, 1=boost/performance
+HWHP_PROP_WMOD = "Wmod"  # Water heater mode: 0=heat pump, 2=boost/performance
 HWHP_WMOD_HEAT_PUMP = 0
-HWHP_WMOD_BOOST = 1
+HWHP_WMOD_BOOST = 2
 HWHP_OPERATION_HEAT_PUMP = "heat_pump"  # Normal heat pump operation
 HWHP_OPERATION_BOOST = "performance"  # Boost / turbo operation
 
