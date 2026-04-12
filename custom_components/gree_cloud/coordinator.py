@@ -21,6 +21,10 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
+# Imported lazily at call time to avoid circular import (coordinator <- __init__).
+_RECONNECT_FUNC_NAME = "async_reconnect_mqtt"
+_RECONNECT_MODULE = __name__.rsplit(".", 1)[0]  # custom_components.gree_cloud
+
 from .const import (
     CONF_SERVER,
     DISPATCH_DEVICE_DISCOVERED,
@@ -97,6 +101,20 @@ def is_hwhp_device(coordinator: "CloudDeviceDataUpdateCoordinator") -> bool:
         coordinator.device.raw_properties.get(HWHP_PROP_WATER_TEMP) is not None
     )
 
+
+def _is_mqtt_disconnected(error: Exception) -> bool:
+    """Return True if *error* indicates the MQTT client is not connected."""
+    msg = str(error).lower()
+    return any(m in msg for m in ("code:4", "not currently connected", "not connected"))
+
+
+async def _try_reconnect(hass: HomeAssistant, entry: "GreeCloudConfigEntry") -> bool:
+    """Lazy-import and call async_reconnect_mqtt to avoid circular imports."""
+    import importlib
+    mod = importlib.import_module(_RECONNECT_MODULE)
+    return await mod.async_reconnect_mqtt(hass, entry)
+
+
 type GreeCloudConfigEntry = ConfigEntry[GreeCloudRuntimeData]
 
 
@@ -107,6 +125,12 @@ class GreeCloudRuntimeData:
     cloud_api: GreeCloudApi
     mqtt_client: GreeMqttClient
     coordinators: list[CloudDeviceDataUpdateCoordinator]
+    mqtt_reconnect_lock: asyncio.Lock = None
+
+    def __post_init__(self) -> None:
+        """Initialise fields that need a running event loop."""
+        if self.mqtt_reconnect_lock is None:
+            self.mqtt_reconnect_lock = asyncio.Lock()
 
 
 class CloudDeviceDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
@@ -159,6 +183,24 @@ class CloudDeviceDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             return copy.deepcopy(self.device.raw_properties)
 
         except Exception as error:
+            if _is_mqtt_disconnected(error):
+                _LOGGER.warning(
+                    "MQTT disconnected while updating %s — triggering reconnect",
+                    self.name,
+                )
+                reconnected = await _try_reconnect(self.hass, self.config_entry)
+                if reconnected:
+                    try:
+                        await self.device.update_state()
+                        self._error_count = 0
+                        return copy.deepcopy(self.device.raw_properties)
+                    except Exception as retry_error:
+                        _LOGGER.warning(
+                            "State update failed after reconnect for %s: %s",
+                            self.name,
+                            retry_error,
+                        )
+
             self._error_count += 1
             _LOGGER.exception("Error updating cloud device %s: %s", self.name, error)
             if self._error_count >= MAX_ERRORS:
@@ -176,6 +218,22 @@ class CloudDeviceDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 "Timeout sending state update to cloud device: %s", self.name
             )
         except Exception as error:
+            if _is_mqtt_disconnected(error):
+                _LOGGER.warning(
+                    "MQTT disconnected while pushing state to %s — triggering reconnect",
+                    self.name,
+                )
+                reconnected = await _try_reconnect(self.hass, self.config_entry)
+                if reconnected:
+                    try:
+                        return await self.device.push_state_update()
+                    except Exception as retry_error:
+                        _LOGGER.warning(
+                            "Push state failed after reconnect for %s: %s",
+                            self.name,
+                            retry_error,
+                        )
+                        return
             _LOGGER.exception(
                 "Error sending state update to cloud device %s: %s", self.name, error
             )
