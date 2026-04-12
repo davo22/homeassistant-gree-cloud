@@ -24,7 +24,6 @@ from .const import (
     HWHP_PROP_SET_TEM_DEC,
     HWHP_PROP_SET_TEM_INT,
     HWHP_PROP_WATER_TEMP,
-    HWHP_TEMP_ENCODING_DIVISOR,
     HWHP_TEMP_ENCODING_OFFSET,
     HWHP_TEMP_MAX,
     HWHP_TEMP_MIN,
@@ -95,7 +94,7 @@ class GreeCloudWaterHeaterEntity(GreeCloudEntity, WaterHeaterEntity):
         raw = self.coordinator.device.raw_properties.get(HWHP_PROP_WATER_TEMP)
         if raw is None:
             return None
-        return (raw - HWHP_TEMP_ENCODING_OFFSET) / HWHP_TEMP_ENCODING_DIVISOR
+        return raw - HWHP_TEMP_ENCODING_OFFSET
 
     @property
     def target_temperature(self) -> float | None:
