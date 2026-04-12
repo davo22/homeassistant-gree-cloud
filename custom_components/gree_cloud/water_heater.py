@@ -118,7 +118,16 @@ class GreeCloudWaterHeaterEntity(GreeCloudEntity, WaterHeaterEntity):
             self.coordinator.device.device_info.name,
         )
 
-        self.coordinator.device.target_temperature = temperature
+        # Do NOT use device.target_temperature setter — it validates against
+        # AC temperature limits (8–30°C) and will reject HWHP temperatures.
+        # Write directly to raw_properties and mark dirty so push_state_update
+        # sends SetTemInt/SetTemDec via MQTT.
+        device = self.coordinator.device
+        device.raw_properties[HWHP_PROP_SET_TEM_INT] = int(temperature)
+        device.raw_properties[HWHP_PROP_SET_TEM_DEC] = 0
+        for key in (HWHP_PROP_SET_TEM_INT, HWHP_PROP_SET_TEM_DEC):
+            if key not in device._dirty:
+                device._dirty.append(key)
         await self.coordinator.push_state_update()
         self.async_write_ha_state()
 
