@@ -29,9 +29,11 @@ from .const import (
     CONF_SERVER,
     DISPATCH_DEVICE_DISCOVERED,
     DOMAIN,
+    HWHP_PROP_POW_CONSUMP,
     HWHP_PROP_SET_TEM_DEC,
     HWHP_PROP_SET_TEM_INT,
     HWHP_PROP_WATER_TEMP,
+    HWHP_PROP_WSTATE,
     MAX_ERRORS,
     UPDATE_INTERVAL,
 )
@@ -41,7 +43,13 @@ _LOGGER = logging.getLogger(__name__)
 # Extra raw properties requested from the device in addition to the standard Props enum.
 # These cover Hot Water Heat Pump (HWHP) devices that expose different sensor keys.
 _STANDARD_PROPS: list[str] = [x.value for x in Props]
-_HWHP_EXTRA_PROPS = [HWHP_PROP_WATER_TEMP, HWHP_PROP_SET_TEM_INT, HWHP_PROP_SET_TEM_DEC]
+_HWHP_EXTRA_PROPS = [
+    HWHP_PROP_WATER_TEMP,
+    HWHP_PROP_SET_TEM_INT,
+    HWHP_PROP_SET_TEM_DEC,
+    HWHP_PROP_WSTATE,
+    HWHP_PROP_POW_CONSUMP,
+]
 
 
 class HWHPAwareCloudDevice(CloudDevice):

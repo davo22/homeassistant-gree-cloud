@@ -21,10 +21,12 @@ from .const import (
     DISPATCH_DEVICE_DISCOVERED,
     HWHP_OPERATION_BOOST,
     HWHP_OPERATION_HEAT_PUMP,
+    HWHP_PROP_POW_CONSUMP,
     HWHP_PROP_SET_TEM_DEC,
     HWHP_PROP_SET_TEM_INT,
     HWHP_PROP_WATER_TEMP,
     HWHP_PROP_WMOD,
+    HWHP_PROP_WSTATE,
     HWHP_TEMP_ENCODING_OFFSET,
     HWHP_TEMP_MAX,
     HWHP_TEMP_MIN,
@@ -90,6 +92,22 @@ class GreeCloudWaterHeaterEntity(GreeCloudEntity, WaterHeaterEntity):
         """Initialize the Gree Cloud HWHP entity."""
         super().__init__(coordinator)
         self._attr_unique_id = f"{coordinator.device.device_info.mac}_water_heater"
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Return HWHP-specific state attributes."""
+        props = self.coordinator.device.raw_properties
+        attrs: dict[str, Any] = {}
+
+        wstate = props.get(HWHP_PROP_WSTATE)
+        if wstate is not None:
+            attrs["heating_status"] = "heating" if wstate == 1 else "keep_warm"
+
+        pow_consump = props.get(HWHP_PROP_POW_CONSUMP)
+        if pow_consump is not None:
+            attrs["power_consumption"] = pow_consump
+
+        return attrs
 
     @property
     def current_temperature(self) -> float | None:

@@ -33,6 +33,8 @@ HWHP_TEMP_ENCODING_OFFSET = 100  # Raw temp encoding: actual = raw - offset
 HWHP_TEMP_MIN = 40  # Minimum target temperature for hot water (°C)
 HWHP_TEMP_MAX = 80  # Maximum target temperature for hot water (°C)
 HWHP_PROP_WMOD = "Wmod"  # Water heater mode: 0=heat pump, 2=boost/performance
+HWHP_PROP_WSTATE = "Wstate"  # Heating state: 0=keep warm (idle), 1=actively heating
+HWHP_PROP_POW_CONSUMP = "powConsump"  # Power consumption (raw device units)
 HWHP_WMOD_HEAT_PUMP = 0
 HWHP_WMOD_BOOST = 2
 HWHP_OPERATION_HEAT_PUMP = "heat_pump"  # Normal heat pump operation
