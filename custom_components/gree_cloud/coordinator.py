@@ -102,12 +102,13 @@ class HWHPAwareCloudDevice(CloudDevice):
 def is_hwhp_device(coordinator: "CloudDeviceDataUpdateCoordinator") -> bool:
     """Return True if the device appears to be a Hot Water Heat Pump.
 
-    Detection is based on whether the device responded with the ``WatTem``
-    (water temperature) property after the initial state fetch.
+    Detection requires a positive WatTmp raw value (actual = raw - 100).
+    Standard AC units return 0 for unknown properties; a real HWHP reports
+    actual water temperature (40–80 °C → raw 140–180), so raw > 0 is the
+    discriminator.
     """
-    return (
-        coordinator.device.raw_properties.get(HWHP_PROP_WATER_TEMP) is not None
-    )
+    raw = coordinator.device.raw_properties.get(HWHP_PROP_WATER_TEMP)
+    return raw is not None and raw > 0
 
 
 def _is_mqtt_disconnected(error: Exception) -> bool:
