@@ -19,7 +19,79 @@ from .coordinator import (
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = [Platform.CLIMATE, Platform.SWITCH]
+PLATFORMS = [Platform.CLIMATE, Platform.SWITCH, Platform.WATER_HEATER]
+
+# Substrings that identify an MQTT "not connected" error from paho / aiomqtt.
+_MQTT_DISCONNECTED_MARKERS = ("code:4", "not currently connected", "not connected")
+
+
+async def async_reconnect_mqtt(hass: HomeAssistant, entry: GreeCloudConfigEntry) -> bool:
+    """Re-establish the MQTT connection after a broker disconnect.
+
+    Returns True if the reconnect succeeded, False otherwise.
+    Acquires the per-entry lock so that concurrent poll cycles don't each
+    try to reconnect simultaneously.
+    """
+    runtime = entry.runtime_data
+    lock = runtime.mqtt_reconnect_lock
+
+    if lock.locked():
+        # Another coroutine is already reconnecting — wait for it to finish,
+        # then return (the client will already be fresh).
+        async with lock:
+            pass
+        return runtime.mqtt_client.is_connected
+
+    async with lock:
+        _LOGGER.warning("MQTT disconnected — attempting to reconnect")
+
+        old_client = runtime.mqtt_client
+        mqtt_server = GREE_MQTT_SERVERS.get(entry.data[CONF_SERVER], "mqtt-eu.gree.com")
+
+        try:
+            # Re-login to get a fresh token (tokens can expire).
+            credentials = await runtime.cloud_api.login()
+
+            new_client = GreeMqttClient(
+                credentials.user_id,
+                credentials.token,
+                server=mqtt_server,
+            )
+            await new_client.connect()
+        except Exception as err:
+            _LOGGER.error("MQTT reconnect failed during connect: %s", err)
+            return False
+
+        # Swap the client reference on every device and re-subscribe.
+        for coordinator in runtime.coordinators:
+            device = coordinator.device
+            try:
+                # Remove the old handler registered against the old client.
+                old_client.remove_message_handler(device._handle_mqtt_message)
+            except Exception:
+                pass
+            device._mqtt_client = new_client
+            new_client.add_message_handler(device._handle_mqtt_message)
+            try:
+                # bind() re-subscribes to response/status/connect topics.
+                await device.bind()
+            except Exception as err:
+                _LOGGER.warning(
+                    "Failed to re-bind device %s after reconnect: %s",
+                    device.device_info.name,
+                    err,
+                )
+
+        runtime.mqtt_client = new_client
+
+        # Best-effort cleanup of the old client.
+        try:
+            await old_client.disconnect()
+        except Exception:
+            pass
+
+        _LOGGER.info("MQTT reconnect successful")
+        return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: GreeCloudConfigEntry) -> bool:

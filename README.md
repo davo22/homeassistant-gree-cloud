@@ -10,13 +10,16 @@ This integration is based on a fork of the [greeclimate](https://github.com/cmro
 
 - 🌐 **Cloud-only device support** - Works with Gree devices that only communicate via cloud
 - 🔄 **Full climate control** - Temperature, mode, fan speed, swing modes
-- 🎛️ **Additional switches** - Panel light, quiet mode, fresh air, XFan, health mode
+- �️ **Hot water heat pump support** - Control Gree WHIO / Hot Water Heat Pump devices
+- 🎛️ **Additional switches** - Panel light, quiet mode, fresh air, XFan, health mode (AC/heat pump devices)
 - 🔐 **Secure authentication** - Uses your existing Gree+ account credentials
 - 🌍 **Multi-region support** - Works with all Gree Cloud regions
 
 ## Supported Devices
 
-Any Gree Smart device working with the Gree+ app should be supported, including non-Gree branded devices such as:
+### Air Conditioners & Heat Pumps
+
+Any Gree Smart air conditioner or heat pump working with the Gree+ app should be supported, including non-Gree branded devices such as:
 
 - Trane
 - Innova
@@ -28,6 +31,11 @@ Any Gree Smart device working with the Gree+ app should be supported, including 
 - Lessar
 - Tosot
 - Wilfa
+
+### Hot Water Heat Pumps
+
+- Gree WHIO (New Zealand)
+- Gree Hot Water Heat Pump (Australia)
 
 ## Installation
 
@@ -61,9 +69,9 @@ The integration will automatically discover all devices associated with your Gre
 
 ## Available Entities
 
-### Climate Entity
+### Air Conditioner / Heat Pump — Climate Entity
 
-Each device creates a climate entity with the following features:
+Created for standard Gree air conditioner and heat pump devices:
 
 - **HVAC Modes**: Off, Auto, Cool, Heat, Dry, Fan Only
 - **Preset Modes**: None, Eco, Away (8°C mode), Boost (Turbo), Sleep
@@ -71,9 +79,17 @@ Each device creates a climate entity with the following features:
 - **Swing Modes**: Off, Vertical, Horizontal, Both
 - **Temperature Control**: Target temperature with 1° step
 
+### Hot Water Heat Pump — Water Heater Entity
+
+Created for Gree WHIO / Hot Water Heat Pump devices (auto-detected):
+
+- **Operation Modes**: Heat Pump (normal), Performance (boost), Off
+- **Temperature Control**: Target temperature 40–80°C with 1° step
+- **Current Temperature**: Live tank water temperature
+
 ### Switch Entities
 
-Each device also creates the following switches:
+Created for air conditioner and heat pump devices only (not hot water heat pumps):
 
 - **Panel Light**: Control the front panel LED
 - **Quiet Mode**: Enable/disable quiet operation
@@ -165,6 +181,7 @@ logger:
 ### Q: My device shows as unavailable
 
 **A:** This can happen if:
+
 - The device is offline or not connected to WiFi
 - Your internet connection is unstable
 - The Gree Cloud servers are experiencing issues
