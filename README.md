@@ -101,15 +101,16 @@ Created for air conditioner and heat pump devices only (not hot water heat pumps
 
 Select the appropriate region for your account:
 
-- Europe
-- East South Asia
-- North American
-- South American
-- China Mainland
-- India
-- Middle East
 - Australia
-- Russian server
+- China Mainland
+- East South Asia
+- Europe
+- India
+- Latin American
+- Middle East
+- North American
+- Russia
+- South American
 
 ## Known Limitations
 

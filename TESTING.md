@@ -30,10 +30,12 @@ async def test_cloud_connection():
     """Test connection to Gree Cloud and device control."""
     
     # Configuration
+    # Available regions: Australia, China Mainland, East South Asia, Europe, India
+                         Latin American, Middle East, North American, Russia, South American
     SERVER = "Europe"  # Change to your region
     USERNAME = "your-email@example.com"  # Change to your Gree+ username
     PASSWORD = "your-password"  # Change to your Gree+ password
-    
+
     print(f"Testing Gree Cloud connection...")
     print(f"Server: {SERVER}")
     print(f"Username: {USERNAME}")
@@ -62,7 +64,8 @@ async def test_cloud_connection():
         
         # Connect to MQTT
         print("3. Connecting to MQTT broker...")
-        mqtt = GreeMqttClient(credentials.user_id, credentials.token)
+        mqtt_server = GreeMqttClient.MQTT_SERVERS.get(SERVER, "mqtt-eu.gree.com")
+        mqtt = GreeMqttClient(credentials.user_id, credentials.token, server=mqtt_server)
         await mqtt.connect()
         print("   ✓ Connected to MQTT")
         print()
