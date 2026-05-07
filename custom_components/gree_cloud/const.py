@@ -42,26 +42,28 @@ HWHP_OPERATION_BOOST = "performance"  # Boost / turbo operation
 
 # Gree Cloud servers
 GREE_CLOUD_SERVERS = {
-    "Europe": "https://eugrih.gree.com",
-    "East South Asia": "https://hkgrih.gree.com",
-    "North American": "https://nagrih.gree.com",
-    "South American": "https://sagrih.gree.com",
-    "China Mainland": "https://grih.gree.com",
-    "India": "https://ingrih.gree.com",
-    "Middle East": "https://megrih.gree.com",
     "Australia": "https://augrih.gree.com",
-    "Russian server": "https://rugrih.gree.com",
+    "China Mainland": "https://grih.gree.com",
+    "East South Asia": "https://hkgrih.gree.com",
+    "Europe": "https://eugrih.gree.com",
+    "India": "https://ingrih.gree.com",
+    "Latin American": 'https://lagrih.gree.com',
+    "Middle East": "https://megrih.gree.com",
+    "North American": "https://nagrih.gree.com",
+    "Russia": "https://rugrih.gree.com",
+    "South American": "https://sagrih.gree.com",
 }
 
 # Gree MQTT servers (one per region, must match the REST API region)
 GREE_MQTT_SERVERS = {
-    "Europe": "mqtt-eu.gree.com",
-    "East South Asia": "mqtt-as.gree.com",
-    "North American": "mqtt-us.gree.com",
-    "South American": "mqtt-sa.gree.com",
-    "China Mainland": "mqtt-cn.gree.com",
-    "India": "mqtt-in.gree.com",
-    "Middle East": "mqtt-me.gree.com",
     "Australia": "mqtt-au.gree.com",
-    "Russian server": "mqtt-ru.gree.com",
+    "China Mainland": "mqtt-cn.gree.com",
+    "East South Asia": "mqtt-as.gree.com",
+    "Europe": "mqtt-eu.gree.com",
+    "India": "mqtt-in.gree.com",
+    "Latin American": "mqtt-la.gree.com",
+    "Middle East": "mqtt-me.gree.com",
+    "North American": "mqtt-us.gree.com",
+    "Russia": "mqtt-ru.gree.com",
+    "South American": "mqtt-sa.gree.com",
 }

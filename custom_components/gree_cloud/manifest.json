@@ -8,7 +8,7 @@
   "iot_class": "cloud_polling",
   "integration_type": "hub",
   "loggers": ["greeclimate"],
-  "requirements": ["greeclimate @ git+https://github.com/davo22/greeclimate.git@1.0.1"],
-  "version": "1.1.1",
+  "requirements": ["greeclimate @ git+https://github.com/davo22/greeclimate.git@1.0.2"],
+  "version": "1.1.2",
   "brand": "gree"
 }
