@@ -6,7 +6,7 @@
       }
     },
     "switch": {
-      "panel_light": {
+      "light": {
         "default": "mdi:lightbulb"
       },
       "quiet": {
@@ -17,6 +17,9 @@
       },
       "xfan": {
         "default": "mdi:fan"
+      },
+      "health_mode": {
+        "default": "mdi:leaf"
       }
     }
   }

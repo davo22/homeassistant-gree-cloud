@@ -25,6 +25,23 @@
       "energy_total": {
         "name": "Energia"
       }
+    },
+    "switch": {
+      "light": {
+        "name": "Luz do painel"
+      },
+      "quiet": {
+        "name": "Silencioso"
+      },
+      "fresh_air": {
+        "name": "Ar fresco"
+      },
+      "xfan": {
+        "name": "XFan"
+      },
+      "health_mode": {
+        "name": "Modo saúde"
+      }
     }
   }
 }
