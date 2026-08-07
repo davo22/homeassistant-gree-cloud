@@ -19,7 +19,7 @@ from .coordinator import (
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = [Platform.CLIMATE, Platform.SWITCH, Platform.WATER_HEATER]
+PLATFORMS = [Platform.CLIMATE, Platform.SENSOR, Platform.SWITCH, Platform.WATER_HEATER]
 
 # Substrings that identify an MQTT "not connected" error from paho / aiomqtt.
 _MQTT_DISCONNECTED_MARKERS = ("code:4", "not currently connected", "not connected")

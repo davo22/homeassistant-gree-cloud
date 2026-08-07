@@ -40,6 +40,12 @@ HWHP_WMOD_BOOST = 2
 HWHP_OPERATION_HEAT_PUMP = "heat_pump"  # Normal heat pump operation
 HWHP_OPERATION_BOOST = "performance"  # Boost / turbo operation
 
+# Energy metering (AC units).
+# ElcAll is a cumulative counter in tenths of a kWh; it does not reset daily.
+# ElcAllConsumption carries the same value and is not read separately.
+PROP_ENERGY_TOTAL = "ElcAll"
+ENERGY_SCALE = 0.1
+
 # Gree Cloud servers
 GREE_CLOUD_SERVERS = {
     "Australia": "https://augrih.gree.com",

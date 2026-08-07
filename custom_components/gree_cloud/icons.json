@@ -1,5 +1,10 @@
 {
   "entity": {
+    "sensor": {
+      "energy_total": {
+        "default": "mdi:lightning-bolt"
+      }
+    },
     "switch": {
       "panel_light": {
         "default": "mdi:lightbulb"

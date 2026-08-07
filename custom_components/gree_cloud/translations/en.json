@@ -19,5 +19,12 @@
     "abort": {
       "already_configured": "This account is already configured"
     }
+  },
+  "entity": {
+    "sensor": {
+      "energy_total": {
+        "name": "Energy"
+      }
+    }
   }
 }
