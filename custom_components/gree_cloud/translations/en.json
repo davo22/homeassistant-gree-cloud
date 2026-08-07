@@ -24,6 +24,12 @@
     "sensor": {
       "energy_total": {
         "name": "Energy"
+      },
+      "humidity": {
+        "name": "Humidity"
+      },
+      "compressor_frequency": {
+        "name": "Compressor frequency"
       }
     },
     "switch": {

@@ -46,6 +46,15 @@ HWHP_OPERATION_BOOST = "performance"  # Boost / turbo operation
 PROP_ENERGY_TOTAL = "ElcAll"
 ENERGY_SCALE = 0.1
 
+# Compressor frequency in Hz. Reads 0 while the unit is idle and non-zero while
+# it is actually running, so it tracks load far more responsively than the
+# energy counter, which only moves in whole 0.1 kWh steps.
+PROP_COMPRESSOR_FREQ = "CompressorFqy"
+
+# Relative humidity. Already part of the standard Props enum (HUM_SENSOR), so
+# it needs no extra request - only an entity to surface it.
+PROP_HUMIDITY = "DwatSen"
+
 # Gree Cloud servers
 GREE_CLOUD_SERVERS = {
     "Australia": "https://augrih.gree.com",

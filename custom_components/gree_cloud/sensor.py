@@ -13,12 +13,23 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import UnitOfEnergy
+from homeassistant.const import (
+    PERCENTAGE,
+    EntityCategory,
+    UnitOfEnergy,
+    UnitOfFrequency,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DISPATCH_DEVICE_DISCOVERED, ENERGY_SCALE, PROP_ENERGY_TOTAL
+from .const import (
+    DISPATCH_DEVICE_DISCOVERED,
+    ENERGY_SCALE,
+    PROP_COMPRESSOR_FREQ,
+    PROP_ENERGY_TOTAL,
+    PROP_HUMIDITY,
+)
 from .coordinator import (
     CloudDeviceDataUpdateCoordinator,
     GreeCloudConfigEntry,
@@ -53,6 +64,36 @@ def _has_energy_total(device: Device) -> bool:
     return device.raw_properties.get(PROP_ENERGY_TOTAL) is not None
 
 
+def _compressor_frequency(device: Device) -> float | None:
+    """Return compressor frequency in Hz."""
+    return device.raw_properties.get(PROP_COMPRESSOR_FREQ)
+
+
+def _has_compressor_frequency(device: Device) -> bool:
+    """Return True if the device reports compressor frequency.
+
+    Zero is a valid reading - it means the compressor is idle - so presence of
+    the key is the only reliable test.
+    """
+    return device.raw_properties.get(PROP_COMPRESSOR_FREQ) is not None
+
+
+def _humidity(device: Device) -> float | None:
+    """Return relative humidity in percent."""
+    return device.raw_properties.get(PROP_HUMIDITY)
+
+
+def _has_humidity(device: Device) -> bool:
+    """Return True if the device has a usable humidity reading.
+
+    Unlike the other properties, units without a humidity sensor report a flat
+    0 rather than omitting the key, and 0 %RH is not a plausible indoor value.
+    Readings outside 1-100 are therefore treated as "no sensor fitted".
+    """
+    raw = device.raw_properties.get(PROP_HUMIDITY)
+    return isinstance(raw, (int, float)) and 0 < raw <= 100
+
+
 GREE_CLOUD_SENSORS: tuple[GreeCloudSensorEntityDescription, ...] = (
     GreeCloudSensorEntityDescription(
         key="Energy",
@@ -63,6 +104,25 @@ GREE_CLOUD_SENSORS: tuple[GreeCloudSensorEntityDescription, ...] = (
         suggested_display_precision=1,
         value_fn=_energy_total,
         exists_fn=_has_energy_total,
+    ),
+    GreeCloudSensorEntityDescription(
+        key="Humidity",
+        translation_key="humidity",
+        device_class=SensorDeviceClass.HUMIDITY,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=PERCENTAGE,
+        value_fn=_humidity,
+        exists_fn=_has_humidity,
+    ),
+    GreeCloudSensorEntityDescription(
+        key="Compressor Frequency",
+        translation_key="compressor_frequency",
+        device_class=SensorDeviceClass.FREQUENCY,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfFrequency.HERTZ,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=_compressor_frequency,
+        exists_fn=_has_compressor_frequency,
     ),
 )
 

@@ -3,6 +3,12 @@
     "sensor": {
       "energy_total": {
         "default": "mdi:lightning-bolt"
+      },
+      "humidity": {
+        "default": "mdi:water-percent"
+      },
+      "compressor_frequency": {
+        "default": "mdi:sine-wave"
       }
     },
     "switch": {

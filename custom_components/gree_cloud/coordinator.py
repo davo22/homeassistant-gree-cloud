@@ -35,6 +35,7 @@ from .const import (
     HWHP_PROP_WATER_TEMP,
     HWHP_PROP_WSTATE,
     MAX_ERRORS,
+    PROP_COMPRESSOR_FREQ,
     PROP_ENERGY_TOTAL,
     UPDATE_INTERVAL,
 )
@@ -52,9 +53,10 @@ _HWHP_EXTRA_PROPS = [
     HWHP_PROP_POW_CONSUMP,
 ]
 
-# Extra properties reported by AC units. The cloud serves these even though the
-# local UDP protocol does not, so they are only available on this integration.
-_ENERGY_EXTRA_PROPS = [PROP_ENERGY_TOTAL]
+# Extra properties reported by AC units, surfaced by the sensor platform. The
+# cloud serves these even though the local UDP protocol does not, so they are
+# only available on this integration.
+_SENSOR_EXTRA_PROPS = [PROP_ENERGY_TOTAL, PROP_COMPRESSOR_FREQ]
 
 
 class HWHPAwareCloudDevice(CloudDevice):
@@ -76,7 +78,7 @@ class HWHPAwareCloudDevice(CloudDevice):
             "Updating HWHP-aware cloud device state: %s", self.device_info.name
         )
 
-        props: list[str] = _STANDARD_PROPS + _HWHP_EXTRA_PROPS + _ENERGY_EXTRA_PROPS
+        props: list[str] = _STANDARD_PROPS + _HWHP_EXTRA_PROPS + _SENSOR_EXTRA_PROPS
         if not self.hid:
             props.append("hid")
 
