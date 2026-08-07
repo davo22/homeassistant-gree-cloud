@@ -1,0 +1,30 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Configuração do Gree Climate Cloud",
+        "description": "Introduza as credenciais da sua conta Gree+",
+        "data": {
+          "server": "Região do servidor",
+          "username": "Utilizador/Email",
+          "password": "Palavra-passe"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Falha ao ligar à Gree Cloud",
+      "invalid_auth": "Credenciais de autenticação inválidas",
+      "unknown": "Ocorreu um erro inesperado"
+    },
+    "abort": {
+      "already_configured": "Esta conta já está configurada"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "energy_total": {
+        "name": "Energia"
+      }
+    }
+  }
+}
