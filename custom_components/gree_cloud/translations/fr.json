@@ -1,0 +1,53 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Configuration Gree Climate Cloud",
+        "description": "Saisissez les identifiants de votre compte Gree+",
+        "data": {
+          "server": "Région du serveur",
+          "username": "Nom d'utilisateur/Email",
+          "password": "Mot de passe"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Échec de la connexion à Gree Cloud",
+      "invalid_auth": "Identifiants d'authentification invalides",
+      "unknown": "Une erreur inattendue s'est produite"
+    },
+    "abort": {
+      "already_configured": "Ce compte est déjà configuré"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "energy_total": {
+        "name": "Énergie"
+      },
+      "humidity": {
+        "name": "Humidité"
+      },
+      "compressor_frequency": {
+        "name": "Fréquence du compresseur"
+      }
+    },
+    "switch": {
+      "light": {
+        "name": "Éclairage du panneau"
+      },
+      "quiet": {
+        "name": "Silencieux"
+      },
+      "fresh_air": {
+        "name": "Air frais"
+      },
+      "xfan": {
+        "name": "XFan"
+      },
+      "health_mode": {
+        "name": "Mode santé"
+      }
+    }
+  }
+}
