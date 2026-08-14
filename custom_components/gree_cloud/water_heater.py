@@ -24,6 +24,7 @@ from .const import (
     HWHP_PROP_POW_CONSUMP,
     HWHP_PROP_SET_TEM_DEC,
     HWHP_PROP_SET_TEM_INT,
+    HWHP_PROP_WATER_PERCENT,
     HWHP_PROP_WATER_TEMP,
     HWHP_PROP_WMOD,
     HWHP_PROP_WSTATE,
@@ -106,6 +107,10 @@ class GreeCloudWaterHeaterEntity(GreeCloudEntity, WaterHeaterEntity):
         pow_consump = props.get(HWHP_PROP_POW_CONSUMP)
         if pow_consump is not None:
             attrs["power_consumption"] = pow_consump
+
+        water_percent_raw = props.get(HWHP_PROP_WATER_PERCENT)
+        if water_percent_raw is not None:
+            attrs["water_level_percent"] = water_percent_raw - HWHP_TEMP_ENCODING_OFFSET
 
         return attrs
 
