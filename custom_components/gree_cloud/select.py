@@ -22,19 +22,19 @@ from .entity import GreeCloudEntity
 _LOGGER = logging.getLogger(__name__)
 
 VERTICAL_POSITIONS = {
-    "Oben": VerticalSwing.FixedUpper,
-    "Oben-Mitte": VerticalSwing.FixedUpperMiddle,
-    "Mitte": VerticalSwing.FixedMiddle,
-    "Unten-Mitte": VerticalSwing.FixedLowerMiddle,
-    "Unten": VerticalSwing.FixedLower,
+    "fixed_upper": VerticalSwing.FixedUpper,
+    "fixed_upper_middle": VerticalSwing.FixedUpperMiddle,
+    "fixed_middle": VerticalSwing.FixedMiddle,
+    "fixed_lower_middle": VerticalSwing.FixedLowerMiddle,
+    "fixed_lower": VerticalSwing.FixedLower,
 }
 
 HORIZONTAL_POSITIONS = {
-    "Links": HorizontalSwing.Left,
-    "Links-Mitte": HorizontalSwing.LeftCenter,
-    "Mitte": HorizontalSwing.Center,
-    "Rechts-Mitte": HorizontalSwing.RightCenter,
-    "Rechts": HorizontalSwing.Right,
+    "left": HorizontalSwing.Left,
+    "left_center": HorizontalSwing.LeftCenter,
+    "center": HorizontalSwing.Center,
+    "right_center": HorizontalSwing.RightCenter,
+    "right": HorizontalSwing.Right,
 }
 
 
@@ -81,8 +81,8 @@ class GreeCloudVaneSelect(GreeCloudEntity, SelectEntity):
         self._reverse = {int(v): k for k, v in positions.items()}
         self._attr_options = list(positions)
         self._attr_unique_id = f"{coordinator.device.device_info.mac}_swing_{axis}"
-        self._attr_name = (
-            "Lamelle vertikal" if axis == "vertical" else "Lamelle horizontal"
+        self._attr_translation_key = (
+            "vane_vertical" if axis == "vertical" else "vane_horizontal"
         )
 
     @property
@@ -93,6 +93,11 @@ class GreeCloudVaneSelect(GreeCloudEntity, SelectEntity):
         else:
             value = self.coordinator.device.horizontal_swing
         return self._reverse.get(int(value))
+
+    @property
+    def _option_name_to_translation_key(self) -> dict[str, str]:
+        """Map option names to translation keys."""
+        return {option: option for option in self._attr_options}
 
     async def async_select_option(self, option: str) -> None:
         """Set a fixed vane position."""

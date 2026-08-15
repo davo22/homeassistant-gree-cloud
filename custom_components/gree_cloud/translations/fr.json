@@ -48,6 +48,28 @@
       "health_mode": {
         "name": "Mode santé"
       }
+    },
+    "select": {
+      "vane_vertical": {
+        "name": "Lames verticales",
+        "state": {
+          "fixed_upper": "Haut",
+          "fixed_upper_middle": "Haut-Milieu",
+          "fixed_middle": "Milieu",
+          "fixed_lower_middle": "Bas-Milieu",
+          "fixed_lower": "Bas"
+        }
+      },
+      "vane_horizontal": {
+        "name": "Lames horizontales",
+        "state": {
+          "left": "Gauche",
+          "left_center": "Gauche-Centre",
+          "center": "Centre",
+          "right_center": "Droite-Centre",
+          "right": "Droite"
+        }
+      }
     }
   }
 }

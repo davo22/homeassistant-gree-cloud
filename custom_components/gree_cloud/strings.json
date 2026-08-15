@@ -48,6 +48,28 @@
       "health_mode": {
         "name": "Health mode"
       }
+    },
+    "select": {
+      "vane_vertical": {
+        "name": "Vertical vane",
+        "state": {
+          "fixed_upper": "Top",
+          "fixed_upper_middle": "Top-Middle",
+          "fixed_middle": "Middle",
+          "fixed_lower_middle": "Bottom-Middle",
+          "fixed_lower": "Bottom"
+        }
+      },
+      "vane_horizontal": {
+        "name": "Horizontal vane",
+        "state": {
+          "left": "Left",
+          "left_center": "Left-Center",
+          "center": "Center",
+          "right_center": "Right-Center",
+          "right": "Right"
+        }
+      }
     }
   }
 }

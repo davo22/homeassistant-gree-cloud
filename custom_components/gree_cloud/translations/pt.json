@@ -48,6 +48,28 @@
       "health_mode": {
         "name": "Modo saúde"
       }
+    },
+    "select": {
+      "vane_vertical": {
+        "name": "Aleta vertical",
+        "state": {
+          "fixed_upper": "Superior",
+          "fixed_upper_middle": "Superior-Médio",
+          "fixed_middle": "Médio",
+          "fixed_lower_middle": "Inferior-Médio",
+          "fixed_lower": "Inferior"
+        }
+      },
+      "vane_horizontal": {
+        "name": "Aleta horizontal",
+        "state": {
+          "left": "Esquerda",
+          "left_center": "Esquerda-Centro",
+          "center": "Centro",
+          "right_center": "Direita-Centro",
+          "right": "Direita"
+        }
+      }
     }
   }
 }
