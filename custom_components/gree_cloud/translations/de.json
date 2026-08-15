@@ -1,0 +1,75 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Gree Climate Cloud Einrichtung",
+        "description": "Geben Sie Ihre Gree+ Anmeldedaten ein",
+        "data": {
+          "server": "Serverregion",
+          "username": "Benutzername/E-Mail",
+          "password": "Passwort"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Verbindung zu Gree Cloud fehlgeschlagen",
+      "invalid_auth": "Ungültige Anmeldedaten",
+      "unknown": "Ein unerwarteter Fehler ist aufgetreten"
+    },
+    "abort": {
+      "already_configured": "Dieses Konto ist bereits konfiguriert"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "energy_total": {
+        "name": "Energie"
+      },
+      "humidity": {
+        "name": "Luftfeuchtigkeit"
+      },
+      "compressor_frequency": {
+        "name": "Kompressorfrequenz"
+      }
+    },
+    "switch": {
+      "light": {
+        "name": "Displaybeleuchtung"
+      },
+      "quiet": {
+        "name": "Flüstermodus"
+      },
+      "fresh_air": {
+        "name": "Frischluft"
+      },
+      "xfan": {
+        "name": "XFan"
+      },
+      "health_mode": {
+        "name": "Gesundheitsmodus"
+      }
+    },
+    "select": {
+      "vane_vertical": {
+        "name": "Vertikale Lamelle",
+        "state": {
+          "fixed_upper": "Oben",
+          "fixed_upper_middle": "Oben-Mitte",
+          "fixed_middle": "Mitte",
+          "fixed_lower_middle": "Unten-Mitte",
+          "fixed_lower": "Unten"
+        }
+      },
+      "vane_horizontal": {
+        "name": "Horizontale Lamelle",
+        "state": {
+          "left": "Links",
+          "left_center": "Links-Mitte",
+          "center": "Mitte",
+          "right_center": "Rechts-Mitte",
+          "right": "Rechts"
+        }
+      }
+    }
+  }
+}
