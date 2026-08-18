@@ -49,6 +49,12 @@
         "name": "Modo saúde"
       }
     },
+    "climate": {
+      "fan_mode": {
+        "medium_low": "Médio-Baixo",
+        "medium_high": "Médio-Alto"
+      }
+    },
     "select": {
       "vane_vertical": {
         "name": "Aleta vertical",

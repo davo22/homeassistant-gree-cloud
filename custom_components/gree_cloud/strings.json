@@ -49,6 +49,12 @@
         "name": "Health mode"
       }
     },
+    "climate": {
+      "fan_mode": {
+        "medium_low": "Medium Low",
+        "medium_high": "Medium High"
+      }
+    },
     "select": {
       "vane_vertical": {
         "name": "Vertical vane",

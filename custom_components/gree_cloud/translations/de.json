@@ -49,6 +49,12 @@
         "name": "Gesundheitsmodus"
       }
     },
+    "climate": {
+      "fan_mode": {
+        "medium_low": "Mittel-Niedrig",
+        "medium_high": "Mittel-Hoch"
+      }
+    },
     "select": {
       "vane_vertical": {
         "name": "Vertikale Lamelle",

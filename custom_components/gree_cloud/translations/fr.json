@@ -49,6 +49,12 @@
         "name": "Mode santé"
       }
     },
+    "climate": {
+      "fan_mode": {
+        "medium_low": "Moyen-Bas",
+        "medium_high": "Moyen-Haut"
+      }
+    },
     "select": {
       "vane_vertical": {
         "name": "Lames verticales",
