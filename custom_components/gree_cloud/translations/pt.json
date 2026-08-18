@@ -1,0 +1,81 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Configuração do Gree Climate Cloud",
+        "description": "Introduza as credenciais da sua conta Gree+",
+        "data": {
+          "server": "Região do servidor",
+          "username": "Utilizador/Email",
+          "password": "Palavra-passe"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Falha ao ligar à Gree Cloud",
+      "invalid_auth": "Credenciais de autenticação inválidas",
+      "unknown": "Ocorreu um erro inesperado"
+    },
+    "abort": {
+      "already_configured": "Esta conta já está configurada"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "energy_total": {
+        "name": "Energia"
+      },
+      "humidity": {
+        "name": "Humidade"
+      },
+      "compressor_frequency": {
+        "name": "Frequência do compressor"
+      }
+    },
+    "switch": {
+      "light": {
+        "name": "Luz do painel"
+      },
+      "quiet": {
+        "name": "Silencioso"
+      },
+      "fresh_air": {
+        "name": "Ar fresco"
+      },
+      "xfan": {
+        "name": "XFan"
+      },
+      "health_mode": {
+        "name": "Modo saúde"
+      }
+    },
+    "climate": {
+      "fan_mode": {
+        "medium_low": "Médio-Baixo",
+        "medium_high": "Médio-Alto"
+      }
+    },
+    "select": {
+      "vane_vertical": {
+        "name": "Aleta vertical",
+        "state": {
+          "fixed_upper": "Superior",
+          "fixed_upper_middle": "Superior-Médio",
+          "fixed_middle": "Médio",
+          "fixed_lower_middle": "Inferior-Médio",
+          "fixed_lower": "Inferior"
+        }
+      },
+      "vane_horizontal": {
+        "name": "Aleta horizontal",
+        "state": {
+          "left": "Esquerda",
+          "left_center": "Esquerda-Centro",
+          "center": "Centro",
+          "right_center": "Direita-Centro",
+          "right": "Direita"
+        }
+      }
+    }
+  }
+}
