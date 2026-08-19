@@ -23,7 +23,7 @@ FAN_MEDIUM_LOW = "medium low"
 FAN_MEDIUM_HIGH = "medium high"
 
 # Temperature settings
-TARGET_TEMPERATURE_STEP = 1
+TARGET_TEMPERATURE_STEP = 0.5
 
 # Gree HWHP (Hot Water Heat Pump) settings
 HWHP_PROP_WATER_TEMP = "WatTmp"  # Current water temperature property key

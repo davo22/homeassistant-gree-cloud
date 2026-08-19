@@ -32,7 +32,7 @@ from homeassistant.components.climate import (
     ClimateEntityFeature,
     HVACMode,
 )
-from homeassistant.const import ATTR_TEMPERATURE, PRECISION_WHOLE, UnitOfTemperature
+from homeassistant.const import ATTR_TEMPERATURE, PRECISION_HALVES, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -131,7 +131,7 @@ async def async_setup_entry(
 class GreeCloudClimateEntity(GreeCloudEntity, ClimateEntity):
     """Representation of a Gree Cloud HVAC device."""
 
-    _attr_precision = PRECISION_WHOLE
+    _attr_precision = PRECISION_HALVES
     _attr_supported_features = (
         ClimateEntityFeature.TARGET_TEMPERATURE
         | ClimateEntityFeature.FAN_MODE
@@ -178,7 +178,7 @@ class GreeCloudClimateEntity(GreeCloudEntity, ClimateEntity):
 
         temperature = kwargs[ATTR_TEMPERATURE]
         _LOGGER.debug(
-            "Setting temperature to %d for %s",
+            "Setting temperature to %s for %s",
             temperature,
             self._attr_name,
         )
