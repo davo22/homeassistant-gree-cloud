@@ -50,11 +50,40 @@
       }
     },
     "climate": {
-      "state_attributes": {
-        "fan_mode": {
-          "state": {
-            "medium_low": "Moyen-Bas",
-            "medium_high": "Moyen-Haut"
+      "climate": {
+        "state_attributes": {
+          "fan_mode": {
+            "state": {
+              "medium_low": "Moyen-Bas",
+              "medium_high": "Moyen-Haut"
+            }
+          },
+          "swing_horizontal_mode": {
+            "state": {
+              "center": "Centre",
+              "default": "Par défaut",
+              "full_swing": "Oscillation complète",
+              "left": "Gauche",
+              "left_center": "Gauche-centre",
+              "right": "Droite",
+              "right_center": "Droite-centre"
+            }
+          },
+          "swing_mode": {
+            "state": {
+              "default": "Par défaut",
+              "fixed_lower": "Fixe bas",
+              "fixed_lower_middle": "Fixe bas-milieu",
+              "fixed_middle": "Fixe milieu",
+              "fixed_upper": "Fixe haut",
+              "fixed_upper_middle": "Fixe haut-milieu",
+              "full_swing": "Oscillation complète",
+              "swing_lower": "Oscillation bas",
+              "swing_lower_middle": "Oscillation bas-milieu",
+              "swing_middle": "Oscillation milieu",
+              "swing_upper": "Oscillation haut",
+              "swing_upper_middle": "Oscillation haut-milieu"
+            }
           }
         }
       }
