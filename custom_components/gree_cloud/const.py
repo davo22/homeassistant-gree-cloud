@@ -72,13 +72,13 @@ GREE_CLOUD_SERVERS = {
 # Gree MQTT servers (one per region, must match the REST API region)
 GREE_MQTT_SERVERS = {
     "Australia": "mqtt-au.gree.com",
-    "China Mainland": "mqtt-cn.gree.com",
+    "China Mainland": "mqtt.gree.com",
     "East South Asia": "mqtt-as.gree.com",
     "Europe": "mqtt-eu.gree.com",
     "India": "mqtt-in.gree.com",
     "Latin American": "mqtt-la.gree.com",
     "Middle East": "mqtt-me.gree.com",
-    "North American": "mqtt-us.gree.com",
+    "North American": "mqtt-na.gree.com",
     "Russia": "mqtt-ru.gree.com",
     "South American": "mqtt-sa.gree.com",
 }
