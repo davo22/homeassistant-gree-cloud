@@ -22,6 +22,8 @@ from homeassistant.components.climate import (
     FAN_AUTO,
     FAN_HIGH,
     FAN_LOW,
+    FAN_MEDIUM_HIGH,
+    FAN_MEDIUM_LOW,
     FAN_MEDIUM,
     PRESET_AWAY,
     PRESET_BOOST,
@@ -37,12 +39,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import (
-    DISPATCH_DEVICE_DISCOVERED,
-    FAN_MEDIUM_HIGH,
-    FAN_MEDIUM_LOW,
-    TARGET_TEMPERATURE_STEP,
-)
+from .const import DISPATCH_DEVICE_DISCOVERED, TARGET_TEMPERATURE_STEP
 from .coordinator import CloudDeviceDataUpdateCoordinator, GreeCloudConfigEntry, is_hwhp_device
 from .entity import GreeCloudEntity
 

@@ -54,8 +54,8 @@
         "state_attributes": {
           "fan_mode": {
             "state": {
-              "medium_low": "Moyen-Bas",
-              "medium_high": "Moyen-Haut"
+              "medium-low": "Moyen-Bas",
+              "medium-high": "Moyen-Haut"
             }
           },
           "swing_horizontal_mode": {
