@@ -18,6 +18,10 @@ MAX_EXPECTED_RESPONSE_TIME_INTERVAL = 180
 # Dispatcher signals
 DISPATCH_DEVICE_DISCOVERED = f"{DOMAIN}_device_discovered"
 
+# Fan modes not provided by Home Assistant
+FAN_MEDIUM_LOW = "medium-low"
+FAN_MEDIUM_HIGH = "medium-high"
+
 # Temperature settings
 TARGET_TEMPERATURE_STEP = 0.5
 
