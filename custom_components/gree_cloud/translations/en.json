@@ -19,5 +19,35 @@
     "abort": {
       "already_configured": "This account is already configured"
     }
+  },
+  "entity": {
+    "sensor": {
+      "energy_total": {
+        "name": "Energy"
+      },
+      "humidity": {
+        "name": "Humidity"
+      },
+      "compressor_frequency": {
+        "name": "Compressor frequency"
+      }
+    },
+    "switch": {
+      "light": {
+        "name": "Panel light"
+      },
+      "quiet": {
+        "name": "Quiet"
+      },
+      "fresh_air": {
+        "name": "Fresh air"
+      },
+      "xfan": {
+        "name": "XFan"
+      },
+      "health_mode": {
+        "name": "Health mode"
+      }
+    }
   }
 }
