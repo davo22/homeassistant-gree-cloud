@@ -72,17 +72,12 @@
           "swing_mode": {
             "state": {
               "default": "Standard",
-              "fixed_lower": "Fest unten",
-              "fixed_lower_middle": "Fest unten-Mitte",
-              "fixed_middle": "Fest Mitte",
               "fixed_upper": "Fest oben",
               "fixed_upper_middle": "Fest oben-Mitte",
-              "full_swing": "Vollständiges Schwenken",
-              "swing_lower": "Schwenken unten",
-              "swing_lower_middle": "Schwenken unten-Mitte",
-              "swing_middle": "Schwenken Mitte",
-              "swing_upper": "Schwenken oben",
-              "swing_upper_middle": "Schwenken oben-Mitte"
+              "fixed_middle": "Fest Mitte",
+              "fixed_lower_middle": "Fest unten-Mitte",
+              "fixed_lower": "Fest unten",
+              "full_swing": "Vollständiges Schwenken"
             }
           }
         }

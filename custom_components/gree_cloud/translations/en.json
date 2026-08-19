@@ -72,17 +72,12 @@
           "swing_mode": {
             "state": {
               "default": "Default",
-              "fixed_lower": "Fixed lower",
-              "fixed_lower_middle": "Fixed lower middle",
-              "fixed_middle": "Fixed middle",
               "fixed_upper": "Fixed upper",
               "fixed_upper_middle": "Fixed upper middle",
-              "full_swing": "Full swing",
-              "swing_lower": "Swing lower",
-              "swing_lower_middle": "Swing lower middle",
-              "swing_middle": "Swing middle",
-              "swing_upper": "Swing upper",
-              "swing_upper_middle": "Swing upper middle"
+              "fixed_middle": "Fixed middle",
+              "fixed_lower_middle": "Fixed lower middle",
+              "fixed_lower": "Fixed lower",
+              "full_swing": "Full swing"
             }
           }
         }

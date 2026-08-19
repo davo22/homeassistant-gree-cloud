@@ -72,17 +72,12 @@
           "swing_mode": {
             "state": {
               "default": "Par défaut",
-              "fixed_lower": "Fixe bas",
-              "fixed_lower_middle": "Fixe bas-milieu",
-              "fixed_middle": "Fixe milieu",
               "fixed_upper": "Fixe haut",
               "fixed_upper_middle": "Fixe haut-milieu",
-              "full_swing": "Oscillation complète",
-              "swing_lower": "Oscillation bas",
-              "swing_lower_middle": "Oscillation bas-milieu",
-              "swing_middle": "Oscillation milieu",
-              "swing_upper": "Oscillation haut",
-              "swing_upper_middle": "Oscillation haut-milieu"
+              "fixed_middle": "Fixe milieu",
+              "fixed_lower_middle": "Fixe bas-milieu",
+              "fixed_lower": "Fixe bas",
+              "full_swing": "Oscillation complète"
             }
           }
         }

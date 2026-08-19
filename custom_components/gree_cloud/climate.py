@@ -82,12 +82,7 @@ VERTICAL_SWING_MODES: dict[str, VerticalSwing] = {
     "fixed_upper_middle": VerticalSwing.FixedUpperMiddle,
     "fixed_middle": VerticalSwing.FixedMiddle,
     "fixed_lower_middle": VerticalSwing.FixedLowerMiddle,
-    "fixed_lower": VerticalSwing.FixedLower,
-    "swing_upper": VerticalSwing.SwingUpper,
-    "swing_upper_middle": VerticalSwing.SwingUpperMiddle,
-    "swing_middle": VerticalSwing.SwingMiddle,
-    "swing_lower_middle": VerticalSwing.SwingLowerMiddle,
-    "swing_lower": VerticalSwing.SwingLower,
+    "fixed_lower": VerticalSwing.FixedLower
 }
 VERTICAL_SWING_MODES_INVERSE: dict[VerticalSwing, str] = {
     v: k for k, v in VERTICAL_SWING_MODES.items()
