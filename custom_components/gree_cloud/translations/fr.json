@@ -50,9 +50,13 @@
       }
     },
     "climate": {
-      "fan_mode": {
-        "medium_low": "Moyen-Bas",
-        "medium_high": "Moyen-Haut"
+      "state_attributes": {
+        "fan_mode": {
+          "state": {
+            "medium_low": "Moyen-Bas",
+            "medium_high": "Moyen-Haut"
+          }
+        }
       }
     },
     "select": {
