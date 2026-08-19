@@ -35,11 +35,6 @@ def _set_light(device: Device, value: bool) -> None:
     device.light = value
 
 
-def _get_quiet(device: Device) -> bool:
-    """Typed helper to get device quiet property."""
-    return bool(device.quiet)
-
-
 def _set_quiet(device: Device, value: bool) -> None:
     """Typed helper to set device quiet property."""
     device.quiet = value
@@ -70,7 +65,7 @@ GREE_CLOUD_SWITCHES: tuple[GreeCloudSwitchEntityDescription, ...] = (
     GreeCloudSwitchEntityDescription(
         key="Quiet",
         translation_key="quiet",
-        get_value_fn=_get_quiet,
+        get_value_fn=lambda d: d.quiet.value,
         set_value_fn=_set_quiet,
     ),
     GreeCloudSwitchEntityDescription(
