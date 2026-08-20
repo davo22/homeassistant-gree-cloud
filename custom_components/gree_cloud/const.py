@@ -18,9 +18,9 @@ MAX_EXPECTED_RESPONSE_TIME_INTERVAL = 180
 # Dispatcher signals
 DISPATCH_DEVICE_DISCOVERED = f"{DOMAIN}_device_discovered"
 
-# Fan modes (matching official integration)
-FAN_MEDIUM_LOW = "medium low"
-FAN_MEDIUM_HIGH = "medium high"
+# Fan modes not provided by Home Assistant
+FAN_MEDIUM_LOW = "medium-low"
+FAN_MEDIUM_HIGH = "medium-high"
 
 # Temperature settings. Half-degree steps are only offered to units that report
 # support for it (Props.TEMP_HALF_ENABLED); everything else stays whole-degree.
@@ -37,6 +37,7 @@ HWHP_TEMP_MAX = 80  # Maximum target temperature for hot water (°C)
 HWHP_PROP_WMOD = "Wmod"  # Water heater mode: 0=heat pump, 2=boost/performance
 HWHP_PROP_WSTATE = "Wstate"  # Heating state: 0=keep warm (idle), 1=actively heating
 HWHP_PROP_POW_CONSUMP = "powConsump"  # Power consumption (raw device units)
+HWHP_PROP_WATER_PERCENT = "Watpercent"  # Tank fill percentage (raw: actual = raw - offset)
 HWHP_WMOD_HEAT_PUMP = 0
 HWHP_WMOD_BOOST = 2
 HWHP_OPERATION_HEAT_PUMP = "heat_pump"  # Normal heat pump operation

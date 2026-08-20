@@ -33,7 +33,13 @@ from .const import (
     HWHP_PROP_SET_TEM_DEC,
     HWHP_PROP_SET_TEM_INT,
     HWHP_PROP_WATER_TEMP,
+    HWHP_PROP_WMOD,
     HWHP_PROP_WSTATE,
+    HWHP_TEMP_ENCODING_OFFSET,
+    HWHP_TEMP_MAX,
+    HWHP_TEMP_MIN,
+    HWHP_WMOD_BOOST,
+    HWHP_WMOD_HEAT_PUMP,
     MAX_ERRORS,
     PROP_COMPRESSOR_FREQ,
     PROP_ENERGY_TOTAL,
@@ -110,15 +116,36 @@ class HWHPAwareCloudDevice(CloudDevice):
 
 
 def is_hwhp_device(coordinator: "CloudDeviceDataUpdateCoordinator") -> bool:
-    """Return True if the device appears to be a Hot Water Heat Pump.
+    """Return True if the device is a Hot Water Heat Pump.
 
-    Detection requires a positive WatTmp raw value (actual = raw - 100).
-    Standard AC units return 0 for unknown properties; a real HWHP reports
-    actual water temperature (40–80 °C → raw 140–180), so raw > 0 is the
-    discriminator.
+    Standard AC units may expose placeholder values for unused HWHP keys, but a
+    real HWHP reports a water temperature and target temperature in the 40–80 °C
+    hot-water range. Reject anything outside that range to avoid classifying a
+    normal HVAC unit as a water heater.
     """
-    raw = coordinator.device.raw_properties.get(HWHP_PROP_WATER_TEMP)
-    return raw is not None and raw > 0
+    props = coordinator.device.raw_properties
+
+    # Check that the device reports a water temperature property
+    raw_temp = props.get(HWHP_PROP_WATER_TEMP)
+    if raw_temp is None:
+        return False
+
+    # Check that the actual water temperature (after decoding offset) is in valid range
+    actual_temp = raw_temp - HWHP_TEMP_ENCODING_OFFSET
+    if not HWHP_TEMP_MIN <= actual_temp <= HWHP_TEMP_MAX:
+        return False
+
+    # Check that the target temperature is in valid range (if present)
+    target_temp = props.get(HWHP_PROP_SET_TEM_INT)
+    if target_temp is not None and not HWHP_TEMP_MIN <= target_temp <= HWHP_TEMP_MAX:
+        return False
+
+    # Check that the water mode is a valid heat pump mode (if present)
+    wmod = props.get(HWHP_PROP_WMOD)
+    if wmod is not None and wmod not in (HWHP_WMOD_HEAT_PUMP, HWHP_WMOD_BOOST):
+        return False
+
+    return True
 
 
 def _is_mqtt_disconnected(error: Exception) -> bool:

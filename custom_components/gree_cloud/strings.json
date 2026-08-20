@@ -48,6 +48,40 @@
       "health_mode": {
         "name": "Health mode"
       }
+    },
+    "climate": {
+      "climate": {
+        "state_attributes": {
+          "fan_mode": {
+            "state": {
+              "medium-low": "Medium Low",
+              "medium-high": "Medium High"
+            }
+          },
+          "swing_horizontal_mode": {
+            "state": {
+              "default": "Default",
+              "full_swing": "Full swing",
+              "left": "Left",
+              "left_center": "Left center",
+              "center": "Center",
+              "right_center": "Right center",
+              "right": "Right"
+            }
+          },
+          "swing_mode": {
+            "state": {
+              "default": "Default",
+              "full_swing": "Full swing",
+              "fixed_upper": "Fixed upper",
+              "fixed_upper_middle": "Fixed upper middle",
+              "fixed_middle": "Fixed middle",
+              "fixed_lower_middle": "Fixed lower middle",
+              "fixed_lower": "Fixed lower"
+            }
+          }
+        }
+      }
     }
   }
 }
