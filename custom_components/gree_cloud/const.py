@@ -22,8 +22,10 @@ DISPATCH_DEVICE_DISCOVERED = f"{DOMAIN}_device_discovered"
 FAN_MEDIUM_LOW = "medium low"
 FAN_MEDIUM_HIGH = "medium high"
 
-# Temperature settings
-TARGET_TEMPERATURE_STEP = 0.5
+# Temperature settings. Half-degree steps are only offered to units that report
+# support for it (Props.TEMP_HALF_ENABLED); everything else stays whole-degree.
+TARGET_TEMPERATURE_STEP = 1
+TARGET_TEMPERATURE_STEP_HALF = 0.5
 
 # Gree HWHP (Hot Water Heat Pump) settings
 HWHP_PROP_WATER_TEMP = "WatTmp"  # Current water temperature property key

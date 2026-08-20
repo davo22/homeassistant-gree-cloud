@@ -13,6 +13,7 @@ from greeclimate.device import (
     FanSpeed,
     HorizontalSwing,
     Mode,
+    Props,
     TemperatureUnits,
     VerticalSwing,
 )
@@ -36,7 +37,12 @@ from homeassistant.components.climate import (
     ClimateEntityFeature,
     HVACMode,
 )
-from homeassistant.const import ATTR_TEMPERATURE, PRECISION_HALVES, UnitOfTemperature
+from homeassistant.const import (
+    ATTR_TEMPERATURE,
+    PRECISION_HALVES,
+    PRECISION_WHOLE,
+    UnitOfTemperature,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -46,6 +52,7 @@ from .const import (
     FAN_MEDIUM_HIGH,
     FAN_MEDIUM_LOW,
     TARGET_TEMPERATURE_STEP,
+    TARGET_TEMPERATURE_STEP_HALF,
 )
 from .coordinator import CloudDeviceDataUpdateCoordinator, GreeCloudConfigEntry, is_hwhp_device
 from .entity import GreeCloudEntity
@@ -111,7 +118,6 @@ async def async_setup_entry(
 class GreeCloudClimateEntity(GreeCloudEntity, ClimateEntity):
     """Representation of a Gree Cloud HVAC device."""
 
-    _attr_precision = PRECISION_HALVES
     _attr_supported_features = (
         ClimateEntityFeature.TARGET_TEMPERATURE
         | ClimateEntityFeature.FAN_MODE
@@ -120,7 +126,6 @@ class GreeCloudClimateEntity(GreeCloudEntity, ClimateEntity):
         | ClimateEntityFeature.TURN_OFF
         | ClimateEntityFeature.TURN_ON
     )
-    _attr_target_temperature_step = TARGET_TEMPERATURE_STEP
     _attr_hvac_modes = [*HVAC_MODES_REVERSE, HVACMode.OFF]
     _attr_preset_modes = PRESET_MODES
     _attr_fan_modes = [*FAN_MODES_REVERSE]
@@ -134,6 +139,21 @@ class GreeCloudClimateEntity(GreeCloudEntity, ClimateEntity):
         """Initialize the Gree Cloud device."""
         super().__init__(coordinator)
         self._attr_unique_id = coordinator.device.device_info.mac
+
+    @property
+    def _supports_half_degree(self) -> bool:
+        """Return whether this unit supports 0.5C setpoints."""
+        return self.coordinator.device.get_property(Props.TEMP_HALF_ENABLED) == 1
+
+    @property
+    def precision(self) -> float:
+        """Return the display precision, matching the device's actual step."""
+        return PRECISION_HALVES if self._supports_half_degree else PRECISION_WHOLE
+
+    @property
+    def target_temperature_step(self) -> float:
+        """Return the target temperature step, only offering 0.5C where supported."""
+        return TARGET_TEMPERATURE_STEP_HALF if self._supports_half_degree else TARGET_TEMPERATURE_STEP
 
     @property
     def current_temperature(self) -> float:
