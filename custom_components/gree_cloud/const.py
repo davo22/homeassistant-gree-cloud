@@ -42,6 +42,14 @@ HWHP_WMOD_BOOST = 2
 HWHP_OPERATION_HEAT_PUMP = "heat_pump"  # Normal heat pump operation
 HWHP_OPERATION_BOOST = "performance"  # Boost / turbo operation
 
+# Gree commercial multi-split units (mid 6000 / 6400) sit behind a shared WiFi
+# controller. The cloud API links each indoor unit to its controller via the
+# `pmac` field, and MQTT messages for the group are tagged with a `sub` field
+# holding the indoor unit's MAC. These units also report the current indoor
+# temperature under `InTem` rather than the standard `TemSen`.
+COMMERCIAL_PROP_IN_TEMP = "InTem"
+COMMERCIAL_PROP_TOTAL_ENERGY = "TotalEle"
+
 # Energy metering (AC units).
 # ElcAll is a cumulative counter in tenths of a kWh; it does not reset daily.
 # ElcAllConsumption carries the same value and is not read separately.

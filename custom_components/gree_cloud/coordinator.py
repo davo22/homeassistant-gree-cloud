@@ -25,6 +25,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 _RECONNECT_FUNC_NAME = "async_reconnect_mqtt"
 _RECONNECT_MODULE = __name__.rsplit(".", 1)[0]  # custom_components.gree_cloud
 
+from .commercial import CommercialCloudDevice, async_get_parent_macs
 from .const import (
     CONF_SERVER,
     DISPATCH_DEVICE_DISCOVERED,
@@ -282,6 +283,15 @@ class CloudDiscoveryService:
 
             _LOGGER.info("Found %d cloud devices", len(cloud_devices))
 
+            # Commercial multi-split indoor units sit behind a shared WiFi
+            # controller; the cloud links them via `pmac`, which greeclimate
+            # drops. Recover it so those units use the right MQTT parent.
+            try:
+                parent_macs = await async_get_parent_macs(self.api)
+            except Exception as err:  # pylint: disable=broad-except
+                _LOGGER.warning("Could not fetch controller MACs (pmac): %s", err)
+                parent_macs = {}
+
             # Create coordinator for each device
             for cloud_dev_info in cloud_devices:
                 try:
@@ -294,12 +304,27 @@ class CloudDiscoveryService:
                     )
 
                     # Create cloud device instance
-                    device = HWHPAwareCloudDevice(
-                        mqtt_client=mqtt_client,
-                        device_info=device_info,
-                        device_key=cloud_dev_info.key,
-                        cipher_version=1,  # Default to v1, can be made configurable
-                    )
+                    parent_mac = parent_macs.get(cloud_dev_info.mac)
+                    if parent_mac:
+                        _LOGGER.debug(
+                            "Device %s is behind controller %s",
+                            cloud_dev_info.mac,
+                            parent_mac,
+                        )
+                        device = CommercialCloudDevice(
+                            mqtt_client=mqtt_client,
+                            device_info=device_info,
+                            device_key=cloud_dev_info.key,
+                            cipher_version=1,
+                            parent_mac=parent_mac,
+                        )
+                    else:
+                        device = HWHPAwareCloudDevice(
+                            mqtt_client=mqtt_client,
+                            device_info=device_info,
+                            device_key=cloud_dev_info.key,
+                            cipher_version=1,  # Default to v1, can be made configurable
+                        )
 
                     # Bind to cloud device (subscribe to MQTT topics)
                     await device.bind()

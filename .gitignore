@@ -43,3 +43,6 @@ Thumbs.db
 
 # venv
 .venv
+
+# Local command-line tooling / scratch (not part of the integration)
+cli/
