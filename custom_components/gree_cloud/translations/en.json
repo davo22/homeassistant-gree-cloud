@@ -47,9 +47,6 @@
       },
       "health_mode": {
         "name": "Health mode"
-      },
-      "auto_humidity": {
-        "name": "Auto humidity"
       }
     }
   }
