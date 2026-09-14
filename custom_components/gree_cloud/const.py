@@ -59,8 +59,9 @@ PROP_HUMIDITY = "DwatSen"
 
 # Smart Drying: cools while intelligently managing humidity (indoor fan drops
 # to Low internally) instead of the plain temperature-only Cool behaviour.
-# Not part of the greeclimate Props enum, so it must be requested explicitly
-# alongside the standard properties (see coordinator._SWITCH_EXTRA_PROPS).
+# Not part of the greeclimate Props enum, and deliberately not requested in
+# the periodic status poll either - see the note next to _SENSOR_EXTRA_PROPS
+# in coordinator.py for why. The switch platform reads/writes it directly.
 PROP_SMART_DRY = "DRState"
 
 # Gree Cloud servers

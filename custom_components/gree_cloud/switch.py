@@ -29,7 +29,6 @@ class GreeCloudSwitchEntityDescription(SwitchEntityDescription):
 
     get_value_fn: Callable[[Device], bool]
     set_value_fn: Callable[[Device, bool], None]
-    exists_fn: Callable[[Device], bool] = lambda device: True
 
 
 def _set_light(device: Device, value: bool) -> None:
@@ -60,6 +59,13 @@ def _set_anion(device: Device, value: bool) -> None:
 # DRState (Smart Drying) is not part of the greeclimate Props enum, so a
 # minimal stand-in with the `.value` attribute get_property/set_property
 # expect is used in place of a real Props member.
+#
+# It is deliberately never added to the periodic status poll (see the note
+# in coordinator.py): doing so broke status updates entirely on at least one
+# unit. That means this switch's state is only ever known locally - set by
+# our own writes here, or by an unsolicited push update from the device, if
+# it sends one. It will not be corrected by the routine poll if the unit
+# silently rejects the command.
 _DRSTATE = SimpleNamespace(value=PROP_SMART_DRY)
 
 
@@ -71,15 +77,6 @@ def _get_smart_dry(device: Device) -> bool:
 def _set_smart_dry(device: Device, value: bool) -> None:
     """Typed helper to set the Smart Drying (DRState) property."""
     device.set_property(_DRSTATE, int(value))
-
-
-def _has_smart_dry(device: Device) -> bool:
-    """Return True if the device reports the DRState property.
-
-    Only units with a Smart Drying feature (e.g. Gree Clivia) report this;
-    other units omit it entirely from their status response.
-    """
-    return device.raw_properties.get(PROP_SMART_DRY) is not None
 
 
 GREE_CLOUD_SWITCHES: tuple[GreeCloudSwitchEntityDescription, ...] = (
@@ -119,7 +116,7 @@ GREE_CLOUD_SWITCHES: tuple[GreeCloudSwitchEntityDescription, ...] = (
         translation_key="smart_dry",
         get_value_fn=_get_smart_dry,
         set_value_fn=_set_smart_dry,
-        exists_fn=_has_smart_dry,
+        entity_registry_enabled_default=False,
     ),
 )
 
@@ -139,7 +136,6 @@ async def async_setup_entry(
         async_add_entities(
             GreeCloudSwitch(coordinator=coordinator, description=description)
             for description in GREE_CLOUD_SWITCHES
-            if description.exists_fn(coordinator.device)
         )
 
     for coordinator in entry.runtime_data.coordinators:
