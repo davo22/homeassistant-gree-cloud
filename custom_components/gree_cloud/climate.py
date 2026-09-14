@@ -53,7 +53,6 @@ from .const import (
     DISPATCH_DEVICE_DISCOVERED,
     FAN_MEDIUM_HIGH,
     FAN_MEDIUM_LOW,
-    PROP_SMART_DRY,
     TARGET_TEMPERATURE_STEP,
     TARGET_TEMPERATURE_STEP_HALF,
 )
@@ -78,6 +77,14 @@ PRESET_MODES = [
     PRESET_NONE,  # Default operating mode
     PRESET_SLEEP,  # Sleep mode
 ]
+
+# Custom preset offered only on units that report a Dwet (target humidity)
+# property. Selecting it switches to Cool mode and sets a manual target
+# humidity; selecting any other preset clears it, giving plain Cool back.
+# Independent of the Smart Drying switch (DRState), which is the unit's own
+# automatic alternative to picking a manual target here.
+PRESET_COOL_DRY = "cool_dry"
+DEFAULT_TARGET_HUMIDITY = 50
 
 FAN_MODES = {
     FanSpeed.Auto: FAN_AUTO,
@@ -155,25 +162,37 @@ class GreeCloudClimateEntity(GreeCloudEntity, ClimateEntity):
         return self.coordinator.device.raw_properties.get(Props.HUM_SET.value) is not None
 
     @property
-    def _smart_drying_active(self) -> bool:
-        """Return whether the Smart Drying switch (DRState) is currently on."""
-        return bool(self.coordinator.device.raw_properties.get(PROP_SMART_DRY))
+    def _humidity_control_active(self) -> bool:
+        """Return whether a manual target humidity (Cool and Dry) is active.
+
+        Dwet reads back as 0 when a target has never been requested; any
+        other value means the Cool and Dry preset is in effect.
+        """
+        raw = self.coordinator.device.raw_properties.get(Props.HUM_SET.value)
+        return raw not in (None, 0)
 
     @property
     def supported_features(self) -> ClimateEntityFeature:
-        """Return the supported features, adding target humidity in Cool mode.
+        """Return the supported features, adding target humidity in Cool and Dry.
 
-        The humidity slider is only meaningful once Smart Drying is turned on
-        (see the switch platform), so it is only offered then.
+        Only offer the humidity slider once Cool and Dry is actually active;
+        otherwise Dwet is cleared to 0 and has no meaningful value to show.
         """
         features = self._attr_supported_features
         if (
             self._supports_target_humidity
             and self.hvac_mode == HVACMode.COOL
-            and self._smart_drying_active
+            and self._humidity_control_active
         ):
             features |= ClimateEntityFeature.TARGET_HUMIDITY
         return features
+
+    @property
+    def preset_modes(self) -> list[str]:
+        """Return the available preset modes, adding Cool and Dry where supported."""
+        if self._supports_target_humidity:
+            return [*self._attr_preset_modes, PRESET_COOL_DRY]
+        return self._attr_preset_modes
 
     @property
     def _supports_half_degree(self) -> bool:
@@ -300,11 +319,13 @@ class GreeCloudClimateEntity(GreeCloudEntity, ClimateEntity):
             return PRESET_SLEEP
         if self.coordinator.device.turbo:
             return PRESET_BOOST
+        if self._humidity_control_active:
+            return PRESET_COOL_DRY
         return PRESET_NONE
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
-        if preset_mode not in PRESET_MODES:
+        if preset_mode not in self.preset_modes:
             raise ValueError(f"Invalid preset mode: {preset_mode}")
 
         _LOGGER.debug(
@@ -313,10 +334,16 @@ class GreeCloudClimateEntity(GreeCloudEntity, ClimateEntity):
             self._attr_name,
         )
 
+        # Capture before clearing below, so re-selecting Cool and Dry restores
+        # the previous target instead of always resetting to the default.
+        previous_target = self.target_humidity if self._humidity_control_active else DEFAULT_TARGET_HUMIDITY
+
         self.coordinator.device.steady_heat = False
         self.coordinator.device.power_save = False
         self.coordinator.device.turbo = False
         self.coordinator.device.sleep = False
+        # Clear any active humidity target; Cool and Dry re-activates it below.
+        self.coordinator.device.set_property(Props.HUM_SET, 0)
 
         if preset_mode == PRESET_AWAY:
             self.coordinator.device.steady_heat = True
@@ -326,6 +353,10 @@ class GreeCloudClimateEntity(GreeCloudEntity, ClimateEntity):
             self.coordinator.device.turbo = True
         elif preset_mode == PRESET_SLEEP:
             self.coordinator.device.sleep = True
+        elif preset_mode == PRESET_COOL_DRY:
+            self.coordinator.device.power = True
+            self.coordinator.device.mode = Mode.Cool
+            self.coordinator.device.target_humidity = previous_target
 
         await self.coordinator.push_state_update()
         self.async_write_ha_state()
