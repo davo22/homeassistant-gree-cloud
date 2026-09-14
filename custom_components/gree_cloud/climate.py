@@ -6,6 +6,8 @@ import logging
 from typing import Any
 
 from greeclimate.device import (
+    HUMIDITY_MAX,
+    HUMIDITY_MIN,
     TEMP_MAX,
     TEMP_MAX_F,
     TEMP_MIN,
@@ -134,11 +136,35 @@ class GreeCloudClimateEntity(GreeCloudEntity, ClimateEntity):
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_min_temp = TEMP_MIN
     _attr_max_temp = TEMP_MAX
+    _attr_min_humidity = HUMIDITY_MIN
+    _attr_max_humidity = HUMIDITY_MAX
 
     def __init__(self, coordinator: CloudDeviceDataUpdateCoordinator) -> None:
         """Initialize the Gree Cloud device."""
         super().__init__(coordinator)
         self._attr_unique_id = coordinator.device.device_info.mac
+
+    @property
+    def _supports_target_humidity(self) -> bool:
+        """Return whether this unit reports the Dwet humidity control property.
+
+        Units without a humidity control feature omit the property entirely
+        from their status response, so its presence is what gates the switch.
+        """
+        return self.coordinator.device.raw_properties.get(Props.HUM_SET.value) is not None
+
+    @property
+    def supported_features(self) -> ClimateEntityFeature:
+        """Return the supported features, adding target humidity in Cool mode.
+
+        Gree Clivia units only allow adjusting the target humidity while in
+        Cool mode; the indoor fan automatically drops to Low speed while it
+        is active.
+        """
+        features = self._attr_supported_features
+        if self._supports_target_humidity and self.hvac_mode == HVACMode.COOL:
+            features |= ClimateEntityFeature.TARGET_HUMIDITY
+        return features
 
     @property
     def _supports_half_degree(self) -> bool:
@@ -181,6 +207,28 @@ class GreeCloudClimateEntity(GreeCloudEntity, ClimateEntity):
         )
 
         self.coordinator.device.target_temperature = temperature
+        await self.coordinator.push_state_update()
+        self.async_write_ha_state()
+
+    @property
+    def current_humidity(self) -> float | None:
+        """Return the reported current humidity for the device."""
+        return self.coordinator.device.current_humidity
+
+    @property
+    def target_humidity(self) -> float | None:
+        """Return the target humidity for the device."""
+        return self.coordinator.device.target_humidity
+
+    async def async_set_humidity(self, humidity: int) -> None:
+        """Set new target humidity."""
+        _LOGGER.debug(
+            "Setting target humidity to %s for %s",
+            humidity,
+            self._attr_name,
+        )
+
+        self.coordinator.device.target_humidity = humidity
         await self.coordinator.push_state_update()
         self.async_write_ha_state()
 

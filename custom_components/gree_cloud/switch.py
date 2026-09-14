@@ -6,7 +6,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
 
-from greeclimate.device import Device
+from greeclimate.device import Device, Props
 
 from homeassistant.components.switch import (
     SwitchDeviceClass,
@@ -28,6 +28,7 @@ class GreeCloudSwitchEntityDescription(SwitchEntityDescription):
 
     get_value_fn: Callable[[Device], bool]
     set_value_fn: Callable[[Device, bool], None]
+    exists_fn: Callable[[Device], bool] = lambda device: True
 
 
 def _set_light(device: Device, value: bool) -> None:
@@ -53,6 +54,31 @@ def _set_xfan(device: Device, value: bool) -> None:
 def _set_anion(device: Device, value: bool) -> None:
     """Typed helper to set device anion property."""
     device.anion = value
+
+
+def _get_auto_humidity(device: Device) -> bool:
+    """Return whether automatic humidity management is enabled."""
+    return bool(device.get_property(Props.DEHUMIDIFIER_MODE))
+
+
+def _set_auto_humidity(device: Device, value: bool) -> None:
+    """Toggle automatic humidity management.
+
+    Not exposed as a typed property on the greeclimate Device yet, so the raw
+    Dmod property is written directly, following the same 0/1 boolean
+    convention as the other switches (light, xfan, anion, ...).
+    """
+    device.set_property(Props.DEHUMIDIFIER_MODE, int(value))
+
+
+def _has_auto_humidity(device: Device) -> bool:
+    """Return True if the device reports the Dmod property.
+
+    Only units with a humidity control feature (e.g. Gree Clivia in Cool
+    mode) report this; other units omit it entirely from their status
+    response.
+    """
+    return device.raw_properties.get(Props.DEHUMIDIFIER_MODE.value) is not None
 
 
 GREE_CLOUD_SWITCHES: tuple[GreeCloudSwitchEntityDescription, ...] = (
@@ -87,6 +113,13 @@ GREE_CLOUD_SWITCHES: tuple[GreeCloudSwitchEntityDescription, ...] = (
         set_value_fn=_set_anion,
         entity_registry_enabled_default=False,
     ),
+    GreeCloudSwitchEntityDescription(
+        key="Auto Humidity",
+        translation_key="auto_humidity",
+        get_value_fn=_get_auto_humidity,
+        set_value_fn=_set_auto_humidity,
+        exists_fn=_has_auto_humidity,
+    ),
 )
 
 
@@ -105,6 +138,7 @@ async def async_setup_entry(
         async_add_entities(
             GreeCloudSwitch(coordinator=coordinator, description=description)
             for description in GREE_CLOUD_SWITCHES
+            if description.exists_fn(coordinator.device)
         )
 
     for coordinator in entry.runtime_data.coordinators:
