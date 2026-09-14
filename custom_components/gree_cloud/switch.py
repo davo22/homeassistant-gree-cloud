@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from types import SimpleNamespace
 from typing import Any
 
 from greeclimate.device import Device
@@ -17,7 +18,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DISPATCH_DEVICE_DISCOVERED
+from .const import DISPATCH_DEVICE_DISCOVERED, PROP_SMART_DRY
 from .coordinator import CloudDeviceDataUpdateCoordinator, GreeCloudConfigEntry, is_hwhp_device
 from .entity import GreeCloudEntity
 
@@ -28,6 +29,7 @@ class GreeCloudSwitchEntityDescription(SwitchEntityDescription):
 
     get_value_fn: Callable[[Device], bool]
     set_value_fn: Callable[[Device, bool], None]
+    exists_fn: Callable[[Device], bool] = lambda device: True
 
 
 def _set_light(device: Device, value: bool) -> None:
@@ -53,6 +55,31 @@ def _set_xfan(device: Device, value: bool) -> None:
 def _set_anion(device: Device, value: bool) -> None:
     """Typed helper to set device anion property."""
     device.anion = value
+
+
+# DRState (Smart Drying) is not part of the greeclimate Props enum, so a
+# minimal stand-in with the `.value` attribute get_property/set_property
+# expect is used in place of a real Props member.
+_DRSTATE = SimpleNamespace(value=PROP_SMART_DRY)
+
+
+def _get_smart_dry(device: Device) -> bool:
+    """Typed helper to read the Smart Drying (DRState) property."""
+    return bool(device.get_property(_DRSTATE))
+
+
+def _set_smart_dry(device: Device, value: bool) -> None:
+    """Typed helper to set the Smart Drying (DRState) property."""
+    device.set_property(_DRSTATE, int(value))
+
+
+def _has_smart_dry(device: Device) -> bool:
+    """Return True if the device reports the DRState property.
+
+    Only units with a Smart Drying feature (e.g. Gree Clivia) report this;
+    other units omit it entirely from their status response.
+    """
+    return device.raw_properties.get(PROP_SMART_DRY) is not None
 
 
 GREE_CLOUD_SWITCHES: tuple[GreeCloudSwitchEntityDescription, ...] = (
@@ -87,6 +114,13 @@ GREE_CLOUD_SWITCHES: tuple[GreeCloudSwitchEntityDescription, ...] = (
         set_value_fn=_set_anion,
         entity_registry_enabled_default=False,
     ),
+    GreeCloudSwitchEntityDescription(
+        key="Smart Drying",
+        translation_key="smart_dry",
+        get_value_fn=_get_smart_dry,
+        set_value_fn=_set_smart_dry,
+        exists_fn=_has_smart_dry,
+    ),
 )
 
 
@@ -105,6 +139,7 @@ async def async_setup_entry(
         async_add_entities(
             GreeCloudSwitch(coordinator=coordinator, description=description)
             for description in GREE_CLOUD_SWITCHES
+            if description.exists_fn(coordinator.device)
         )
 
     for coordinator in entry.runtime_data.coordinators:

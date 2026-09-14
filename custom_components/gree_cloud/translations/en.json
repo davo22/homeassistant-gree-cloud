@@ -47,6 +47,9 @@
       },
       "health_mode": {
         "name": "Health mode"
+      },
+      "smart_dry": {
+        "name": "Smart drying"
       }
     }
   }

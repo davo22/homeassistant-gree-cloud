@@ -47,6 +47,9 @@
       },
       "health_mode": {
         "name": "Modo saúde"
+      },
+      "smart_dry": {
+        "name": "Secagem inteligente"
       }
     }
   }

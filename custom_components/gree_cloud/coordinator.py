@@ -37,6 +37,7 @@ from .const import (
     MAX_ERRORS,
     PROP_COMPRESSOR_FREQ,
     PROP_ENERGY_TOTAL,
+    PROP_SMART_DRY,
     UPDATE_INTERVAL,
 )
 
@@ -58,6 +59,9 @@ _HWHP_EXTRA_PROPS = [
 # only available on this integration.
 _SENSOR_EXTRA_PROPS = [PROP_ENERGY_TOTAL, PROP_COMPRESSOR_FREQ]
 
+# Extra properties reported by AC units, surfaced by the switch platform.
+_SWITCH_EXTRA_PROPS = [PROP_SMART_DRY]
+
 
 class HWHPAwareCloudDevice(CloudDevice):
     """CloudDevice subclass that also requests HWHP-specific properties.
@@ -78,7 +82,7 @@ class HWHPAwareCloudDevice(CloudDevice):
             "Updating HWHP-aware cloud device state: %s", self.device_info.name
         )
 
-        props: list[str] = _STANDARD_PROPS + _HWHP_EXTRA_PROPS + _SENSOR_EXTRA_PROPS
+        props: list[str] = _STANDARD_PROPS + _HWHP_EXTRA_PROPS + _SENSOR_EXTRA_PROPS + _SWITCH_EXTRA_PROPS
         if not self.hid:
             props.append("hid")
 
