@@ -57,6 +57,13 @@ PROP_COMPRESSOR_FREQ = "CompressorFqy"
 # it needs no extra request - only an entity to surface it.
 PROP_HUMIDITY = "DwatSen"
 
+# Smart Drying: cools while intelligently managing humidity (indoor fan drops
+# to Low internally) instead of the plain temperature-only Cool behaviour.
+# Not part of the greeclimate Props enum, and deliberately not requested in
+# the periodic status poll either - see the note next to _SENSOR_EXTRA_PROPS
+# in coordinator.py for why. The switch platform reads/writes it directly.
+PROP_SMART_DRY = "DRState"
+
 # Gree Cloud servers
 GREE_CLOUD_SERVERS = {
     "Australia": "https://augrih.gree.com",

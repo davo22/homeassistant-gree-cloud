@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from types import SimpleNamespace
 from typing import Any
 
 from greeclimate.device import Device
@@ -17,7 +18,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DISPATCH_DEVICE_DISCOVERED
+from .const import DISPATCH_DEVICE_DISCOVERED, PROP_SMART_DRY
 from .coordinator import CloudDeviceDataUpdateCoordinator, GreeCloudConfigEntry, is_hwhp_device
 from .entity import GreeCloudEntity
 
@@ -55,6 +56,29 @@ def _set_anion(device: Device, value: bool) -> None:
     device.anion = value
 
 
+# DRState (Smart Drying) is not part of the greeclimate Props enum, so a
+# minimal stand-in with the `.value` attribute get_property/set_property
+# expect is used in place of a real Props member.
+#
+# It is deliberately never added to the periodic status poll (see the note
+# in coordinator.py): doing so broke status updates entirely on at least one
+# unit. That means this switch's state is only ever known locally - set by
+# our own writes here, or by an unsolicited push update from the device, if
+# it sends one. It will not be corrected by the routine poll if the unit
+# silently rejects the command.
+_DRSTATE = SimpleNamespace(value=PROP_SMART_DRY)
+
+
+def _get_smart_dry(device: Device) -> bool:
+    """Typed helper to read the Smart Drying (DRState) property."""
+    return bool(device.get_property(_DRSTATE))
+
+
+def _set_smart_dry(device: Device, value: bool) -> None:
+    """Typed helper to set the Smart Drying (DRState) property."""
+    device.set_property(_DRSTATE, int(value))
+
+
 GREE_CLOUD_SWITCHES: tuple[GreeCloudSwitchEntityDescription, ...] = (
     GreeCloudSwitchEntityDescription(
         key="Panel Light",
@@ -85,6 +109,13 @@ GREE_CLOUD_SWITCHES: tuple[GreeCloudSwitchEntityDescription, ...] = (
         translation_key="health_mode",
         get_value_fn=lambda d: d.anion,
         set_value_fn=_set_anion,
+        entity_registry_enabled_default=False,
+    ),
+    GreeCloudSwitchEntityDescription(
+        key="Smart Drying",
+        translation_key="smart_dry",
+        get_value_fn=_get_smart_dry,
+        set_value_fn=_set_smart_dry,
         entity_registry_enabled_default=False,
     ),
 )

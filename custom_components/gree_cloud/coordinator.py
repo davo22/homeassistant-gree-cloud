@@ -58,6 +58,14 @@ _HWHP_EXTRA_PROPS = [
 # only available on this integration.
 _SENSOR_EXTRA_PROPS = [PROP_ENERGY_TOTAL, PROP_COMPRESSOR_FREQ]
 
+# NOTE: DRState (Smart Drying, see switch.py) is deliberately NOT requested
+# here. Adding it to the polled "cols" broke status polling entirely on at
+# least one unit (Cool and Dry stopped updating, other switches appeared to
+# flip themselves off) - some devices seemingly reject the whole status
+# request when it contains a column they don't recognize, unlike ElcAll/
+# CompressorFqy above which are tolerated. The switch reads/writes DRState
+# from the local cache only; see the comment there for details.
+
 
 class HWHPAwareCloudDevice(CloudDevice):
     """CloudDevice subclass that also requests HWHP-specific properties.
