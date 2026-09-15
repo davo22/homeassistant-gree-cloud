@@ -36,9 +36,6 @@
       }
     },
     "switch": {
-      "light": {
-        "name": "Panel light"
-      },
       "quiet": {
         "name": "Quiet"
       },
@@ -56,6 +53,16 @@
       },
       "smart_drying": {
         "name": "Smart drying"
+      }
+    },
+    "select": {
+      "panel_light": {
+        "name": "Panel Light",
+        "state": {
+          "on": "On",
+          "auto": "Auto",
+          "off": "Off"
+        }
       }
     }
   }

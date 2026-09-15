@@ -58,6 +58,19 @@ PROP_COMPRESSOR_FREQ = "CompressorFqy"
 # explicitly (see _SENSOR_EXTRA_PROPS in coordinator.py).
 PROP_COMPRESSOR_TEMP = "CompressorTem"
 
+# Panel light auto-sense. Not part of the standard Props enum, so it must be
+# requested explicitly (see _LIGHT_EXTRA_PROPS in coordinator.py). Combined
+# with Props.LIGHT ("Lig"), the panel light actually has three states,
+# verified on real hardware:
+#   Lig=0            -> off
+#   Lig=1, LigSen=1  -> on (manual, full brightness)
+#   Lig=1, LigSen=0  -> auto (adjusts to ambient light)
+PROP_LIGHT_SENSOR = "LigSen"
+
+PANEL_LIGHT_ON = "on"
+PANEL_LIGHT_AUTO = "auto"
+PANEL_LIGHT_OFF = "off"
+
 # Relative humidity. Already part of the standard Props enum (HUM_SENSOR), so
 # it needs no extra request - only an entity to surface it.
 PROP_HUMIDITY = "DwatSen"

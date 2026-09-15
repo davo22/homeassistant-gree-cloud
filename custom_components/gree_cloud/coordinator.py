@@ -38,6 +38,7 @@ from .const import (
     PROP_COMPRESSOR_FREQ,
     PROP_COMPRESSOR_TEMP,
     PROP_ENERGY_TOTAL,
+    PROP_LIGHT_SENSOR,
     UPDATE_INTERVAL,
 )
 
@@ -59,6 +60,10 @@ _HWHP_EXTRA_PROPS = [
 # only available on this integration.
 _SENSOR_EXTRA_PROPS = [PROP_ENERGY_TOTAL, PROP_COMPRESSOR_FREQ, PROP_COMPRESSOR_TEMP]
 
+# Extra property needed by the panel light select entity, alongside the
+# standard Props.LIGHT ("Lig").
+_LIGHT_EXTRA_PROPS = [PROP_LIGHT_SENSOR]
+
 
 class HWHPAwareCloudDevice(CloudDevice):
     """CloudDevice subclass that also requests HWHP-specific properties.
@@ -79,7 +84,9 @@ class HWHPAwareCloudDevice(CloudDevice):
             "Updating HWHP-aware cloud device state: %s", self.device_info.name
         )
 
-        props: list[str] = _STANDARD_PROPS + _HWHP_EXTRA_PROPS + _SENSOR_EXTRA_PROPS
+        props: list[str] = (
+            _STANDARD_PROPS + _HWHP_EXTRA_PROPS + _SENSOR_EXTRA_PROPS + _LIGHT_EXTRA_PROPS
+        )
         if not self.hid:
             props.append("hid")
 

@@ -38,11 +38,6 @@ class GreeCloudSwitchEntityDescription(SwitchEntityDescription):
     available_fn: Callable[[Device], bool] = lambda device: True
 
 
-def _set_light(device: Device, value: bool) -> None:
-    """Typed helper to set device light property."""
-    device.light = value
-
-
 def _set_quiet(device: Device, value: bool) -> None:
     """Typed helper to set device quiet property."""
     device.quiet = value
@@ -117,12 +112,6 @@ def _dehumidify_mode_available(device: Device) -> bool:
 
 
 GREE_CLOUD_SWITCHES: tuple[GreeCloudSwitchEntityDescription, ...] = (
-    GreeCloudSwitchEntityDescription(
-        key="Panel Light",
-        translation_key="light",
-        get_value_fn=lambda d: d.light,
-        set_value_fn=_set_light,
-    ),
     GreeCloudSwitchEntityDescription(
         key="Quiet",
         translation_key="quiet",
