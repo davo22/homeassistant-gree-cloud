@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from greeclimate.device import Device, Props
+from greeclimate.device import Device, HorizontalSwing, Props, VerticalSwing
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.core import HomeAssistant, callback
@@ -63,6 +63,66 @@ def _has_panel_light(device: Device) -> bool:
     return device.get_property(Props.LIGHT) is not None
 
 
+# Fixed swing positions, verified on real hardware: 1=full swing, then
+# 2..6 walk from one end of the blade's travel to the other. Built by
+# numeric value rather than by greeclimate's enum member names - its
+# HorizontalSwing names (Left=2 .. Right=6) run backwards relative to what
+# was actually observed (2=Far Right .. 6=Far Left), so only the values are
+# trustworthy here, not the names. VerticalSwing's names do match (Upper=2
+# .. Lower=6) but are built the same way for consistency.
+_VERTICAL_SWING_OPTIONS: list[tuple[str, VerticalSwing]] = [
+    ("full_swing", VerticalSwing(1)),
+    ("highest", VerticalSwing(2)),
+    ("upper_middle", VerticalSwing(3)),
+    ("middle", VerticalSwing(4)),
+    ("lower_middle", VerticalSwing(5)),
+    ("lowest", VerticalSwing(6)),
+]
+_VERTICAL_SWING_BY_OPTION = dict(_VERTICAL_SWING_OPTIONS)
+_VERTICAL_SWING_BY_VALUE = {value: option for option, value in _VERTICAL_SWING_OPTIONS}
+
+_HORIZONTAL_SWING_OPTIONS: list[tuple[str, HorizontalSwing]] = [
+    ("full_swing", HorizontalSwing(1)),
+    ("far_right", HorizontalSwing(2)),
+    ("right_center", HorizontalSwing(3)),
+    ("center", HorizontalSwing(4)),
+    ("left_center", HorizontalSwing(5)),
+    ("far_left", HorizontalSwing(6)),
+]
+_HORIZONTAL_SWING_BY_OPTION = dict(_HORIZONTAL_SWING_OPTIONS)
+_HORIZONTAL_SWING_BY_VALUE = {value: option for option, value in _HORIZONTAL_SWING_OPTIONS}
+
+
+def _get_swing_vertical(device: Device) -> str | None:
+    """Typed helper to read the vertical swing position (SwUpDn) as a select option."""
+    return _VERTICAL_SWING_BY_VALUE.get(device.vertical_swing)
+
+
+def _set_swing_vertical(device: Device, option: str) -> None:
+    """Typed helper to set the vertical swing position (SwUpDn)."""
+    device.vertical_swing = _VERTICAL_SWING_BY_OPTION[option]
+
+
+def _has_swing_vertical(device: Device) -> bool:
+    """Return True if the device reports vertical swing (SwUpDn) support."""
+    return device.get_property(Props.SWING_VERT) is not None
+
+
+def _get_swing_horizontal(device: Device) -> str | None:
+    """Typed helper to read the horizontal swing position (SwingLfRig) as a select option."""
+    return _HORIZONTAL_SWING_BY_VALUE.get(device.horizontal_swing)
+
+
+def _set_swing_horizontal(device: Device, option: str) -> None:
+    """Typed helper to set the horizontal swing position (SwingLfRig)."""
+    device.horizontal_swing = _HORIZONTAL_SWING_BY_OPTION[option]
+
+
+def _has_swing_horizontal(device: Device) -> bool:
+    """Return True if the device reports horizontal swing (SwingLfRig) support."""
+    return device.get_property(Props.SWING_HORIZ) is not None
+
+
 GREE_CLOUD_SELECTS: tuple[GreeCloudSelectEntityDescription, ...] = (
     GreeCloudSelectEntityDescription(
         key="Panel Light",
@@ -71,6 +131,22 @@ GREE_CLOUD_SELECTS: tuple[GreeCloudSelectEntityDescription, ...] = (
         get_value_fn=_get_panel_light,
         set_value_fn=_set_panel_light,
         exists_fn=_has_panel_light,
+    ),
+    GreeCloudSelectEntityDescription(
+        key="Swing Vertical",
+        translation_key="swing_vertical",
+        options=[option for option, _ in _VERTICAL_SWING_OPTIONS],
+        get_value_fn=_get_swing_vertical,
+        set_value_fn=_set_swing_vertical,
+        exists_fn=_has_swing_vertical,
+    ),
+    GreeCloudSelectEntityDescription(
+        key="Swing Horizontal",
+        translation_key="swing_horizontal",
+        options=[option for option, _ in _HORIZONTAL_SWING_OPTIONS],
+        get_value_fn=_get_swing_horizontal,
+        set_value_fn=_set_swing_horizontal,
+        exists_fn=_has_swing_horizontal,
     ),
 )
 

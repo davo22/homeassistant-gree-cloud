@@ -11,11 +11,9 @@ from greeclimate.device import (
     TEMP_MIN,
     TEMP_MIN_F,
     FanSpeed,
-    HorizontalSwing,
     Mode,
     Props,
     TemperatureUnits,
-    VerticalSwing,
 )
 
 from homeassistant.components.climate import (
@@ -29,10 +27,6 @@ from homeassistant.components.climate import (
     PRESET_ECO,
     PRESET_NONE,
     PRESET_SLEEP,
-    SWING_BOTH,
-    SWING_HORIZONTAL,
-    SWING_OFF,
-    SWING_VERTICAL,
     ClimateEntity,
     ClimateEntityFeature,
     HVACMode,
@@ -93,8 +87,6 @@ FAN_MODES = {
 }
 FAN_MODES_REVERSE = {v: k for k, v in FAN_MODES.items()}
 
-SWING_MODES = [SWING_OFF, SWING_VERTICAL, SWING_HORIZONTAL, SWING_BOTH]
-
 # Target humidity is only meaningful while actively cooling or drying.
 HUMIDITY_MODES = (Mode.Cool, Mode.Dry)
 
@@ -132,14 +124,12 @@ class GreeCloudClimateEntity(GreeCloudEntity, ClimateEntity):
         ClimateEntityFeature.TARGET_TEMPERATURE
         | ClimateEntityFeature.FAN_MODE
         | ClimateEntityFeature.PRESET_MODE
-        | ClimateEntityFeature.SWING_MODE
         | ClimateEntityFeature.TURN_OFF
         | ClimateEntityFeature.TURN_ON
     )
     _attr_hvac_modes = [*HVAC_MODES_REVERSE, HVACMode.OFF]
     _attr_preset_modes = PRESET_MODES
     _attr_fan_modes = [*FAN_MODES_REVERSE]
-    _attr_swing_modes = SWING_MODES
     _attr_name = None
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_min_temp = TEMP_MIN
@@ -364,41 +354,6 @@ class GreeCloudClimateEntity(GreeCloudEntity, ClimateEntity):
             raise ValueError(f"Invalid fan mode: {fan_mode}")
 
         self.coordinator.device.fan_speed = FAN_MODES_REVERSE.get(fan_mode)
-        await self.coordinator.push_state_update()
-        self.async_write_ha_state()
-
-    @property
-    def swing_mode(self) -> str:
-        """Return the current swing mode for the device."""
-        h_swing = self.coordinator.device.horizontal_swing == HorizontalSwing.FullSwing
-        v_swing = self.coordinator.device.vertical_swing == VerticalSwing.FullSwing
-
-        if h_swing and v_swing:
-            return SWING_BOTH
-        if h_swing:
-            return SWING_HORIZONTAL
-        if v_swing:
-            return SWING_VERTICAL
-        return SWING_OFF
-
-    async def async_set_swing_mode(self, swing_mode: str) -> None:
-        """Set new target swing operation."""
-        if swing_mode not in SWING_MODES:
-            raise ValueError(f"Invalid swing mode: {swing_mode}")
-
-        _LOGGER.debug(
-            "Setting swing mode to %s for device %s",
-            swing_mode,
-            self._attr_name,
-        )
-
-        self.coordinator.device.horizontal_swing = HorizontalSwing.Center
-        self.coordinator.device.vertical_swing = VerticalSwing.FixedMiddle
-        if swing_mode in (SWING_BOTH, SWING_HORIZONTAL):
-            self.coordinator.device.horizontal_swing = HorizontalSwing.FullSwing
-        if swing_mode in (SWING_BOTH, SWING_VERTICAL):
-            self.coordinator.device.vertical_swing = VerticalSwing.FullSwing
-
         await self.coordinator.push_state_update()
         self.async_write_ha_state()
 
