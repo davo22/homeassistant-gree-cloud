@@ -6,7 +6,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
 
-from greeclimate.device import Device
+from greeclimate.device import Device, FanSpeed, Mode
 
 from homeassistant.components.switch import (
     SwitchDeviceClass,
@@ -17,7 +17,13 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DISPATCH_DEVICE_DISCOVERED
+from .const import (
+    DISPATCH_DEVICE_DISCOVERED,
+    PROP_SMART_DRYING,
+    SMART_DRYING_ACTIVE,
+    SMART_DRYING_OFF,
+    SMART_DRYING_ON,
+)
 from .coordinator import CloudDeviceDataUpdateCoordinator, GreeCloudConfigEntry, is_hwhp_device
 from .entity import GreeCloudEntity
 
@@ -28,6 +34,8 @@ class GreeCloudSwitchEntityDescription(SwitchEntityDescription):
 
     get_value_fn: Callable[[Device], bool]
     set_value_fn: Callable[[Device, bool], None]
+    exists_fn: Callable[[Device], bool] = lambda device: True
+    available_fn: Callable[[Device], bool] = lambda device: True
 
 
 def _set_light(device: Device, value: bool) -> None:
@@ -53,6 +61,43 @@ def _set_xfan(device: Device, value: bool) -> None:
 def _set_anion(device: Device, value: bool) -> None:
     """Typed helper to set device anion property."""
     device.anion = value
+
+
+def _get_smart_drying(device: Device) -> bool:
+    """Typed helper to read the Smart Drying (Dmod) state."""
+    return device.raw_properties.get(PROP_SMART_DRYING) in (
+        SMART_DRYING_ON,
+        SMART_DRYING_ACTIVE,
+    )
+
+
+def _set_smart_drying(device: Device, value: bool) -> None:
+    """Typed helper to set the Smart Drying (Dmod) state.
+
+    Dmod has no setter in greeclimate (it's exposed read-only), so it's
+    written directly through raw_properties, the same pattern used for HWHP
+    properties. In Cool mode the unit only dehumidifies effectively at low
+    airflow, so enabling Smart Drying there also forces the fan to Low.
+    """
+    device.raw_properties[PROP_SMART_DRYING] = SMART_DRYING_ON if value else SMART_DRYING_OFF
+    if PROP_SMART_DRYING not in device._dirty:
+        device._dirty.append(PROP_SMART_DRYING)
+    if value and device.mode == Mode.Cool:
+        device.fan_speed = FanSpeed.Low
+
+
+def _has_smart_drying(device: Device) -> bool:
+    """Return True if the device reports Smart Drying support.
+
+    Units without this feature omit the Dmod key entirely rather than
+    reporting 0, matching the convention used for other optional properties.
+    """
+    return device.raw_properties.get(PROP_SMART_DRYING) is not None
+
+
+def _smart_drying_available(device: Device) -> bool:
+    """Smart Drying only applies in Cool or Dry mode."""
+    return device.mode in (Mode.Cool, Mode.Dry)
 
 
 GREE_CLOUD_SWITCHES: tuple[GreeCloudSwitchEntityDescription, ...] = (
@@ -87,6 +132,14 @@ GREE_CLOUD_SWITCHES: tuple[GreeCloudSwitchEntityDescription, ...] = (
         set_value_fn=_set_anion,
         entity_registry_enabled_default=False,
     ),
+    GreeCloudSwitchEntityDescription(
+        key="Smart Drying",
+        translation_key="smart_drying",
+        get_value_fn=_get_smart_drying,
+        set_value_fn=_set_smart_drying,
+        exists_fn=_has_smart_drying,
+        available_fn=_smart_drying_available,
+    ),
 )
 
 
@@ -105,6 +158,7 @@ async def async_setup_entry(
         async_add_entities(
             GreeCloudSwitch(coordinator=coordinator, description=description)
             for description in GREE_CLOUD_SWITCHES
+            if description.exists_fn(coordinator.device)
         )
 
     for coordinator in entry.runtime_data.coordinators:
@@ -130,6 +184,13 @@ class GreeCloudSwitch(GreeCloudEntity, SwitchEntity):
         super().__init__(coordinator)
         self.entity_description = description
         self._attr_unique_id = f"{coordinator.device.device_info.mac}_{description.key}"
+
+    @property
+    def available(self) -> bool:
+        """Return True if the switch is available in the device's current mode."""
+        return super().available and self.entity_description.available_fn(
+            self.coordinator.device
+        )
 
     @property
     def is_on(self) -> bool:

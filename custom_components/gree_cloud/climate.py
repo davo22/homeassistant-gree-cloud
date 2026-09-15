@@ -51,6 +51,11 @@ from .const import (
     DISPATCH_DEVICE_DISCOVERED,
     FAN_MEDIUM_HIGH,
     FAN_MEDIUM_LOW,
+    HUMIDITY_MAX_COOL,
+    HUMIDITY_MAX_DRY,
+    HUMIDITY_MIN_COOL,
+    HUMIDITY_MIN_DRY,
+    HUMIDITY_STEP,
     TARGET_TEMPERATURE_STEP,
     TARGET_TEMPERATURE_STEP_HALF,
 )
@@ -87,6 +92,9 @@ FAN_MODES = {
 FAN_MODES_REVERSE = {v: k for k, v in FAN_MODES.items()}
 
 SWING_MODES = [SWING_OFF, SWING_VERTICAL, SWING_HORIZONTAL, SWING_BOTH]
+
+# Target humidity is only meaningful while actively cooling or drying.
+HUMIDITY_MODES = (Mode.Cool, Mode.Dry)
 
 
 async def async_setup_entry(
@@ -139,6 +147,63 @@ class GreeCloudClimateEntity(GreeCloudEntity, ClimateEntity):
         """Initialize the Gree Cloud device."""
         super().__init__(coordinator)
         self._attr_unique_id = coordinator.device.device_info.mac
+
+    @property
+    def supported_features(self) -> ClimateEntityFeature:
+        """Return the supported features, adding humidity control in Cool/Dry mode."""
+        features = self._attr_supported_features
+        if self.coordinator.device.mode in HUMIDITY_MODES:
+            features |= ClimateEntityFeature.TARGET_HUMIDITY
+        return features
+
+    @property
+    def min_humidity(self) -> int:
+        """Return the minimum target humidity for the current mode."""
+        if self.coordinator.device.mode == Mode.Dry:
+            return HUMIDITY_MIN_DRY
+        return HUMIDITY_MIN_COOL
+
+    @property
+    def max_humidity(self) -> int:
+        """Return the maximum target humidity for the current mode."""
+        if self.coordinator.device.mode == Mode.Dry:
+            return HUMIDITY_MAX_DRY
+        return HUMIDITY_MAX_COOL
+
+    @property
+    def target_humidity(self) -> int | None:
+        """Return the target humidity, only meaningful in Cool/Dry mode."""
+        if self.coordinator.device.mode not in HUMIDITY_MODES:
+            return None
+        return self.coordinator.device.target_humidity
+
+    async def async_set_humidity(self, humidity: int) -> None:
+        """Set new target humidity."""
+        mode = self.coordinator.device.mode
+        if mode not in HUMIDITY_MODES:
+            raise ValueError(f"Target humidity can only be set in Cool or Dry mode, not {mode}")
+
+        min_humidity, max_humidity = (
+            (HUMIDITY_MIN_DRY, HUMIDITY_MAX_DRY)
+            if mode == Mode.Dry
+            else (HUMIDITY_MIN_COOL, HUMIDITY_MAX_COOL)
+        )
+        # The unit only accepts setpoints in steps of 5.
+        humidity = round(humidity / HUMIDITY_STEP) * HUMIDITY_STEP
+        humidity = max(min_humidity, min(humidity, max_humidity))
+
+        _LOGGER.debug(
+            "Setting target humidity to %s for %s",
+            humidity,
+            self._attr_name,
+        )
+
+        self.coordinator.device.target_humidity = humidity
+        if mode == Mode.Cool:
+            # Effective dehumidification while cooling requires low airflow.
+            self.coordinator.device.fan_speed = FanSpeed.Low
+        await self.coordinator.push_state_update()
+        self.async_write_ha_state()
 
     @property
     def _supports_half_degree(self) -> bool:

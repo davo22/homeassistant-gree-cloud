@@ -57,6 +57,24 @@ PROP_COMPRESSOR_FREQ = "CompressorFqy"
 # it needs no extra request - only an entity to surface it.
 PROP_HUMIDITY = "DwatSen"
 
+# Target humidity (Cool/Dry mode only). Backed by Props.HUM_SET ("Dwet"),
+# already exposed by greeclimate as Device.target_humidity. Range and step
+# verified against a real Clivia V3.2.M unit's MQTT traffic.
+HUMIDITY_MIN_COOL = 40
+HUMIDITY_MAX_COOL = 80
+HUMIDITY_MIN_DRY = 30
+HUMIDITY_MAX_DRY = 70
+HUMIDITY_STEP = 5
+
+# Smart Drying mode ("Dmod", part of the standard Props enum but exposed by
+# greeclimate as a read-only property - no setter - so it is driven directly
+# through raw_properties). Verified values: 0 = off, 2 = on/requested,
+# 15 = active once the unit has stabilized at the target humidity.
+PROP_SMART_DRYING = "Dmod"
+SMART_DRYING_OFF = 0
+SMART_DRYING_ON = 2
+SMART_DRYING_ACTIVE = 15
+
 # Gree Cloud servers
 GREE_CLOUD_SERVERS = {
     "Australia": "https://augrih.gree.com",
