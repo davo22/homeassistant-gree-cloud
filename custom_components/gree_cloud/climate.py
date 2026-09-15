@@ -48,6 +48,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
+    DEHUMIDIFY_MODE_ON,
     DISPATCH_DEVICE_DISCOVERED,
     FAN_MEDIUM_HIGH,
     FAN_MEDIUM_LOW,
@@ -56,6 +57,7 @@ from .const import (
     HUMIDITY_MIN_COOL,
     HUMIDITY_MIN_DRY,
     HUMIDITY_STEP,
+    PROP_DEHUMIDIFY_MODE,
     TARGET_TEMPERATURE_STEP,
     TARGET_TEMPERATURE_STEP_HALF,
 )
@@ -204,7 +206,16 @@ class GreeCloudClimateEntity(GreeCloudEntity, ClimateEntity):
             self._attr_name,
         )
 
-        self.coordinator.device.target_humidity = humidity
+        device = self.coordinator.device
+        device.target_humidity = humidity  # Dwet
+        # Setting a target implies dehumidify should be on. Dmod has no
+        # setter in greeclimate, so it's written directly through
+        # raw_properties, the same pattern used for HWHP properties; this
+        # takes over from whatever Dmod held before (including Smart
+        # Drying), and both go out together in the push below.
+        device.raw_properties[PROP_DEHUMIDIFY_MODE] = DEHUMIDIFY_MODE_ON
+        if PROP_DEHUMIDIFY_MODE not in device._dirty:
+            device._dirty.append(PROP_DEHUMIDIFY_MODE)
         await self.coordinator.push_state_update()
         self.async_write_ha_state()
 

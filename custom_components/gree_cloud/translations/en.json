@@ -48,17 +48,11 @@
       "health_mode": {
         "name": "Health mode"
       },
+      "dehumidify": {
+        "name": "Dehumidify"
+      },
       "smart_drying": {
         "name": "Smart drying"
-      }
-    },
-    "select": {
-      "dehumidify_mode": {
-        "name": "Dehumidify mode",
-        "state": {
-          "cooling": "Cooling",
-          "dehumidify": "Cooling + Dehumidify"
-        }
       }
     }
   }

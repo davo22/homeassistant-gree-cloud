@@ -72,21 +72,19 @@ HUMIDITY_STEP = 5
 # Dehumidify mode ("Dmod", part of the standard Props enum but exposed by
 # greeclimate as a read-only property - no setter - so it is driven directly
 # through raw_properties, the same pattern as the HWHP properties above).
-# Verified identical in both Cool and Dry mode against real Clivia V3.2.M
-# MQTT traffic:
+# Holds a single value at a time; verified identical in both Cool and Dry
+# mode against real Clivia V3.2.M MQTT traffic:
 #   15 = off (plain cooling/drying, no dehumidification)
-#   0  = dehumidify (cooling/drying + dehumidify)
+#   0  = dehumidify (cooling/drying + dehumidify; also implied by setting a
+#        target humidity, see climate.py)
 #   2  = smart dehumidify ("Smart Drying")
-# Exposed as two entities, mirroring the Gree+ app: a select for the base
-# Cooling / Cooling+Dehumidify choice, and a separate Smart Drying switch
-# layered on top of it (see select.py and switch.py).
+# Exposed as two independent switches (see switch.py) that both just read
+# back whichever value Dmod currently holds, rather than fighting each
+# other over it.
 PROP_DEHUMIDIFY_MODE = "Dmod"
 DEHUMIDIFY_MODE_OFF = 15
 DEHUMIDIFY_MODE_ON = 0
 DEHUMIDIFY_MODE_SMART = 2
-
-DEHUMIDIFY_OPTION_COOLING = "cooling"
-DEHUMIDIFY_OPTION_DEHUMIDIFY = "dehumidify"
 
 # Gree Cloud servers
 GREE_CLOUD_SERVERS = {

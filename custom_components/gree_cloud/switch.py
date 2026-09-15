@@ -19,6 +19,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
     DEHUMIDIFY_MODE_OFF,
+    DEHUMIDIFY_MODE_ON,
     DEHUMIDIFY_MODE_SMART,
     DISPATCH_DEVICE_DISCOVERED,
     PROP_DEHUMIDIFY_MODE,
@@ -62,6 +63,30 @@ def _set_anion(device: Device, value: bool) -> None:
     device.anion = value
 
 
+def _set_dehumidify_mode(device: Device, value: int) -> None:
+    """Write a Dmod value directly through raw_properties.
+
+    Dmod has no setter in greeclimate (it's exposed read-only), so it's
+    written directly, the same pattern used for HWHP properties. Dmod holds
+    a single value at a time (15=off/0=dehumidify/2=smart), so each of the
+    two switches below just writes its own value and lets the other switch
+    read back whatever Dmod ends up holding, rather than fighting over it.
+    """
+    device.raw_properties[PROP_DEHUMIDIFY_MODE] = value
+    if PROP_DEHUMIDIFY_MODE not in device._dirty:
+        device._dirty.append(PROP_DEHUMIDIFY_MODE)
+
+
+def _get_dehumidify(device: Device) -> bool:
+    """Typed helper to read the plain Dehumidify (Dmod) state."""
+    return device.raw_properties.get(PROP_DEHUMIDIFY_MODE) == DEHUMIDIFY_MODE_ON
+
+
+def _set_dehumidify(device: Device, value: bool) -> None:
+    """Typed helper to set the plain Dehumidify (Dmod) state."""
+    _set_dehumidify_mode(device, DEHUMIDIFY_MODE_ON if value else DEHUMIDIFY_MODE_OFF)
+
+
 def _get_smart_drying(device: Device) -> bool:
     """Typed helper to read the Smart Drying (Dmod) state."""
     return device.raw_properties.get(PROP_DEHUMIDIFY_MODE) == DEHUMIDIFY_MODE_SMART
@@ -70,21 +95,15 @@ def _get_smart_drying(device: Device) -> bool:
 def _set_smart_drying(device: Device, value: bool) -> None:
     """Typed helper to set the Smart Drying (Dmod) state.
 
-    Dmod has no setter in greeclimate (it's exposed read-only), so it's
-    written directly through raw_properties, the same pattern used for HWHP
-    properties. Turning Smart Drying off falls back to plain cooling
-    (Dmod=15), discarding whatever the Dehumidify Mode select was set to -
-    re-enable dehumidify there if that's still wanted.
+    Turning Smart Drying off falls back to plain cooling (Dmod=15),
+    discarding whatever the plain Dehumidify switch was set to - turn that
+    back on if dehumidify (without smart mode) is still wanted.
     """
-    device.raw_properties[PROP_DEHUMIDIFY_MODE] = (
-        DEHUMIDIFY_MODE_SMART if value else DEHUMIDIFY_MODE_OFF
-    )
-    if PROP_DEHUMIDIFY_MODE not in device._dirty:
-        device._dirty.append(PROP_DEHUMIDIFY_MODE)
+    _set_dehumidify_mode(device, DEHUMIDIFY_MODE_SMART if value else DEHUMIDIFY_MODE_OFF)
 
 
-def _has_smart_drying(device: Device) -> bool:
-    """Return True if the device reports Smart Drying support.
+def _has_dehumidify_mode(device: Device) -> bool:
+    """Return True if the device reports dehumidify mode (Dmod) support.
 
     Units without this feature omit the Dmod key entirely rather than
     reporting 0, matching the convention used for other optional properties.
@@ -92,8 +111,8 @@ def _has_smart_drying(device: Device) -> bool:
     return device.raw_properties.get(PROP_DEHUMIDIFY_MODE) is not None
 
 
-def _smart_drying_available(device: Device) -> bool:
-    """Smart Drying only applies in Cool or Dry mode."""
+def _dehumidify_mode_available(device: Device) -> bool:
+    """Dehumidify controls only apply in Cool or Dry mode."""
     return device.mode in (Mode.Cool, Mode.Dry)
 
 
@@ -130,12 +149,20 @@ GREE_CLOUD_SWITCHES: tuple[GreeCloudSwitchEntityDescription, ...] = (
         entity_registry_enabled_default=False,
     ),
     GreeCloudSwitchEntityDescription(
+        key="Dehumidify",
+        translation_key="dehumidify",
+        get_value_fn=_get_dehumidify,
+        set_value_fn=_set_dehumidify,
+        exists_fn=_has_dehumidify_mode,
+        available_fn=_dehumidify_mode_available,
+    ),
+    GreeCloudSwitchEntityDescription(
         key="Smart Drying",
         translation_key="smart_drying",
         get_value_fn=_get_smart_drying,
         set_value_fn=_set_smart_drying,
-        exists_fn=_has_smart_drying,
-        available_fn=_smart_drying_available,
+        exists_fn=_has_dehumidify_mode,
+        available_fn=_dehumidify_mode_available,
     ),
 )
 
