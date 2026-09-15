@@ -53,10 +53,16 @@ ENERGY_SCALE = 0.1
 # energy counter, which only moves in whole 0.1 kWh steps.
 PROP_COMPRESSOR_FREQ = "CompressorFqy"
 
-# Compressor temperature in degrees C. Observed values around 58-59 C while
-# running; not part of the standard Props enum, so it must be requested
-# explicitly (see _SENSOR_EXTRA_PROPS in coordinator.py).
+# Compressor and outdoor temperature. Neither is part of the standard Props
+# enum, so both must be requested explicitly (see _SENSOR_EXTRA_PROPS in
+# coordinator.py). Verified on a real Clivia V3.2.M with the device set to
+# Celsius (HA showed indoor temp correctly in C): these raw keys still
+# report Fahrenheit regardless of the TemUn setting - unlike TemSen (indoor
+# temperature), which greeclimate already normalizes to the display unit.
+# They therefore need an unconditional F->C conversion; see
+# _fahrenheit_to_celsius in sensor.py.
 PROP_COMPRESSOR_TEMP = "CompressorTem"
+PROP_OUTDOOR_TEMP = "OutEnvTem"
 
 # Panel light auto-sense. Not part of the standard Props enum, so it must be
 # requested explicitly (see _LIGHT_EXTRA_PROPS in coordinator.py). Combined

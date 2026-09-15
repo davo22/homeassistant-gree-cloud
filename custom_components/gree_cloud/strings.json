@@ -33,6 +33,9 @@
       },
       "compressor_temperature": {
         "name": "Compressor temperature"
+      },
+      "outdoor_temperature": {
+        "name": "Outdoor temperature"
       }
     },
     "switch": {

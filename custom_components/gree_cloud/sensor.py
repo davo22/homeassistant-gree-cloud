@@ -31,6 +31,7 @@ from .const import (
     PROP_COMPRESSOR_TEMP,
     PROP_ENERGY_TOTAL,
     PROP_HUMIDITY,
+    PROP_OUTDOOR_TEMP,
 )
 from .coordinator import (
     CloudDeviceDataUpdateCoordinator,
@@ -80,9 +81,26 @@ def _has_compressor_frequency(device: Device) -> bool:
     return device.raw_properties.get(PROP_COMPRESSOR_FREQ) is not None
 
 
+def _fahrenheit_to_celsius(value: float) -> float:
+    """Convert a raw device temperature key to Celsius.
+
+    Unlike TemSen (indoor temperature), which greeclimate's Device class
+    already normalizes to the display unit, raw keys read directly off
+    raw_properties report Fahrenheit regardless of the TemUn setting -
+    verified on a Clivia V3.2.M with the device set to Celsius (HA showed
+    indoor temp correctly in C, but OutEnvTem/CompressorTem/InEvaTem/
+    TemsSenOut all still came back in F). The conversion is therefore
+    unconditional here, not gated on temperature_units.
+    """
+    return round((value - 32) * 5 / 9, 1)
+
+
 def _compressor_temperature(device: Device) -> float | None:
     """Return compressor temperature in degrees C."""
-    return device.raw_properties.get(PROP_COMPRESSOR_TEMP)
+    raw = device.raw_properties.get(PROP_COMPRESSOR_TEMP)
+    if raw is None:
+        return None
+    return _fahrenheit_to_celsius(raw)
 
 
 def _has_compressor_temperature(device: Device) -> bool:
@@ -92,6 +110,23 @@ def _has_compressor_temperature(device: Device) -> bool:
     matching the convention used for other optional properties.
     """
     return device.raw_properties.get(PROP_COMPRESSOR_TEMP) is not None
+
+
+def _outdoor_temperature(device: Device) -> float | None:
+    """Return outdoor temperature in degrees C."""
+    raw = device.raw_properties.get(PROP_OUTDOOR_TEMP)
+    if raw is None:
+        return None
+    return _fahrenheit_to_celsius(raw)
+
+
+def _has_outdoor_temperature(device: Device) -> bool:
+    """Return True if the device reports outdoor temperature.
+
+    Units without this sensor omit the key entirely rather than reporting 0,
+    matching the convention used for other optional properties.
+    """
+    return device.raw_properties.get(PROP_OUTDOOR_TEMP) is not None
 
 
 def _humidity(device: Device) -> float | None:
@@ -129,6 +164,15 @@ GREE_CLOUD_SENSORS: tuple[GreeCloudSensorEntityDescription, ...] = (
         native_unit_of_measurement=PERCENTAGE,
         value_fn=_humidity,
         exists_fn=_has_humidity,
+    ),
+    GreeCloudSensorEntityDescription(
+        key="Outdoor Temperature",
+        translation_key="outdoor_temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        value_fn=_outdoor_temperature,
+        exists_fn=_has_outdoor_temperature,
     ),
     GreeCloudSensorEntityDescription(
         key="Compressor Frequency",

@@ -39,6 +39,7 @@ from .const import (
     PROP_COMPRESSOR_TEMP,
     PROP_ENERGY_TOTAL,
     PROP_LIGHT_SENSOR,
+    PROP_OUTDOOR_TEMP,
     UPDATE_INTERVAL,
 )
 
@@ -58,7 +59,12 @@ _HWHP_EXTRA_PROPS = [
 # Extra properties reported by AC units, surfaced by the sensor platform. The
 # cloud serves these even though the local UDP protocol does not, so they are
 # only available on this integration.
-_SENSOR_EXTRA_PROPS = [PROP_ENERGY_TOTAL, PROP_COMPRESSOR_FREQ, PROP_COMPRESSOR_TEMP]
+_SENSOR_EXTRA_PROPS = [
+    PROP_ENERGY_TOTAL,
+    PROP_COMPRESSOR_FREQ,
+    PROP_COMPRESSOR_TEMP,
+    PROP_OUTDOOR_TEMP,
+]
 
 # Extra property needed by the panel light select entity, alongside the
 # standard Props.LIGHT ("Lig").
