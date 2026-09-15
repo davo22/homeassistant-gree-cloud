@@ -171,6 +171,11 @@ class GreeCloudClimateEntity(GreeCloudEntity, ClimateEntity):
         return HUMIDITY_MAX_COOL
 
     @property
+    def target_humidity_step(self) -> int:
+        """Return the target humidity step; the unit only accepts multiples of 5."""
+        return HUMIDITY_STEP
+
+    @property
     def target_humidity(self) -> int | None:
         """Return the target humidity, only meaningful in Cool/Dry mode."""
         if self.coordinator.device.mode not in HUMIDITY_MODES:
@@ -188,7 +193,8 @@ class GreeCloudClimateEntity(GreeCloudEntity, ClimateEntity):
             if mode == Mode.Dry
             else (HUMIDITY_MIN_COOL, HUMIDITY_MAX_COOL)
         )
-        # The unit only accepts setpoints in steps of 5.
+        # target_humidity_step keeps the UI slider on multiples of 5, but a
+        # direct service call can still pass an arbitrary value.
         humidity = round(humidity / HUMIDITY_STEP) * HUMIDITY_STEP
         humidity = max(min_humidity, min(humidity, max_humidity))
 

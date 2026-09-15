@@ -58,24 +58,35 @@ PROP_COMPRESSOR_FREQ = "CompressorFqy"
 PROP_HUMIDITY = "DwatSen"
 
 # Target humidity (Cool/Dry mode only). Backed by Props.HUM_SET ("Dwet"),
-# already exposed by greeclimate as Device.target_humidity. The Cool range
-# and 5% step are verified against a real Clivia V3.2.M unit's MQTT traffic
-# (40%->Dwet 5, 45%->6, 50%->7). The Dry range mirrors the Gree spec sheet
-# but has NOT been confirmed on real hardware - only Cool mode was captured.
+# already exposed by greeclimate as Device.target_humidity, encoding
+# humidity% / 5 - 3. Confirmed against real Clivia V3.2.M MQTT traffic in
+# BOTH modes (45% -> Dwet 6 in Cool, and in Dry). Only the Cool bounds were
+# captured end-to-end (40-80%); the Dry bounds below are ASSUMED from the
+# Gree spec sheet and have NOT been verified on real hardware.
 HUMIDITY_MIN_COOL = 40
 HUMIDITY_MAX_COOL = 80
-HUMIDITY_MIN_DRY = 30  # unverified - not captured on real hardware
-HUMIDITY_MAX_DRY = 70  # unverified - not captured on real hardware
+HUMIDITY_MIN_DRY = 30  # ASSUMED - not verified on real hardware
+HUMIDITY_MAX_DRY = 70  # ASSUMED - not verified on real hardware
 HUMIDITY_STEP = 5
 
-# Smart Drying mode ("Dmod", part of the standard Props enum but exposed by
+# Dehumidify mode ("Dmod", part of the standard Props enum but exposed by
 # greeclimate as a read-only property - no setter - so it is driven directly
-# through raw_properties). Verified values: 0 = off, 2 = on/requested,
-# 15 = active once the unit has stabilized at the target humidity.
-PROP_SMART_DRYING = "Dmod"
-SMART_DRYING_OFF = 0
-SMART_DRYING_ON = 2
-SMART_DRYING_ACTIVE = 15
+# through raw_properties, the same pattern as the HWHP properties above).
+# Verified identical in both Cool and Dry mode against real Clivia V3.2.M
+# MQTT traffic:
+#   15 = off (plain cooling/drying, no dehumidification)
+#   0  = dehumidify (cooling/drying + dehumidify)
+#   2  = smart dehumidify ("Smart Drying")
+# Exposed as two entities, mirroring the Gree+ app: a select for the base
+# Cooling / Cooling+Dehumidify choice, and a separate Smart Drying switch
+# layered on top of it (see select.py and switch.py).
+PROP_DEHUMIDIFY_MODE = "Dmod"
+DEHUMIDIFY_MODE_OFF = 15
+DEHUMIDIFY_MODE_ON = 0
+DEHUMIDIFY_MODE_SMART = 2
+
+DEHUMIDIFY_OPTION_COOLING = "cooling"
+DEHUMIDIFY_OPTION_DEHUMIDIFY = "dehumidify"
 
 # Gree Cloud servers
 GREE_CLOUD_SERVERS = {

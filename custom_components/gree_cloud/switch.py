@@ -18,11 +18,10 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
+    DEHUMIDIFY_MODE_OFF,
+    DEHUMIDIFY_MODE_SMART,
     DISPATCH_DEVICE_DISCOVERED,
-    PROP_SMART_DRYING,
-    SMART_DRYING_ACTIVE,
-    SMART_DRYING_OFF,
-    SMART_DRYING_ON,
+    PROP_DEHUMIDIFY_MODE,
 )
 from .coordinator import CloudDeviceDataUpdateCoordinator, GreeCloudConfigEntry, is_hwhp_device
 from .entity import GreeCloudEntity
@@ -65,10 +64,7 @@ def _set_anion(device: Device, value: bool) -> None:
 
 def _get_smart_drying(device: Device) -> bool:
     """Typed helper to read the Smart Drying (Dmod) state."""
-    return device.raw_properties.get(PROP_SMART_DRYING) in (
-        SMART_DRYING_ON,
-        SMART_DRYING_ACTIVE,
-    )
+    return device.raw_properties.get(PROP_DEHUMIDIFY_MODE) == DEHUMIDIFY_MODE_SMART
 
 
 def _set_smart_drying(device: Device, value: bool) -> None:
@@ -76,11 +72,15 @@ def _set_smart_drying(device: Device, value: bool) -> None:
 
     Dmod has no setter in greeclimate (it's exposed read-only), so it's
     written directly through raw_properties, the same pattern used for HWHP
-    properties.
+    properties. Turning Smart Drying off falls back to plain cooling
+    (Dmod=15), discarding whatever the Dehumidify Mode select was set to -
+    re-enable dehumidify there if that's still wanted.
     """
-    device.raw_properties[PROP_SMART_DRYING] = SMART_DRYING_ON if value else SMART_DRYING_OFF
-    if PROP_SMART_DRYING not in device._dirty:
-        device._dirty.append(PROP_SMART_DRYING)
+    device.raw_properties[PROP_DEHUMIDIFY_MODE] = (
+        DEHUMIDIFY_MODE_SMART if value else DEHUMIDIFY_MODE_OFF
+    )
+    if PROP_DEHUMIDIFY_MODE not in device._dirty:
+        device._dirty.append(PROP_DEHUMIDIFY_MODE)
 
 
 def _has_smart_drying(device: Device) -> bool:
@@ -89,7 +89,7 @@ def _has_smart_drying(device: Device) -> bool:
     Units without this feature omit the Dmod key entirely rather than
     reporting 0, matching the convention used for other optional properties.
     """
-    return device.raw_properties.get(PROP_SMART_DRYING) is not None
+    return device.raw_properties.get(PROP_DEHUMIDIFY_MODE) is not None
 
 
 def _smart_drying_available(device: Device) -> bool:
