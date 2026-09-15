@@ -30,6 +30,9 @@
       },
       "compressor_frequency": {
         "name": "Compressor frequency"
+      },
+      "compressor_temperature": {
+        "name": "Compressor temperature"
       }
     },
     "switch": {
@@ -49,7 +52,7 @@
         "name": "Health mode"
       },
       "dehumidify": {
-        "name": "Dehumidify"
+        "name": "Target Dehumidify"
       },
       "smart_drying": {
         "name": "Smart drying"

@@ -53,6 +53,11 @@ ENERGY_SCALE = 0.1
 # energy counter, which only moves in whole 0.1 kWh steps.
 PROP_COMPRESSOR_FREQ = "CompressorFqy"
 
+# Compressor temperature in degrees C. Observed values around 58-59 C while
+# running; not part of the standard Props enum, so it must be requested
+# explicitly (see _SENSOR_EXTRA_PROPS in coordinator.py).
+PROP_COMPRESSOR_TEMP = "CompressorTem"
+
 # Relative humidity. Already part of the standard Props enum (HUM_SENSOR), so
 # it needs no extra request - only an entity to surface it.
 PROP_HUMIDITY = "DwatSen"

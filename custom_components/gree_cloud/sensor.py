@@ -18,6 +18,7 @@ from homeassistant.const import (
     EntityCategory,
     UnitOfEnergy,
     UnitOfFrequency,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -27,6 +28,7 @@ from .const import (
     DISPATCH_DEVICE_DISCOVERED,
     ENERGY_SCALE,
     PROP_COMPRESSOR_FREQ,
+    PROP_COMPRESSOR_TEMP,
     PROP_ENERGY_TOTAL,
     PROP_HUMIDITY,
 )
@@ -78,6 +80,20 @@ def _has_compressor_frequency(device: Device) -> bool:
     return device.raw_properties.get(PROP_COMPRESSOR_FREQ) is not None
 
 
+def _compressor_temperature(device: Device) -> float | None:
+    """Return compressor temperature in degrees C."""
+    return device.raw_properties.get(PROP_COMPRESSOR_TEMP)
+
+
+def _has_compressor_temperature(device: Device) -> bool:
+    """Return True if the device reports compressor temperature.
+
+    Units without this sensor omit the key entirely rather than reporting 0,
+    matching the convention used for other optional properties.
+    """
+    return device.raw_properties.get(PROP_COMPRESSOR_TEMP) is not None
+
+
 def _humidity(device: Device) -> float | None:
     """Return relative humidity in percent."""
     return device.raw_properties.get(PROP_HUMIDITY)
@@ -123,6 +139,16 @@ GREE_CLOUD_SENSORS: tuple[GreeCloudSensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=_compressor_frequency,
         exists_fn=_has_compressor_frequency,
+    ),
+    GreeCloudSensorEntityDescription(
+        key="Compressor Temperature",
+        translation_key="compressor_temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=_compressor_temperature,
+        exists_fn=_has_compressor_temperature,
     ),
 )
 
