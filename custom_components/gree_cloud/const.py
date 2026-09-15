@@ -96,18 +96,22 @@ HUMIDITY_STEP = 5
 # Dehumidify mode ("Dmod", part of the standard Props enum but exposed by
 # greeclimate as a read-only property - no setter - so it is driven directly
 # through raw_properties, the same pattern as the HWHP properties above).
-# Holds a single value at a time; verified identical in both Cool and Dry
-# mode against real Clivia V3.2.M MQTT traffic:
+# Holds a single value at a time; verified on a real Clivia V3.2.M:
 #   15 = off (plain cooling/drying, no dehumidification)
-#   0  = dehumidify (cooling/drying + dehumidify; also implied by setting a
-#        target humidity, see climate.py)
-#   2  = smart dehumidify ("Smart Drying")
-# Exposed as two independent switches (see switch.py) that both just read
-# back whichever value Dmod currently holds, rather than fighting each
-# other over it.
+#   0  = target-based dehumidify (uses Dwet; also implied by setting a
+#        target humidity, see climate.py) - available in Cool and Dry
+#   1  = continuous dehumidify, no target ("Continuous Dry") - Dry only
+#   2  = smart dehumidify ("Smart Drying") - Cool only
+# Exposed as three independent switches plus the climate target humidity
+# (see switch.py and climate.py) that each just read back whichever value
+# Dmod currently holds, rather than fighting each other over it. Mode
+# gating is enforced only through each entity's `available` property -
+# nothing here forces Dmod, the fan, or any other control when the HVAC
+# mode changes; the device manages that on its own.
 PROP_DEHUMIDIFY_MODE = "Dmod"
 DEHUMIDIFY_MODE_OFF = 15
 DEHUMIDIFY_MODE_ON = 0
+DEHUMIDIFY_MODE_CONTINUOUS = 1
 DEHUMIDIFY_MODE_SMART = 2
 
 # Gree Cloud servers

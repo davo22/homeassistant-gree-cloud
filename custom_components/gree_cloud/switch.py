@@ -18,6 +18,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
+    DEHUMIDIFY_MODE_CONTINUOUS,
     DEHUMIDIFY_MODE_OFF,
     DEHUMIDIFY_MODE_ON,
     DEHUMIDIFY_MODE_SMART,
@@ -63,9 +64,10 @@ def _set_dehumidify_mode(device: Device, value: int) -> None:
 
     Dmod has no setter in greeclimate (it's exposed read-only), so it's
     written directly, the same pattern used for HWHP properties. Dmod holds
-    a single value at a time (15=off/0=dehumidify/2=smart), so each of the
-    two switches below just writes its own value and lets the other switch
-    read back whatever Dmod ends up holding, rather than fighting over it.
+    a single value at a time (15=off/0=target dehumidify/1=continuous
+    dry/2=smart), so each of the three switches below just writes its own
+    value and lets the others read back whatever Dmod ends up holding,
+    rather than fighting over it.
     """
     device.raw_properties[PROP_DEHUMIDIFY_MODE] = value
     if PROP_DEHUMIDIFY_MODE not in device._dirty:
@@ -73,13 +75,23 @@ def _set_dehumidify_mode(device: Device, value: int) -> None:
 
 
 def _get_dehumidify(device: Device) -> bool:
-    """Typed helper to read the plain Dehumidify (Dmod) state."""
+    """Typed helper to read the Target Dehumidify (Dmod) state."""
     return device.raw_properties.get(PROP_DEHUMIDIFY_MODE) == DEHUMIDIFY_MODE_ON
 
 
 def _set_dehumidify(device: Device, value: bool) -> None:
-    """Typed helper to set the plain Dehumidify (Dmod) state."""
+    """Typed helper to set the Target Dehumidify (Dmod) state."""
     _set_dehumidify_mode(device, DEHUMIDIFY_MODE_ON if value else DEHUMIDIFY_MODE_OFF)
+
+
+def _get_continuous_dry(device: Device) -> bool:
+    """Typed helper to read the Continuous Dry (Dmod) state."""
+    return device.raw_properties.get(PROP_DEHUMIDIFY_MODE) == DEHUMIDIFY_MODE_CONTINUOUS
+
+
+def _set_continuous_dry(device: Device, value: bool) -> None:
+    """Typed helper to set the Continuous Dry (Dmod) state."""
+    _set_dehumidify_mode(device, DEHUMIDIFY_MODE_CONTINUOUS if value else DEHUMIDIFY_MODE_OFF)
 
 
 def _get_smart_drying(device: Device) -> bool:
@@ -88,12 +100,7 @@ def _get_smart_drying(device: Device) -> bool:
 
 
 def _set_smart_drying(device: Device, value: bool) -> None:
-    """Typed helper to set the Smart Drying (Dmod) state.
-
-    Turning Smart Drying off falls back to plain cooling (Dmod=15),
-    discarding whatever the plain Dehumidify switch was set to - turn that
-    back on if dehumidify (without smart mode) is still wanted.
-    """
+    """Typed helper to set the Smart Drying (Dmod) state."""
     _set_dehumidify_mode(device, DEHUMIDIFY_MODE_SMART if value else DEHUMIDIFY_MODE_OFF)
 
 
@@ -106,9 +113,26 @@ def _has_dehumidify_mode(device: Device) -> bool:
     return device.raw_properties.get(PROP_DEHUMIDIFY_MODE) is not None
 
 
-def _dehumidify_mode_available(device: Device) -> bool:
-    """Dehumidify controls only apply in Cool or Dry mode."""
-    return device.mode in (Mode.Cool, Mode.Dry)
+def _dehumidify_available_in(*modes: Mode) -> Callable[[Device], bool]:
+    """Build an available_fn restricted to the given HVAC modes.
+
+    Each dehumidify-related switch has different mode gating: Target
+    Dehumidify works in both Cool and Dry, Smart Drying only makes sense
+    while cooling, and Continuous Dry only while drying. When the current
+    mode isn't in the allowed set, `available` (see GreeCloudSwitch below)
+    turns False and the switch shows as unavailable rather than a stale
+    on/off state left over from a previous mode.
+    """
+
+    def _available(device: Device) -> bool:
+        return device.mode in modes
+
+    return _available
+
+
+_TARGET_DEHUMIDIFY_AVAILABLE = _dehumidify_available_in(Mode.Cool, Mode.Dry)
+_SMART_DRYING_AVAILABLE = _dehumidify_available_in(Mode.Cool)
+_CONTINUOUS_DRY_AVAILABLE = _dehumidify_available_in(Mode.Dry)
 
 
 GREE_CLOUD_SWITCHES: tuple[GreeCloudSwitchEntityDescription, ...] = (
@@ -143,7 +167,15 @@ GREE_CLOUD_SWITCHES: tuple[GreeCloudSwitchEntityDescription, ...] = (
         get_value_fn=_get_dehumidify,
         set_value_fn=_set_dehumidify,
         exists_fn=_has_dehumidify_mode,
-        available_fn=_dehumidify_mode_available,
+        available_fn=_TARGET_DEHUMIDIFY_AVAILABLE,
+    ),
+    GreeCloudSwitchEntityDescription(
+        key="Continuous Dry",
+        translation_key="continuous_dry",
+        get_value_fn=_get_continuous_dry,
+        set_value_fn=_set_continuous_dry,
+        exists_fn=_has_dehumidify_mode,
+        available_fn=_CONTINUOUS_DRY_AVAILABLE,
     ),
     GreeCloudSwitchEntityDescription(
         key="Smart Drying",
@@ -151,7 +183,7 @@ GREE_CLOUD_SWITCHES: tuple[GreeCloudSwitchEntityDescription, ...] = (
         get_value_fn=_get_smart_drying,
         set_value_fn=_set_smart_drying,
         exists_fn=_has_dehumidify_mode,
-        available_fn=_dehumidify_mode_available,
+        available_fn=_SMART_DRYING_AVAILABLE,
     ),
 )
 

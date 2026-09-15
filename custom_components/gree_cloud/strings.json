@@ -54,6 +54,9 @@
       "dehumidify": {
         "name": "Target Dehumidify"
       },
+      "continuous_dry": {
+        "name": "Continuous Dry"
+      },
       "smart_drying": {
         "name": "Smart drying"
       }
