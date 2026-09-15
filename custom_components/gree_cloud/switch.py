@@ -113,15 +113,17 @@ def _has_dehumidify_mode(device: Device) -> bool:
     return device.raw_properties.get(PROP_DEHUMIDIFY_MODE) is not None
 
 
-def _dehumidify_available_in(*modes: Mode) -> Callable[[Device], bool]:
+def _available_in_modes(*modes: Mode) -> Callable[[Device], bool]:
     """Build an available_fn restricted to the given HVAC modes.
 
-    Each dehumidify-related switch has different mode gating: Target
-    Dehumidify works in both Cool and Dry, Smart Drying only makes sense
-    while cooling, and Continuous Dry only while drying. When the current
-    mode isn't in the allowed set, `available` (see GreeCloudSwitch below)
-    turns False and the switch shows as unavailable rather than a stale
-    on/off state left over from a previous mode.
+    Several switches only make sense in specific HVAC modes: the
+    dehumidify-related ones (Target Dehumidify in both Cool and Dry, Smart
+    Drying only while cooling, Continuous Dry only while drying), and XFan
+    (Cool and Dry only - it dries the coil after cooling/drying, which is
+    meaningless in Heat/Fan/Auto). When the current mode isn't in the
+    allowed set, `available` (see GreeCloudSwitch below) turns False and
+    the switch shows as unavailable rather than a stale on/off state left
+    over from a previous mode.
     """
 
     def _available(device: Device) -> bool:
@@ -130,9 +132,10 @@ def _dehumidify_available_in(*modes: Mode) -> Callable[[Device], bool]:
     return _available
 
 
-_TARGET_DEHUMIDIFY_AVAILABLE = _dehumidify_available_in(Mode.Cool, Mode.Dry)
-_SMART_DRYING_AVAILABLE = _dehumidify_available_in(Mode.Cool)
-_CONTINUOUS_DRY_AVAILABLE = _dehumidify_available_in(Mode.Dry)
+_TARGET_DEHUMIDIFY_AVAILABLE = _available_in_modes(Mode.Cool, Mode.Dry)
+_SMART_DRYING_AVAILABLE = _available_in_modes(Mode.Cool)
+_CONTINUOUS_DRY_AVAILABLE = _available_in_modes(Mode.Dry)
+_XFAN_AVAILABLE = _available_in_modes(Mode.Cool, Mode.Dry)
 
 
 GREE_CLOUD_SWITCHES: tuple[GreeCloudSwitchEntityDescription, ...] = (
@@ -153,6 +156,7 @@ GREE_CLOUD_SWITCHES: tuple[GreeCloudSwitchEntityDescription, ...] = (
         translation_key="xfan",
         get_value_fn=lambda d: d.xfan,
         set_value_fn=_set_xfan,
+        available_fn=_XFAN_AVAILABLE,
     ),
     GreeCloudSwitchEntityDescription(
         key="Health mode",
