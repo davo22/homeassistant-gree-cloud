@@ -199,9 +199,6 @@ class GreeCloudClimateEntity(GreeCloudEntity, ClimateEntity):
         )
 
         self.coordinator.device.target_humidity = humidity
-        if mode == Mode.Cool:
-            # Effective dehumidification while cooling requires low airflow.
-            self.coordinator.device.fan_speed = FanSpeed.Low
         await self.coordinator.push_state_update()
         self.async_write_ha_state()
 

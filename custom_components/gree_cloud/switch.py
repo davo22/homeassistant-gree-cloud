@@ -6,7 +6,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
 
-from greeclimate.device import Device, FanSpeed, Mode
+from greeclimate.device import Device, Mode
 
 from homeassistant.components.switch import (
     SwitchDeviceClass,
@@ -76,14 +76,11 @@ def _set_smart_drying(device: Device, value: bool) -> None:
 
     Dmod has no setter in greeclimate (it's exposed read-only), so it's
     written directly through raw_properties, the same pattern used for HWHP
-    properties. In Cool mode the unit only dehumidifies effectively at low
-    airflow, so enabling Smart Drying there also forces the fan to Low.
+    properties.
     """
     device.raw_properties[PROP_SMART_DRYING] = SMART_DRYING_ON if value else SMART_DRYING_OFF
     if PROP_SMART_DRYING not in device._dirty:
         device._dirty.append(PROP_SMART_DRYING)
-    if value and device.mode == Mode.Cool:
-        device.fan_speed = FanSpeed.Low
 
 
 def _has_smart_drying(device: Device) -> bool:

@@ -58,12 +58,14 @@ PROP_COMPRESSOR_FREQ = "CompressorFqy"
 PROP_HUMIDITY = "DwatSen"
 
 # Target humidity (Cool/Dry mode only). Backed by Props.HUM_SET ("Dwet"),
-# already exposed by greeclimate as Device.target_humidity. Range and step
-# verified against a real Clivia V3.2.M unit's MQTT traffic.
+# already exposed by greeclimate as Device.target_humidity. The Cool range
+# and 5% step are verified against a real Clivia V3.2.M unit's MQTT traffic
+# (40%->Dwet 5, 45%->6, 50%->7). The Dry range mirrors the Gree spec sheet
+# but has NOT been confirmed on real hardware - only Cool mode was captured.
 HUMIDITY_MIN_COOL = 40
 HUMIDITY_MAX_COOL = 80
-HUMIDITY_MIN_DRY = 30
-HUMIDITY_MAX_DRY = 70
+HUMIDITY_MIN_DRY = 30  # unverified - not captured on real hardware
+HUMIDITY_MAX_DRY = 70  # unverified - not captured on real hardware
 HUMIDITY_STEP = 5
 
 # Smart Drying mode ("Dmod", part of the standard Props enum but exposed by
