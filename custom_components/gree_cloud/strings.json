@@ -39,9 +39,6 @@
       }
     },
     "switch": {
-      "quiet": {
-        "name": "Quiet"
-      },
       "fresh_air": {
         "name": "Fresh air"
       },
@@ -59,6 +56,9 @@
       },
       "smart_drying": {
         "name": "Smart drying"
+      },
+      "silent_mode": {
+        "name": "Silent Mode"
       }
     },
     "select": {

@@ -12,12 +12,6 @@
       }
     },
     "switch": {
-      "light": {
-        "default": "mdi:lightbulb"
-      },
-      "quiet": {
-        "default": "mdi:volume-off"
-      },
       "fresh_air": {
         "default": "mdi:air-filter"
       },
@@ -26,6 +20,13 @@
       },
       "health_mode": {
         "default": "mdi:leaf"
+      },
+      "silent_mode": {
+        "default": "mdi:bell-off",
+        "state": {
+          "on": "mdi:bell-off",
+          "off": "mdi:bell-ring"
+        }
       }
     }
   }

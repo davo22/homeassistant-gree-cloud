@@ -33,12 +33,6 @@
       }
     },
     "switch": {
-      "light": {
-        "name": "Luz do painel"
-      },
-      "quiet": {
-        "name": "Silencioso"
-      },
       "fresh_air": {
         "name": "Ar fresco"
       },
@@ -47,6 +41,9 @@
       },
       "health_mode": {
         "name": "Modo saúde"
+      },
+      "silent_mode": {
+        "name": "Modo silencioso"
       }
     }
   }

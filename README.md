@@ -11,7 +11,7 @@ This integration is based on a fork of the [greeclimate](https://github.com/cmro
 - 🌐 **Cloud-only device support** - Works with Gree devices that only communicate via cloud
 - 🔄 **Full climate control** - Temperature, mode, fan speed, swing modes
 - �️ **Hot water heat pump support** - Control Gree WHIO / Hot Water Heat Pump devices
-- 🎛️ **Additional switches** - Panel light, quiet mode, fresh air, XFan, health mode (AC/heat pump devices)
+- 🎛️ **Additional switches** - Panel light, fresh air, XFan, health mode (AC/heat pump devices)
 - 🔐 **Secure authentication** - Uses your existing Gree+ account credentials
 - 🌍 **Multi-region support** - Works with all Gree Cloud regions
 
@@ -92,10 +92,11 @@ Created for Gree WHIO / Hot Water Heat Pump devices (auto-detected):
 Created for air conditioner and heat pump devices only (not hot water heat pumps):
 
 - **Panel Light**: Control the front panel LED
-- **Quiet Mode**: Enable/disable quiet operation
 - **Fresh Air**: Enable/disable fresh air intake
 - **XFan**: Enable/disable extra fan mode (helps dry coils)
 - **Health Mode**: Enable/disable anion/health mode (disabled by default)
+
+Quiet operation is no longer a separate switch - select `quiet` as the climate entity's fan mode instead (between Auto and Low).
 
 ## Cloud Regions
 

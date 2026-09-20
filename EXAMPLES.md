@@ -63,9 +63,11 @@ automation:
           entity_id: climate.bedroom_ac
         data:
           preset_mode: eco
-      - service: switch.turn_on
+      - service: climate.set_fan_mode
         target:
-          entity_id: switch.bedroom_ac_quiet
+          entity_id: climate.bedroom_ac
+        data:
+          fan_mode: quiet
 ```
 
 ## Adjust temperature based on outdoor temperature
@@ -167,9 +169,11 @@ automation:
           entity_id: climate.bedroom_ac
         data:
           preset_mode: sleep
-      - service: switch.turn_on
+      - service: climate.set_fan_mode
         target:
-          entity_id: switch.bedroom_ac_quiet
+          entity_id: climate.bedroom_ac
+        data:
+          fan_mode: quiet
       - service: switch.turn_off
         target:
           entity_id: switch.bedroom_ac_panel_light
@@ -211,8 +215,6 @@ scene:
         fan_mode: auto
         swing_mode: vertical
         preset_mode: none
-      switch.living_room_ac_quiet:
-        state: off
       switch.living_room_ac_panel_light:
         state: on
 
@@ -221,11 +223,9 @@ scene:
       climate.bedroom_ac:
         hvac_mode: cool
         temperature: 24
-        fan_mode: low
+        fan_mode: quiet
         swing_mode: "off"
         preset_mode: sleep
-      switch.bedroom_ac_quiet:
-        state: on
       switch.bedroom_ac_panel_light:
         state: off
 

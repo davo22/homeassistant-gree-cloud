@@ -23,6 +23,7 @@ from .const import (
     DEHUMIDIFY_MODE_ON,
     DEHUMIDIFY_MODE_SMART,
     DISPATCH_DEVICE_DISCOVERED,
+    PROP_BUZZER_CTRL,
     PROP_DEHUMIDIFY_MODE,
 )
 from .coordinator import CloudDeviceDataUpdateCoordinator, GreeCloudConfigEntry, is_hwhp_device
@@ -37,11 +38,6 @@ class GreeCloudSwitchEntityDescription(SwitchEntityDescription):
     set_value_fn: Callable[[Device, bool], None]
     exists_fn: Callable[[Device], bool] = lambda device: True
     available_fn: Callable[[Device], bool] = lambda device: True
-
-
-def _set_quiet(device: Device, value: bool) -> None:
-    """Typed helper to set device quiet property."""
-    device.quiet = value
 
 
 def _set_fresh_air(device: Device, value: bool) -> None:
@@ -113,6 +109,33 @@ def _has_dehumidify_mode(device: Device) -> bool:
     return device.raw_properties.get(PROP_DEHUMIDIFY_MODE) is not None
 
 
+def _get_silent_mode(device: Device) -> bool:
+    """Typed helper to read the Silent Mode (BuzzerCtrl) state."""
+    return device.raw_properties.get(PROP_BUZZER_CTRL) == 0
+
+
+def _set_silent_mode(device: Device, value: bool) -> None:
+    """Typed helper to set the Silent Mode (BuzzerCtrl) state.
+
+    BuzzerCtrl has no setter in greeclimate, so it's written directly
+    through raw_properties, the same pattern used for Dmod. The raw value
+    is inverted relative to the switch: 1 = beep on (normal), 0 = beep off
+    (silent) - so "Silent Mode" on means BuzzerCtrl=0.
+    """
+    device.raw_properties[PROP_BUZZER_CTRL] = 0 if value else 1
+    if PROP_BUZZER_CTRL not in device._dirty:
+        device._dirty.append(PROP_BUZZER_CTRL)
+
+
+def _has_silent_mode(device: Device) -> bool:
+    """Return True if the device reports Silent Mode (BuzzerCtrl) support.
+
+    Units without this feature omit the key entirely rather than reporting
+    a value, matching the convention used for other optional properties.
+    """
+    return device.raw_properties.get(PROP_BUZZER_CTRL) is not None
+
+
 def _available_in_modes(*modes: Mode) -> Callable[[Device], bool]:
     """Build an available_fn restricted to the given HVAC modes.
 
@@ -139,12 +162,6 @@ _XFAN_AVAILABLE = _available_in_modes(Mode.Cool, Mode.Dry)
 
 
 GREE_CLOUD_SWITCHES: tuple[GreeCloudSwitchEntityDescription, ...] = (
-    GreeCloudSwitchEntityDescription(
-        key="Quiet",
-        translation_key="quiet",
-        get_value_fn=lambda d: d.quiet,
-        set_value_fn=_set_quiet,
-    ),
     GreeCloudSwitchEntityDescription(
         key="Fresh Air",
         translation_key="fresh_air",
@@ -188,6 +205,13 @@ GREE_CLOUD_SWITCHES: tuple[GreeCloudSwitchEntityDescription, ...] = (
         set_value_fn=_set_smart_drying,
         exists_fn=_has_dehumidify_mode,
         available_fn=_SMART_DRYING_AVAILABLE,
+    ),
+    GreeCloudSwitchEntityDescription(
+        key="Silent Mode",
+        translation_key="silent_mode",
+        get_value_fn=_get_silent_mode,
+        set_value_fn=_set_silent_mode,
+        exists_fn=_has_silent_mode,
     ),
 )
 

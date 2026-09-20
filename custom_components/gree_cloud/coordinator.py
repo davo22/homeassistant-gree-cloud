@@ -35,6 +35,7 @@ from .const import (
     HWHP_PROP_WATER_TEMP,
     HWHP_PROP_WSTATE,
     MAX_ERRORS,
+    PROP_BUZZER_CTRL,
     PROP_COMPRESSOR_FREQ,
     PROP_COMPRESSOR_TEMP,
     PROP_ENERGY_TOTAL,
@@ -70,6 +71,9 @@ _SENSOR_EXTRA_PROPS = [
 # standard Props.LIGHT ("Lig").
 _LIGHT_EXTRA_PROPS = [PROP_LIGHT_SENSOR]
 
+# Extra property needed by the Silent Mode switch.
+_SOUND_EXTRA_PROPS = [PROP_BUZZER_CTRL]
+
 
 class HWHPAwareCloudDevice(CloudDevice):
     """CloudDevice subclass that also requests HWHP-specific properties.
@@ -91,7 +95,11 @@ class HWHPAwareCloudDevice(CloudDevice):
         )
 
         props: list[str] = (
-            _STANDARD_PROPS + _HWHP_EXTRA_PROPS + _SENSOR_EXTRA_PROPS + _LIGHT_EXTRA_PROPS
+            _STANDARD_PROPS
+            + _HWHP_EXTRA_PROPS
+            + _SENSOR_EXTRA_PROPS
+            + _LIGHT_EXTRA_PROPS
+            + _SOUND_EXTRA_PROPS
         )
         if not self.hid:
             props.append("hid")

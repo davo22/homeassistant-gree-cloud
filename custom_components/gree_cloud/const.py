@@ -77,6 +77,12 @@ PANEL_LIGHT_ON = "on"
 PANEL_LIGHT_AUTO = "auto"
 PANEL_LIGHT_OFF = "off"
 
+# Buzzer (command confirmation beep) control. Not part of the standard Props
+# enum, so it must be requested explicitly (see _SOUND_EXTRA_PROPS in
+# coordinator.py). Has no setter in greeclimate - driven directly through
+# raw_properties, the same pattern as Dmod/LigSen.
+PROP_BUZZER_CTRL = "BuzzerCtrl"  # 1 = beep ON (normal), 0 = beep OFF (silent)
+
 # Relative humidity. Already part of the standard Props enum (HUM_SENSOR), so
 # it needs no extra request - only an entity to surface it.
 PROP_HUMIDITY = "DwatSen"
