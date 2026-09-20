@@ -9,9 +9,13 @@ This integration is based on a fork of the [greeclimate](https://github.com/cmro
 ## Features
 
 - 🌐 **Cloud-only device support** - Works with Gree devices that only communicate via cloud
-- 🔄 **Full climate control** - Temperature, mode, fan speed, swing modes
-- �️ **Hot water heat pump support** - Control Gree WHIO / Hot Water Heat Pump devices
+- 🔄 **Full climate control** - Temperature, mode, fan speed, swing position
+- 💧 **Humidity control** - Target humidity in Cool & Dry, plus Target Dehumidify, Smart Drying, and Continuous Dry modes
+- 🌬️ **Precise louver control** - Independent vertical and horizontal swing position selects (6 positions each)
+- 🔇 **Silent operation** - Quiet fan mode and a dedicated Silent Mode switch to mute the unit's beeper
+- 🏷️ **Hot water heat pump support** - Control Gree WHIO / Hot Water Heat Pump devices
 - 🎛️ **Additional switches** - Panel light, fresh air, XFan, health mode (AC/heat pump devices)
+- 📊 **Diagnostic sensors** - Outdoor temperature, compressor temperature, compressor frequency
 - 🔐 **Secure authentication** - Uses your existing Gree+ account credentials
 - 🌍 **Multi-region support** - Works with all Gree Cloud regions
 
@@ -75,9 +79,11 @@ Created for standard Gree air conditioner and heat pump devices:
 
 - **HVAC Modes**: Off, Auto, Cool, Heat, Dry, Fan Only
 - **Preset Modes**: None, Eco, Away (8°C mode), Boost (Turbo), Sleep
-- **Fan Modes**: Auto, Low, Medium Low, Medium, Medium High, High
-- **Swing Modes**: Off, Vertical, Horizontal, Both
+- **Fan Modes**: Auto, Quiet, Low, Medium Low, Medium, Medium High, High
+- **Target Humidity**: settable in Cool (40–80%) and Dry (30–70%), in 5% steps — only shown on units that report support
 - **Temperature Control**: Target temperature with 1° step
+
+Quiet operation is not a separate switch — select **Quiet** as the fan mode instead (between Auto and Low). Selecting Quiet leaves the current fan speed untouched; picking any other fan mode restores real fan speed control.
 
 ### Hot Water Heat Pump — Water Heater Entity
 
@@ -89,14 +95,30 @@ Created for Gree WHIO / Hot Water Heat Pump devices (auto-detected):
 
 ### Switch Entities
 
-Created for air conditioner and heat pump devices only (not hot water heat pumps):
+Created for air conditioner and heat pump devices only (not hot water heat pumps), each shown only when the device reports the underlying feature:
 
-- **Panel Light**: Control the front panel LED
+- **Target Dehumidify**: Dehumidify to the target humidity level (Cool + Dry)
+- **Smart Drying**: Automatic drying without a target (Cool only)
+- **Continuous Dry**: Continuous dehumidify without a target (Dry only)
 - **Fresh Air**: Enable/disable fresh air intake
-- **XFan**: Enable/disable extra fan mode (helps dry coils)
+- **XFan**: Enable/disable extra fan mode (helps dry coils, Cool + Dry only)
 - **Health Mode**: Enable/disable anion/health mode (disabled by default)
+- **Silent Mode**: Mute the unit's beeper/buzzer
 
-Quiet operation is no longer a separate switch - select `quiet` as the climate entity's fan mode instead (between Auto and Low).
+### Select Entities
+
+- **Panel Light**: On / Auto / Off
+- **Swing Vertical**: Full Swing, Highest, Upper-Middle, Middle, Lower-Middle, Lowest
+- **Swing Horizontal**: Full Swing, Far Right, Right-Center, Center, Left-Center, Far Left
+
+### Diagnostic Sensors
+
+Shown only when the device reports the corresponding value:
+
+- **Outdoor Temperature**
+- **Compressor Temperature**
+- **Compressor Frequency**
+- **Room Humidity**
 
 ## Cloud Regions
 
@@ -198,6 +220,14 @@ Try power-cycling the device and ensuring it's connected in the Gree+ app.
 ### Q: Does this support Fahrenheit?
 
 **A:** Yes, the integration detects the temperature unit set on your device and displays temperatures accordingly.
+
+### Q: Where did the Quiet switch go?
+
+**A:** It's now a fan mode. Select **Quiet** from the climate entity's fan mode list (between Auto and Low) instead of toggling a separate switch.
+
+### Q: Why don't I see the humidity slider, dehumidify switches, or louver selects?
+
+**A:** These are only created when your device reports the underlying property. Not all Gree-based units (or firmware versions) expose humidity/louver control over the cloud protocol.
 
 ## Credits
 
