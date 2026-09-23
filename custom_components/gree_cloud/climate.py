@@ -88,6 +88,11 @@ FAN_MODES_REVERSE = {v: k for k, v in FAN_MODES.items()}
 
 SWING_MODES = [SWING_OFF, SWING_VERTICAL, SWING_HORIZONTAL, SWING_BOTH]
 
+# greeclimate revisions older than 2.2.0 have no HalfTemEn property. Resolving it
+# leniently keeps the climate entity loadable when Home Assistant is still running
+# an outdated revision of the pinned library.
+_PROP_TEMP_HALF_ENABLED = getattr(Props, "TEMP_HALF_ENABLED", None)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -95,6 +100,12 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Gree Cloud HVAC device from a config entry."""
+    if _PROP_TEMP_HALF_ENABLED is None:
+        _LOGGER.warning(
+            "Installed greeclimate library is older than the pinned 2.2.0 and lacks "
+            "the HalfTemEn property; 0.5C steps are unavailable. Reinstall the "
+            "integration in HACS and restart Home Assistant to update the library"
+        )
 
     @callback
     def init_device(coordinator: CloudDeviceDataUpdateCoordinator) -> None:
@@ -143,7 +154,9 @@ class GreeCloudClimateEntity(GreeCloudEntity, ClimateEntity):
     @property
     def _supports_half_degree(self) -> bool:
         """Return whether this unit supports 0.5C setpoints."""
-        return self.coordinator.device.get_property(Props.TEMP_HALF_ENABLED) == 1
+        if _PROP_TEMP_HALF_ENABLED is None:
+            return False
+        return self.coordinator.device.get_property(_PROP_TEMP_HALF_ENABLED) == 1
 
     @property
     def precision(self) -> float:
