@@ -146,6 +146,11 @@ HORIZONTAL_SWING_LABELS_REVERSE = {v: k for k, v in HORIZONTAL_SWING_LABELS.item
 # the entity loadable; only the 0.5C feature is lost.
 _PROP_TEMP_HALF_ENABLED = getattr(Props, "TEMP_HALF_ENABLED", None)
 
+# greeclimate revisions older than 2.2.0 have no HalfTemEn property. Resolving it
+# leniently keeps the climate entity loadable when Home Assistant is still running
+# an outdated revision of the pinned library.
+_PROP_TEMP_HALF_ENABLED = getattr(Props, "TEMP_HALF_ENABLED", None)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
