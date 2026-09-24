@@ -33,6 +33,9 @@
       }
     },
     "switch": {
+      "quiet": {
+        "name": "Silencioso"
+      },
       "fresh_air": {
         "name": "Ar fresco"
       },

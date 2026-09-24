@@ -12,6 +12,9 @@
       }
     },
     "switch": {
+      "quiet": {
+        "default": "mdi:volume-off"
+      },
       "fresh_air": {
         "default": "mdi:air-filter"
       },

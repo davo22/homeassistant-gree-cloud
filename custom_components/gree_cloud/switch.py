@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+import logging
 from typing import Any
 
 from greeclimate.device import Device, Mode
@@ -29,6 +30,8 @@ from .const import (
 from .coordinator import CloudDeviceDataUpdateCoordinator, GreeCloudConfigEntry, is_hwhp_device
 from .entity import GreeCloudEntity
 
+_LOGGER = logging.getLogger(__name__)
+
 
 @dataclass(kw_only=True, frozen=True)
 class GreeCloudSwitchEntityDescription(SwitchEntityDescription):
@@ -38,6 +41,23 @@ class GreeCloudSwitchEntityDescription(SwitchEntityDescription):
     set_value_fn: Callable[[Device, bool], None]
     exists_fn: Callable[[Device], bool] = lambda device: True
     available_fn: Callable[[Device], bool] = lambda device: True
+
+
+def _set_quiet(device: Device, value: bool) -> None:
+    """Typed helper to set device quiet property.
+
+    Deprecated: kept for this release only for backward compatibility with
+    existing automations that reference switch.<device>_quiet directly; a
+    future release will remove it. Still backed by the same device.quiet
+    property as the climate entity's "quiet" fan mode, so the two can't go
+    out of sync - there's only one source of truth, this switch and the
+    fan mode just read/write the same thing.
+    """
+    _LOGGER.warning(
+        "The Quiet switch is deprecated and will be removed in a future "
+        "release; use the climate entity's 'quiet' fan mode instead."
+    )
+    device.quiet = value
 
 
 def _set_fresh_air(device: Device, value: bool) -> None:
@@ -162,6 +182,12 @@ _XFAN_AVAILABLE = _available_in_modes(Mode.Cool, Mode.Dry)
 
 
 GREE_CLOUD_SWITCHES: tuple[GreeCloudSwitchEntityDescription, ...] = (
+    GreeCloudSwitchEntityDescription(
+        key="Quiet",
+        translation_key="quiet",
+        get_value_fn=lambda d: d.quiet,
+        set_value_fn=_set_quiet,
+    ),
     GreeCloudSwitchEntityDescription(
         key="Fresh Air",
         translation_key="fresh_air",

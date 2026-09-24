@@ -85,7 +85,7 @@ Created for standard Gree air conditioner and heat pump devices:
 - **Swing Modes** (vertical): Full Swing, Highest, Upper-Middle, Middle, Lower-Middle, Lowest — only shown on units that report support
 - **Swing Horizontal Modes**: Full Swing, Far Right, Right-Center, Center, Left-Center, Far Left — only shown on units that report support (requires Home Assistant 2024.12+)
 
-Quiet operation is not a separate switch — select **Quiet** as the fan mode instead (between Auto and Low). Selecting Quiet leaves the current fan speed untouched; picking any other fan mode restores real fan speed control.
+Quiet operation is available as **Quiet** in the fan mode list (between Auto and Low) — the recommended way to use it. Selecting Quiet leaves the current fan speed untouched; picking any other fan mode restores real fan speed control. A separate `Quiet` switch also still exists for backward compatibility (see Switch Entities below) but is deprecated and will be removed in a future release.
 
 ### Hot Water Heat Pump — Water Heater Entity
 
@@ -106,6 +106,7 @@ Created for air conditioner and heat pump devices only (not hot water heat pumps
 - **XFan**: Enable/disable extra fan mode (helps dry coils, Cool + Dry only)
 - **Health Mode**: Enable/disable anion/health mode (disabled by default)
 - **Silent Mode**: Mute the unit's beeper/buzzer
+- **Quiet** *(deprecated)*: Same underlying setting as the climate entity's Quiet fan mode — always in sync, since both read/write the same property. Kept for backward compatibility with existing automations; will be removed in a future release, and toggling it logs a deprecation warning. Prefer the fan mode for new automations.
 
 ### Select Entities
 
@@ -221,9 +222,9 @@ Try power-cycling the device and ensuring it's connected in the Gree+ app.
 
 **A:** Yes, the integration detects the temperature unit set on your device and displays temperatures accordingly.
 
-### Q: Where did the Quiet switch go?
+### Q: Should I use the Quiet switch or the Quiet fan mode?
 
-**A:** It's now a fan mode. Select **Quiet** from the climate entity's fan mode list (between Auto and Low) instead of toggling a separate switch.
+**A:** Use the fan mode — select **Quiet** from the climate entity's fan mode list (between Auto and Low). The standalone `Quiet` switch still works (it reads/writes the exact same underlying setting, so the two can never disagree) but is deprecated and will be removed in a future release; it's kept only so existing automations referencing it directly don't break. New automations should use the fan mode.
 
 ### Q: Why don't I see the humidity slider, dehumidify switches, or louver swing modes?
 
