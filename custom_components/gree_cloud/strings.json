@@ -69,28 +69,6 @@
           "auto": "Auto",
           "off": "Off"
         }
-      },
-      "swing_vertical": {
-        "name": "Swing Vertical",
-        "state": {
-          "full_swing": "Full Swing",
-          "highest": "Highest",
-          "upper_middle": "Upper-Middle",
-          "middle": "Middle",
-          "lower_middle": "Lower-Middle",
-          "lowest": "Lowest"
-        }
-      },
-      "swing_horizontal": {
-        "name": "Swing Horizontal",
-        "state": {
-          "full_swing": "Full Swing",
-          "far_right": "Far Right",
-          "right_center": "Right-Center",
-          "center": "Center",
-          "left_center": "Left-Center",
-          "far_left": "Far Left"
-        }
       }
     }
   }
