@@ -84,13 +84,12 @@ def _has_compressor_frequency(device: Device) -> bool:
 def _fahrenheit_to_celsius(value: float) -> float:
     """Convert a raw device temperature key to Celsius.
 
-    Unlike TemSen (indoor temperature), which greeclimate's Device class
-    already normalizes to the display unit, raw keys read directly off
-    raw_properties report Fahrenheit regardless of the TemUn setting -
-    verified on a Clivia V3.2.M with the device set to Celsius (HA showed
-    indoor temp correctly in C, but OutEnvTem/CompressorTem/InEvaTem/
-    TemsSenOut all still came back in F). The conversion is therefore
-    unconditional here, not gated on temperature_units.
+    OutEnvTem / CompressorTem always report Fahrenheit regardless of the
+    device's TemUn setting - confirmed by testing on a physical Clivia
+    V3.2.M switched between TemUn=0 (Celsius) and TemUn=1 (Fahrenheit);
+    these raw keys did not change value across the switch. The fixed
+    (°F - 32) * 5/9 conversion is therefore correct unconditionally and
+    should not be made conditional on TemUn.
     """
     return round((value - 32) * 5 / 9, 1)
 

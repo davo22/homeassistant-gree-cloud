@@ -55,14 +55,23 @@ PROP_COMPRESSOR_FREQ = "CompressorFqy"
 
 # Compressor and outdoor temperature. Neither is part of the standard Props
 # enum, so both must be requested explicitly (see _SENSOR_EXTRA_PROPS in
-# coordinator.py). Verified on a real Clivia V3.2.M with the device set to
-# Celsius (HA showed indoor temp correctly in C): these raw keys still
-# report Fahrenheit regardless of the TemUn setting - unlike TemSen (indoor
-# temperature), which greeclimate already normalizes to the display unit.
-# They therefore need an unconditional F->C conversion; see
-# _fahrenheit_to_celsius in sensor.py.
+# coordinator.py). Confirmed on a physical Clivia V3.2.M switched between
+# TemUn=0 (Celsius) and TemUn=1 (Fahrenheit): these raw keys did not change
+# value across the switch, i.e. they always report Fahrenheit regardless of
+# TemUn - unlike TemSen (indoor temperature), which greeclimate already
+# normalizes to the display unit. They therefore need an unconditional F->C
+# conversion, not one gated on TemUn; see _fahrenheit_to_celsius in
+# sensor.py.
 PROP_COMPRESSOR_TEMP = "CompressorTem"
 PROP_OUTDOOR_TEMP = "OutEnvTem"
+
+# Device temperature unit (0 = Celsius, 1 = Fahrenheit), confirmed on
+# hardware per the note above. Part of the standard Props enum and already
+# exposed by greeclimate as the typed Device.temperature_units property
+# (see TemperatureUnits in climate.py) - not read directly via this
+# constant anywhere, but documented here for anyone debugging
+# temperature-unit issues later.
+PROP_TEM_UN = "TemUn"
 
 # Panel light auto-sense. Not part of the standard Props enum, so it must be
 # requested explicitly (see _LIGHT_EXTRA_PROPS in coordinator.py). Combined

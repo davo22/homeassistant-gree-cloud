@@ -138,6 +138,14 @@ HORIZONTAL_SWING_LABELS: dict[HorizontalSwing, str] = {
 }
 HORIZONTAL_SWING_LABELS_REVERSE = {v: k for k, v in HORIZONTAL_SWING_LABELS.items()}
 
+# greeclimate revisions older than 2.2.0 have no HalfTemEn property. Every tag
+# before 2.2.0 declared the same package version, so pip never reinstalled an
+# already-present older revision on upgrade (davo22/homeassistant-gree-cloud#19)
+# - a bare Props.TEMP_HALF_ENABLED access would then raise AttributeError and
+# the whole climate entity would fail to load. Resolving it leniently keeps
+# the entity loadable; only the 0.5C feature is lost.
+_PROP_TEMP_HALF_ENABLED = getattr(Props, "TEMP_HALF_ENABLED", None)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -145,6 +153,12 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Gree Cloud HVAC device from a config entry."""
+    if _PROP_TEMP_HALF_ENABLED is None:
+        _LOGGER.warning(
+            "Installed greeclimate library is older than the pinned 2.2.0 and lacks "
+            "the HalfTemEn property; 0.5C steps are unavailable. Reinstall the "
+            "integration in HACS and restart Home Assistant to update the library"
+        )
 
     @callback
     def init_device(coordinator: CloudDeviceDataUpdateCoordinator) -> None:
@@ -271,7 +285,9 @@ class GreeCloudClimateEntity(GreeCloudEntity, ClimateEntity):
     @property
     def _supports_half_degree(self) -> bool:
         """Return whether this unit supports 0.5C setpoints."""
-        return self.coordinator.device.get_property(Props.TEMP_HALF_ENABLED) == 1
+        if _PROP_TEMP_HALF_ENABLED is None:
+            return False
+        return self.coordinator.device.get_property(_PROP_TEMP_HALF_ENABLED) == 1
 
     @property
     def precision(self) -> float:
