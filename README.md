@@ -11,7 +11,7 @@ This integration is based on a fork of the [greeclimate](https://github.com/cmro
 - 🌐 **Cloud-only device support** - Works with Gree devices that only communicate via cloud
 - 🔄 **Full climate control** - Temperature, mode, fan speed, swing position
 - 💧 **Humidity control** - Target humidity in Cool & Dry, plus Target Dehumidify, Smart Drying, and Continuous Dry modes
-- 🌬️ **Precise louver control** - Independent vertical and horizontal swing position selects (6 positions each)
+- 🌬️ **Precise louver control** - Native climate swing modes, 6 fixed positions per axis (vertical and horizontal)
 - 🔇 **Silent operation** - Quiet fan mode and a dedicated Silent Mode switch to mute the unit's beeper
 - 🏷️ **Hot water heat pump support** - Control Gree WHIO / Hot Water Heat Pump devices
 - 🎛️ **Additional switches** - Panel light, fresh air, XFan, health mode (AC/heat pump devices)
@@ -82,6 +82,8 @@ Created for standard Gree air conditioner and heat pump devices:
 - **Fan Modes**: Auto, Quiet, Low, Medium Low, Medium, Medium High, High
 - **Target Humidity**: settable in Cool (40–80%) and Dry (30–70%), in 5% steps — only shown on units that report support
 - **Temperature Control**: Target temperature with 1° step
+- **Swing Modes** (vertical): Full Swing, Highest, Upper-Middle, Middle, Lower-Middle, Lowest — only shown on units that report support
+- **Swing Horizontal Modes**: Full Swing, Far Right, Right-Center, Center, Left-Center, Far Left — only shown on units that report support (requires Home Assistant 2024.12+)
 
 Quiet operation is not a separate switch — select **Quiet** as the fan mode instead (between Auto and Low). Selecting Quiet leaves the current fan speed untouched; picking any other fan mode restores real fan speed control.
 
@@ -108,8 +110,6 @@ Created for air conditioner and heat pump devices only (not hot water heat pumps
 ### Select Entities
 
 - **Panel Light**: On / Auto / Off
-- **Swing Vertical**: Full Swing, Highest, Upper-Middle, Middle, Lower-Middle, Lowest
-- **Swing Horizontal**: Full Swing, Far Right, Right-Center, Center, Left-Center, Far Left
 
 ### Diagnostic Sensors
 
@@ -225,9 +225,9 @@ Try power-cycling the device and ensuring it's connected in the Gree+ app.
 
 **A:** It's now a fan mode. Select **Quiet** from the climate entity's fan mode list (between Auto and Low) instead of toggling a separate switch.
 
-### Q: Why don't I see the humidity slider, dehumidify switches, or louver selects?
+### Q: Why don't I see the humidity slider, dehumidify switches, or louver swing modes?
 
-**A:** These are only created when your device reports the underlying property. Not all Gree-based units (or firmware versions) expose humidity/louver control over the cloud protocol.
+**A:** These are only created/exposed when your device reports the underlying property. Not all Gree-based units (or firmware versions) expose humidity/louver control over the cloud protocol.
 
 ## Credits
 
