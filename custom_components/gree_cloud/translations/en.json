@@ -30,12 +30,15 @@
       },
       "compressor_frequency": {
         "name": "Compressor frequency"
+      },
+      "compressor_temperature": {
+        "name": "Compressor temperature"
+      },
+      "outdoor_temperature": {
+        "name": "Outdoor temperature"
       }
     },
     "switch": {
-      "light": {
-        "name": "Panel light"
-      },
       "quiet": {
         "name": "Quiet"
       },
@@ -47,6 +50,28 @@
       },
       "health_mode": {
         "name": "Health mode"
+      },
+      "dehumidify": {
+        "name": "Target Dehumidify"
+      },
+      "continuous_dry": {
+        "name": "Continuous Dry"
+      },
+      "smart_drying": {
+        "name": "Smart drying"
+      },
+      "silent_mode": {
+        "name": "Silent Mode"
+      }
+    },
+    "select": {
+      "panel_light": {
+        "name": "Panel Light",
+        "state": {
+          "on": "On",
+          "auto": "Auto",
+          "off": "Off"
+        }
       }
     }
   }

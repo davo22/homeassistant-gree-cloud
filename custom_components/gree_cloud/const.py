@@ -53,9 +53,81 @@ ENERGY_SCALE = 0.1
 # energy counter, which only moves in whole 0.1 kWh steps.
 PROP_COMPRESSOR_FREQ = "CompressorFqy"
 
+# Compressor and outdoor temperature. Neither is part of the standard Props
+# enum, so both must be requested explicitly (see _SENSOR_EXTRA_PROPS in
+# coordinator.py). Confirmed on a physical Clivia V3.2.M switched between
+# TemUn=0 (Celsius) and TemUn=1 (Fahrenheit): these raw keys did not change
+# value across the switch, i.e. they always report Fahrenheit regardless of
+# TemUn - unlike TemSen (indoor temperature), which greeclimate already
+# normalizes to the display unit. They therefore need an unconditional F->C
+# conversion, not one gated on TemUn; see _fahrenheit_to_celsius in
+# sensor.py.
+PROP_COMPRESSOR_TEMP = "CompressorTem"
+PROP_OUTDOOR_TEMP = "OutEnvTem"
+
+# Device temperature unit (0 = Celsius, 1 = Fahrenheit), confirmed on
+# hardware per the note above. Part of the standard Props enum and already
+# exposed by greeclimate as the typed Device.temperature_units property
+# (see TemperatureUnits in climate.py) - not read directly via this
+# constant anywhere, but documented here for anyone debugging
+# temperature-unit issues later.
+PROP_TEM_UN = "TemUn"
+
+# Panel light auto-sense. Not part of the standard Props enum, so it must be
+# requested explicitly (see _LIGHT_EXTRA_PROPS in coordinator.py). Combined
+# with Props.LIGHT ("Lig"), the panel light actually has three states,
+# verified on real hardware:
+#   Lig=0            -> off
+#   Lig=1, LigSen=1  -> on (manual, full brightness)
+#   Lig=1, LigSen=0  -> auto (adjusts to ambient light)
+PROP_LIGHT_SENSOR = "LigSen"
+
+PANEL_LIGHT_ON = "on"
+PANEL_LIGHT_AUTO = "auto"
+PANEL_LIGHT_OFF = "off"
+
+# Buzzer (command confirmation beep) control. Not part of the standard Props
+# enum, so it must be requested explicitly (see _SOUND_EXTRA_PROPS in
+# coordinator.py). Has no setter in greeclimate - driven directly through
+# raw_properties, the same pattern as Dmod/LigSen.
+PROP_BUZZER_CTRL = "BuzzerCtrl"  # 1 = beep ON (normal), 0 = beep OFF (silent)
+
 # Relative humidity. Already part of the standard Props enum (HUM_SENSOR), so
 # it needs no extra request - only an entity to surface it.
 PROP_HUMIDITY = "DwatSen"
+
+# Target humidity (Cool/Dry mode only). Backed by Props.HUM_SET ("Dwet"),
+# already exposed by greeclimate as Device.target_humidity, encoding
+# humidity% / 5 - 3. Confirmed against real Clivia V3.2.M MQTT traffic in
+# BOTH modes (45% -> Dwet 6 in Cool, and in Dry). Only the Cool bounds were
+# captured end-to-end (40-80%); the Dry bounds below are ASSUMED from the
+# Gree spec sheet and have NOT been verified on real hardware.
+HUMIDITY_MIN_COOL = 40
+HUMIDITY_MAX_COOL = 80
+HUMIDITY_MIN_DRY = 30  # ASSUMED - not verified on real hardware
+HUMIDITY_MAX_DRY = 70  # ASSUMED - not verified on real hardware
+HUMIDITY_STEP = 5
+
+# Dehumidify mode ("Dmod", part of the standard Props enum but exposed by
+# greeclimate as a read-only property - no setter - so it is driven directly
+# through raw_properties, the same pattern as the HWHP properties above).
+# Holds a single value at a time; verified on a real Clivia V3.2.M:
+#   15 = off (plain cooling/drying, no dehumidification)
+#   0  = target-based dehumidify (uses Dwet; also implied by setting a
+#        target humidity, see climate.py) - available in Cool and Dry
+#   1  = continuous dehumidify, no target ("Continuous Dry") - Dry only
+#   2  = smart dehumidify ("Smart Drying") - Cool only
+# Exposed as three independent switches plus the climate target humidity
+# (see switch.py and climate.py) that each just read back whichever value
+# Dmod currently holds, rather than fighting each other over it. Mode
+# gating is enforced only through each entity's `available` property -
+# nothing here forces Dmod, the fan, or any other control when the HVAC
+# mode changes; the device manages that on its own.
+PROP_DEHUMIDIFY_MODE = "Dmod"
+DEHUMIDIFY_MODE_OFF = 15
+DEHUMIDIFY_MODE_ON = 0
+DEHUMIDIFY_MODE_CONTINUOUS = 1
+DEHUMIDIFY_MODE_SMART = 2
 
 # Gree Cloud servers
 GREE_CLOUD_SERVERS = {

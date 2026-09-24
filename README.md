@@ -9,9 +9,13 @@ This integration is based on a fork of the [greeclimate](https://github.com/cmro
 ## Features
 
 - 🌐 **Cloud-only device support** - Works with Gree devices that only communicate via cloud
-- 🔄 **Full climate control** - Temperature, mode, fan speed, swing modes
-- �️ **Hot water heat pump support** - Control Gree WHIO / Hot Water Heat Pump devices
-- 🎛️ **Additional switches** - Panel light, quiet mode, fresh air, XFan, health mode (AC/heat pump devices)
+- 🔄 **Full climate control** - Temperature, mode, fan speed, swing position
+- 💧 **Humidity control** - Target humidity in Cool & Dry, plus Target Dehumidify, Smart Drying, and Continuous Dry modes
+- 🌬️ **Precise louver control** - Native climate swing modes, 6 fixed positions per axis (vertical and horizontal)
+- 🔇 **Silent operation** - Quiet fan mode and a dedicated Silent Mode switch to mute the unit's beeper
+- 🏷️ **Hot water heat pump support** - Control Gree WHIO / Hot Water Heat Pump devices
+- 🎛️ **Additional switches** - Panel light, fresh air, XFan, health mode (AC/heat pump devices)
+- 📊 **Diagnostic sensors** - Outdoor temperature, compressor temperature, compressor frequency
 - 🔐 **Secure authentication** - Uses your existing Gree+ account credentials
 - 🌍 **Multi-region support** - Works with all Gree Cloud regions
 
@@ -75,9 +79,13 @@ Created for standard Gree air conditioner and heat pump devices:
 
 - **HVAC Modes**: Off, Auto, Cool, Heat, Dry, Fan Only
 - **Preset Modes**: None, Eco, Away (8°C mode), Boost (Turbo), Sleep
-- **Fan Modes**: Auto, Low, Medium Low, Medium, Medium High, High
-- **Swing Modes**: Off, Vertical, Horizontal, Both
+- **Fan Modes**: Auto, Quiet, Low, Medium Low, Medium, Medium High, High
+- **Target Humidity**: settable in Cool (40–80%) and Dry (30–70%), in 5% steps — only shown on units that report support
 - **Temperature Control**: Target temperature with 1° step
+- **Swing Modes** (vertical): Full Swing, Highest, Upper-Middle, Middle, Lower-Middle, Lowest — only shown on units that report support
+- **Swing Horizontal Modes**: Full Swing, Far Right, Right-Center, Center, Left-Center, Far Left — only shown on units that report support (requires Home Assistant 2024.12+)
+
+Quiet operation is available as **Quiet** in the fan mode list (between Auto and Low) — the recommended way to use it. Selecting Quiet leaves the current fan speed untouched; picking any other fan mode restores real fan speed control. A separate `Quiet` switch also still exists for backward compatibility (see Switch Entities below) but is deprecated and will be removed in a future release.
 
 ### Hot Water Heat Pump — Water Heater Entity
 
@@ -89,13 +97,29 @@ Created for Gree WHIO / Hot Water Heat Pump devices (auto-detected):
 
 ### Switch Entities
 
-Created for air conditioner and heat pump devices only (not hot water heat pumps):
+Created for air conditioner and heat pump devices only (not hot water heat pumps), each shown only when the device reports the underlying feature:
 
-- **Panel Light**: Control the front panel LED
-- **Quiet Mode**: Enable/disable quiet operation
+- **Target Dehumidify**: Dehumidify to the target humidity level (Cool + Dry)
+- **Smart Drying**: Automatic drying without a target (Cool only)
+- **Continuous Dry**: Continuous dehumidify without a target (Dry only)
 - **Fresh Air**: Enable/disable fresh air intake
-- **XFan**: Enable/disable extra fan mode (helps dry coils)
+- **XFan**: Enable/disable extra fan mode (helps dry coils, Cool + Dry only)
 - **Health Mode**: Enable/disable anion/health mode (disabled by default)
+- **Silent Mode**: Mute the unit's beeper/buzzer
+- **Quiet** *(deprecated)*: Same underlying setting as the climate entity's Quiet fan mode — always in sync, since both read/write the same property. Kept for backward compatibility with existing automations; will be removed in a future release, and toggling it logs a deprecation warning. Prefer the fan mode for new automations.
+
+### Select Entities
+
+- **Panel Light**: On / Auto / Off
+
+### Diagnostic Sensors
+
+Shown only when the device reports the corresponding value:
+
+- **Outdoor Temperature**
+- **Compressor Temperature**
+- **Compressor Frequency**
+- **Room Humidity**
 
 ## Cloud Regions
 
@@ -197,6 +221,14 @@ Try power-cycling the device and ensuring it's connected in the Gree+ app.
 ### Q: Does this support Fahrenheit?
 
 **A:** Yes, the integration detects the temperature unit set on your device and displays temperatures accordingly.
+
+### Q: Should I use the Quiet switch or the Quiet fan mode?
+
+**A:** Use the fan mode — select **Quiet** from the climate entity's fan mode list (between Auto and Low). The standalone `Quiet` switch still works (it reads/writes the exact same underlying setting, so the two can never disagree) but is deprecated and will be removed in a future release; it's kept only so existing automations referencing it directly don't break. New automations should use the fan mode.
+
+### Q: Why don't I see the humidity slider, dehumidify switches, or louver swing modes?
+
+**A:** These are only created/exposed when your device reports the underlying property. Not all Gree-based units (or firmware versions) expose humidity/louver control over the cloud protocol.
 
 ## Credits
 

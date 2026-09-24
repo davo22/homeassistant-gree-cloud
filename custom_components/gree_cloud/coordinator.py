@@ -35,8 +35,12 @@ from .const import (
     HWHP_PROP_WATER_TEMP,
     HWHP_PROP_WSTATE,
     MAX_ERRORS,
+    PROP_BUZZER_CTRL,
     PROP_COMPRESSOR_FREQ,
+    PROP_COMPRESSOR_TEMP,
     PROP_ENERGY_TOTAL,
+    PROP_LIGHT_SENSOR,
+    PROP_OUTDOOR_TEMP,
     UPDATE_INTERVAL,
 )
 
@@ -56,7 +60,19 @@ _HWHP_EXTRA_PROPS = [
 # Extra properties reported by AC units, surfaced by the sensor platform. The
 # cloud serves these even though the local UDP protocol does not, so they are
 # only available on this integration.
-_SENSOR_EXTRA_PROPS = [PROP_ENERGY_TOTAL, PROP_COMPRESSOR_FREQ]
+_SENSOR_EXTRA_PROPS = [
+    PROP_ENERGY_TOTAL,
+    PROP_COMPRESSOR_FREQ,
+    PROP_COMPRESSOR_TEMP,
+    PROP_OUTDOOR_TEMP,
+]
+
+# Extra property needed by the panel light select entity, alongside the
+# standard Props.LIGHT ("Lig").
+_LIGHT_EXTRA_PROPS = [PROP_LIGHT_SENSOR]
+
+# Extra property needed by the Silent Mode switch.
+_SOUND_EXTRA_PROPS = [PROP_BUZZER_CTRL]
 
 
 class HWHPAwareCloudDevice(CloudDevice):
@@ -78,7 +94,13 @@ class HWHPAwareCloudDevice(CloudDevice):
             "Updating HWHP-aware cloud device state: %s", self.device_info.name
         )
 
-        props: list[str] = _STANDARD_PROPS + _HWHP_EXTRA_PROPS + _SENSOR_EXTRA_PROPS
+        props: list[str] = (
+            _STANDARD_PROPS
+            + _HWHP_EXTRA_PROPS
+            + _SENSOR_EXTRA_PROPS
+            + _LIGHT_EXTRA_PROPS
+            + _SOUND_EXTRA_PROPS
+        )
         if not self.hid:
             props.append("hid")
 
@@ -229,13 +251,22 @@ class CloudDeviceDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             return copy.deepcopy(self.device.raw_properties)
 
     async def push_state_update(self):
-        """Send state updates to the cloud device."""
+        """Send state updates to the cloud device.
+
+        Every entity for this device shares the same underlying Device
+        object, so a write made through one entity (e.g. Dmod written by
+        the Target Dehumidify switch, or by async_set_humidity) is invisible
+        to sibling entities (other switches, sensors, the climate entity)
+        until something asks them to re-render. Notify all of them on a
+        successful push instead of waiting for the next poll cycle.
+        """
         try:
-            return await self.device.push_state_update()
+            result = await self.device.push_state_update()
         except asyncio.TimeoutError:
             _LOGGER.warning(
                 "Timeout sending state update to cloud device: %s", self.name
             )
+            return
         except Exception as error:
             if _is_mqtt_disconnected(error):
                 _LOGGER.warning(
@@ -245,7 +276,7 @@ class CloudDeviceDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 reconnected = await _try_reconnect(self.hass, self.config_entry)
                 if reconnected:
                     try:
-                        return await self.device.push_state_update()
+                        result = await self.device.push_state_update()
                     except Exception as retry_error:
                         _LOGGER.warning(
                             "Push state failed after reconnect for %s: %s",
@@ -253,9 +284,15 @@ class CloudDeviceDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                             retry_error,
                         )
                         return
+                    self.async_update_listeners()
+                    return result
             _LOGGER.exception(
                 "Error sending state update to cloud device %s: %s", self.name, error
             )
+            return
+        else:
+            self.async_update_listeners()
+            return result
 
 
 class CloudDiscoveryService:

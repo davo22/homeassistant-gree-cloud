@@ -29,10 +29,6 @@ from homeassistant.components.climate import (
     PRESET_ECO,
     PRESET_NONE,
     PRESET_SLEEP,
-    SWING_BOTH,
-    SWING_HORIZONTAL,
-    SWING_OFF,
-    SWING_VERTICAL,
     ClimateEntity,
     ClimateEntityFeature,
     HVACMode,
@@ -48,9 +44,16 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
+    DEHUMIDIFY_MODE_ON,
     DISPATCH_DEVICE_DISCOVERED,
     FAN_MEDIUM_HIGH,
     FAN_MEDIUM_LOW,
+    HUMIDITY_MAX_COOL,
+    HUMIDITY_MAX_DRY,
+    HUMIDITY_MIN_COOL,
+    HUMIDITY_MIN_DRY,
+    HUMIDITY_STEP,
+    PROP_DEHUMIDIFY_MODE,
     TARGET_TEMPERATURE_STEP,
     TARGET_TEMPERATURE_STEP_HALF,
 )
@@ -86,7 +89,62 @@ FAN_MODES = {
 }
 FAN_MODES_REVERSE = {v: k for k, v in FAN_MODES.items()}
 
-SWING_MODES = [SWING_OFF, SWING_VERTICAL, SWING_HORIZONTAL, SWING_BOTH]
+# "Quiet" is a separate device flag (device.quiet), not a FanSpeed value, so
+# it can't live in FAN_MODES/FAN_MODES_REVERSE alongside the real speeds -
+# it's handled separately in fan_mode/async_set_fan_mode below. Kept as its
+# own ordered list (rather than [*FAN_MODES_REVERSE]) so it can be inserted
+# between Auto and Low.
+FAN_QUIET = "quiet"
+FAN_MODES_LIST = [
+    FAN_AUTO,
+    FAN_QUIET,
+    FAN_LOW,
+    FAN_MEDIUM_LOW,
+    FAN_MEDIUM,
+    FAN_MEDIUM_HIGH,
+    FAN_HIGH,
+]
+
+# Target humidity is only meaningful while actively cooling or drying.
+HUMIDITY_MODES = (Mode.Cool, Mode.Dry)
+
+# Fixed swing positions, verified on real hardware: 1=full swing, then 2..6
+# walk from one end of the blade's travel to the other. Built by numeric
+# value rather than by greeclimate's enum member names - its HorizontalSwing
+# names (Left=2 .. Right=6) run backwards relative to what was actually
+# observed (2=Far Right .. 6=Far Left), so only the values are trustworthy
+# here, not the names. VerticalSwing's names do match (Upper=2 .. Lower=6)
+# but are built the same way for consistency. Both enums also have a
+# Default=0 member (and VerticalSwing has SwingUpper..SwingLower=7..11 for
+# oscillating sub-ranges) that are deliberately left unmapped - see
+# swing_mode/swing_horizontal_mode below for how that's handled.
+VERTICAL_SWING_LABELS: dict[VerticalSwing, str] = {
+    VerticalSwing(1): "Full Swing",
+    VerticalSwing(2): "Highest",
+    VerticalSwing(3): "Upper-Middle",
+    VerticalSwing(4): "Middle",
+    VerticalSwing(5): "Lower-Middle",
+    VerticalSwing(6): "Lowest",
+}
+VERTICAL_SWING_LABELS_REVERSE = {v: k for k, v in VERTICAL_SWING_LABELS.items()}
+
+HORIZONTAL_SWING_LABELS: dict[HorizontalSwing, str] = {
+    HorizontalSwing(1): "Full Swing",
+    HorizontalSwing(2): "Far Right",
+    HorizontalSwing(3): "Right-Center",
+    HorizontalSwing(4): "Center",
+    HorizontalSwing(5): "Left-Center",
+    HorizontalSwing(6): "Far Left",
+}
+HORIZONTAL_SWING_LABELS_REVERSE = {v: k for k, v in HORIZONTAL_SWING_LABELS.items()}
+
+# greeclimate revisions older than 2.2.0 have no HalfTemEn property. Every tag
+# before 2.2.0 declared the same package version, so pip never reinstalled an
+# already-present older revision on upgrade (davo22/homeassistant-gree-cloud#19)
+# - a bare Props.TEMP_HALF_ENABLED access would then raise AttributeError and
+# the whole climate entity would fail to load. Resolving it leniently keeps
+# the entity loadable; only the 0.5C feature is lost.
+_PROP_TEMP_HALF_ENABLED = getattr(Props, "TEMP_HALF_ENABLED", None)
 
 # greeclimate revisions older than 2.2.0 have no HalfTemEn property. Resolving it
 # leniently keeps the climate entity loadable when Home Assistant is still running
@@ -133,14 +191,14 @@ class GreeCloudClimateEntity(GreeCloudEntity, ClimateEntity):
         ClimateEntityFeature.TARGET_TEMPERATURE
         | ClimateEntityFeature.FAN_MODE
         | ClimateEntityFeature.PRESET_MODE
-        | ClimateEntityFeature.SWING_MODE
         | ClimateEntityFeature.TURN_OFF
         | ClimateEntityFeature.TURN_ON
     )
     _attr_hvac_modes = [*HVAC_MODES_REVERSE, HVACMode.OFF]
     _attr_preset_modes = PRESET_MODES
-    _attr_fan_modes = [*FAN_MODES_REVERSE]
-    _attr_swing_modes = SWING_MODES
+    _attr_fan_modes = FAN_MODES_LIST
+    _attr_swing_modes = [*VERTICAL_SWING_LABELS_REVERSE]
+    _attr_swing_horizontal_modes = [*HORIZONTAL_SWING_LABELS_REVERSE]
     _attr_name = None
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_min_temp = TEMP_MIN
@@ -150,6 +208,84 @@ class GreeCloudClimateEntity(GreeCloudEntity, ClimateEntity):
         """Initialize the Gree Cloud device."""
         super().__init__(coordinator)
         self._attr_unique_id = coordinator.device.device_info.mac
+
+    @property
+    def supported_features(self) -> ClimateEntityFeature:
+        """Return the supported features, adding humidity and swing control.
+
+        Swing support is only advertised when the device actually reports
+        the corresponding raw key (SwUpDn / SwingLfRig), consistent with
+        every other support-check in this integration.
+        """
+        features = self._attr_supported_features
+        if self.coordinator.device.mode in HUMIDITY_MODES:
+            features |= ClimateEntityFeature.TARGET_HUMIDITY
+        if self.coordinator.device.get_property(Props.SWING_VERT) is not None:
+            features |= ClimateEntityFeature.SWING_MODE
+        if self.coordinator.device.get_property(Props.SWING_HORIZ) is not None:
+            features |= ClimateEntityFeature.SWING_HORIZONTAL_MODE
+        return features
+
+    @property
+    def min_humidity(self) -> int:
+        """Return the minimum target humidity for the current mode."""
+        if self.coordinator.device.mode == Mode.Dry:
+            return HUMIDITY_MIN_DRY
+        return HUMIDITY_MIN_COOL
+
+    @property
+    def max_humidity(self) -> int:
+        """Return the maximum target humidity for the current mode."""
+        if self.coordinator.device.mode == Mode.Dry:
+            return HUMIDITY_MAX_DRY
+        return HUMIDITY_MAX_COOL
+
+    @property
+    def target_humidity_step(self) -> int:
+        """Return the target humidity step; the unit only accepts multiples of 5."""
+        return HUMIDITY_STEP
+
+    @property
+    def target_humidity(self) -> int | None:
+        """Return the target humidity, only meaningful in Cool/Dry mode."""
+        if self.coordinator.device.mode not in HUMIDITY_MODES:
+            return None
+        return self.coordinator.device.target_humidity
+
+    async def async_set_humidity(self, humidity: int) -> None:
+        """Set new target humidity."""
+        mode = self.coordinator.device.mode
+        if mode not in HUMIDITY_MODES:
+            raise ValueError(f"Target humidity can only be set in Cool or Dry mode, not {mode}")
+
+        min_humidity, max_humidity = (
+            (HUMIDITY_MIN_DRY, HUMIDITY_MAX_DRY)
+            if mode == Mode.Dry
+            else (HUMIDITY_MIN_COOL, HUMIDITY_MAX_COOL)
+        )
+        # target_humidity_step keeps the UI slider on multiples of 5, but a
+        # direct service call can still pass an arbitrary value.
+        humidity = round(humidity / HUMIDITY_STEP) * HUMIDITY_STEP
+        humidity = max(min_humidity, min(humidity, max_humidity))
+
+        _LOGGER.debug(
+            "Setting target humidity to %s for %s",
+            humidity,
+            self._attr_name,
+        )
+
+        device = self.coordinator.device
+        device.target_humidity = humidity  # Dwet
+        # Setting a target implies dehumidify should be on. Dmod has no
+        # setter in greeclimate, so it's written directly through
+        # raw_properties, the same pattern used for HWHP properties; this
+        # takes over from whatever Dmod held before (including Smart
+        # Drying), and both go out together in the push below.
+        device.raw_properties[PROP_DEHUMIDIFY_MODE] = DEHUMIDIFY_MODE_ON
+        if PROP_DEHUMIDIFY_MODE not in device._dirty:
+            device._dirty.append(PROP_DEHUMIDIFY_MODE)
+        await self.coordinator.push_state_update()
+        self.async_write_ha_state()
 
     @property
     def _supports_half_degree(self) -> bool:
@@ -288,51 +424,70 @@ class GreeCloudClimateEntity(GreeCloudEntity, ClimateEntity):
 
     @property
     def fan_mode(self) -> str | None:
-        """Return the current fan mode for the device."""
+        """Return the current fan mode for the device.
+
+        Quiet is a separate device flag from fan speed, so it's checked
+        first - the unit can report a fan speed and quiet at the same time,
+        but this integration only has one fan_mode slot to show it in.
+        """
+        if self.coordinator.device.quiet:
+            return FAN_QUIET
         speed = self.coordinator.device.fan_speed
         return FAN_MODES.get(speed)
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""
-        if fan_mode not in FAN_MODES_REVERSE:
+        if fan_mode not in FAN_MODES_LIST:
             raise ValueError(f"Invalid fan mode: {fan_mode}")
 
-        self.coordinator.device.fan_speed = FAN_MODES_REVERSE.get(fan_mode)
+        if fan_mode == FAN_QUIET:
+            self.coordinator.device.quiet = True
+        else:
+            self.coordinator.device.quiet = False
+            self.coordinator.device.fan_speed = FAN_MODES_REVERSE.get(fan_mode)
+
         await self.coordinator.push_state_update()
         self.async_write_ha_state()
 
     @property
-    def swing_mode(self) -> str:
-        """Return the current swing mode for the device."""
-        h_swing = self.coordinator.device.horizontal_swing == HorizontalSwing.FullSwing
-        v_swing = self.coordinator.device.vertical_swing == VerticalSwing.FullSwing
+    def swing_mode(self) -> str | None:
+        """Return the current vertical swing position.
 
-        if h_swing and v_swing:
-            return SWING_BOTH
-        if h_swing:
-            return SWING_HORIZONTAL
-        if v_swing:
-            return SWING_VERTICAL
-        return SWING_OFF
+        Returns None for a raw value with no mapped label (VerticalSwing's
+        Default=0, or the SwingUpper..SwingLower=7..11 oscillating
+        sub-ranges) rather than surfacing a raw "unknown" state - the
+        frontend just shows no position selected, which is accurate: none
+        of the 6 fixed positions is currently in effect.
+        """
+        return VERTICAL_SWING_LABELS.get(self.coordinator.device.vertical_swing)
 
     async def async_set_swing_mode(self, swing_mode: str) -> None:
-        """Set new target swing operation."""
-        if swing_mode not in SWING_MODES:
+        """Set new vertical swing position."""
+        if swing_mode not in VERTICAL_SWING_LABELS_REVERSE:
             raise ValueError(f"Invalid swing mode: {swing_mode}")
 
-        _LOGGER.debug(
-            "Setting swing mode to %s for device %s",
-            swing_mode,
-            self._attr_name,
-        )
+        self.coordinator.device.vertical_swing = VERTICAL_SWING_LABELS_REVERSE[swing_mode]
+        await self.coordinator.push_state_update()
+        self.async_write_ha_state()
 
-        self.coordinator.device.horizontal_swing = HorizontalSwing.Center
-        self.coordinator.device.vertical_swing = VerticalSwing.FixedMiddle
-        if swing_mode in (SWING_BOTH, SWING_HORIZONTAL):
-            self.coordinator.device.horizontal_swing = HorizontalSwing.FullSwing
-        if swing_mode in (SWING_BOTH, SWING_VERTICAL):
-            self.coordinator.device.vertical_swing = VerticalSwing.FullSwing
+    @property
+    def swing_horizontal_mode(self) -> str | None:
+        """Return the current horizontal swing position.
 
+        Returns None for a raw value with no mapped label (HorizontalSwing's
+        Default=0) rather than surfacing a raw "unknown" state - same
+        reasoning as swing_mode above.
+        """
+        return HORIZONTAL_SWING_LABELS.get(self.coordinator.device.horizontal_swing)
+
+    async def async_set_swing_horizontal_mode(self, swing_horizontal_mode: str) -> None:
+        """Set new horizontal swing position."""
+        if swing_horizontal_mode not in HORIZONTAL_SWING_LABELS_REVERSE:
+            raise ValueError(f"Invalid horizontal swing mode: {swing_horizontal_mode}")
+
+        self.coordinator.device.horizontal_swing = HORIZONTAL_SWING_LABELS_REVERSE[
+            swing_horizontal_mode
+        ]
         await self.coordinator.push_state_update()
         self.async_write_ha_state()
 
