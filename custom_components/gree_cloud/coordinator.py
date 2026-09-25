@@ -99,7 +99,16 @@ class HWHPAwareCloudDevice(CloudDevice):
                 self._response_event.wait(), timeout=self._command_timeout
             )
             if self._response_data:
-                self.handle_state_update(**self._response_data)
+                # V3.x cloud firmware answers status requests with all-zero
+                # payloads (data masked by the cloud). Ignore those so we
+                # don't clobber the real values from status/ pushes.
+                if any(v not in (0, None, "", []) for v in self._response_data.values()):
+                    self.handle_state_update(**self._response_data)
+                else:
+                    _LOGGER.debug(
+                        "Ignoring all-zero status response from %s (cloud-masked)",
+                        self.device_info.name,
+                    )
         except asyncio.TimeoutError:
             _LOGGER.warning(
                 "Timeout waiting for state update from %s", self.device_info.name
