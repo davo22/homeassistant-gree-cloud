@@ -99,9 +99,11 @@ class HWHPAwareCloudDevice(CloudDevice):
                 self._response_event.wait(), timeout=self._command_timeout
             )
             if self._response_data:
-                # V3.x cloud firmware answers status requests with all-zero
-                # payloads (data masked by the cloud). Ignore those so we
-                # don't clobber the real values from status/ pushes.
+                # Defensive guard: if the cloud ever returns an all-zero
+                # payload (e.g. masked for third-party clients), ignore it
+                # so we don't clobber the real values from status/ pushes.
+                # Note: on V3.4/V3.5.M firmware tested, response/ carries
+                # real values — the guard never triggers in practice.
                 if any(v not in (0, None, "", []) for v in self._response_data.values()):
                     self.handle_state_update(**self._response_data)
                 else:
