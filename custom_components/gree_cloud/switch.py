@@ -65,7 +65,7 @@ GREE_CLOUD_SWITCHES: tuple[GreeCloudSwitchEntityDescription, ...] = (
     GreeCloudSwitchEntityDescription(
         key="Quiet",
         translation_key="quiet",
-        get_value_fn=lambda d: d.quiet,
+        get_value_fn=lambda d: d.quiet.value,
         set_value_fn=_set_quiet,
     ),
     GreeCloudSwitchEntityDescription(

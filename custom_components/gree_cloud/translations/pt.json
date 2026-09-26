@@ -48,6 +48,62 @@
       "health_mode": {
         "name": "Modo saúde"
       }
+    },
+    "climate": {
+      "climate": {
+        "state_attributes": {
+          "fan_mode": {
+            "state": {
+              "medium-low": "Médio-Baixo",
+              "medium-high": "Médio-Alto"
+            }
+          },
+          "swing_horizontal_mode": {
+            "state": {
+              "center": "Centro",
+              "default": "Predefinido",
+              "full_swing": "Oscilação completa",
+              "left": "Esquerda",
+              "left_center": "Esquerda-centro",
+              "right": "Direita",
+              "right_center": "Direita-centro"
+            }
+          },
+          "swing_mode": {
+            "state": {
+              "default": "Predefinido",
+              "fixed_upper": "Fixo superior",
+              "fixed_upper_middle": "Fixo superior-meio",
+              "fixed_middle": "Fixo meio",
+              "fixed_lower_middle": "Fixo inferior-meio",
+              "fixed_lower": "Fixo inferior",
+              "full_swing": "Oscilação completa"
+            }
+          }
+        }
+      }
+    },
+    "select": {
+      "vane_vertical": {
+        "name": "Aleta vertical",
+        "state": {
+          "fixed_upper": "Superior",
+          "fixed_upper_middle": "Superior-Médio",
+          "fixed_middle": "Médio",
+          "fixed_lower_middle": "Inferior-Médio",
+          "fixed_lower": "Inferior"
+        }
+      },
+      "vane_horizontal": {
+        "name": "Aleta horizontal",
+        "state": {
+          "left": "Esquerda",
+          "left_center": "Esquerda-Centro",
+          "center": "Centro",
+          "right_center": "Direita-Centro",
+          "right": "Direita"
+        }
+      }
     }
   }
 }
