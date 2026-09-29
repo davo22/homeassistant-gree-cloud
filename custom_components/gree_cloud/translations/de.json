@@ -82,28 +82,6 @@
           }
         }
       }
-    },
-    "select": {
-      "vane_vertical": {
-        "name": "Vertikale Lamelle",
-        "state": {
-          "fixed_upper": "Oben",
-          "fixed_upper_middle": "Oben-Mitte",
-          "fixed_middle": "Mitte",
-          "fixed_lower_middle": "Unten-Mitte",
-          "fixed_lower": "Unten"
-        }
-      },
-      "vane_horizontal": {
-        "name": "Horizontale Lamelle",
-        "state": {
-          "left": "Links",
-          "left_center": "Links-Mitte",
-          "center": "Mitte",
-          "right_center": "Rechts-Mitte",
-          "right": "Rechts"
-        }
-      }
     }
   }
 }
