@@ -54,30 +54,43 @@
         "state_attributes": {
           "fan_mode": {
             "state": {
-              "medium-low": "Średnio niski",
-              "medium-high": "Średnio wysoki"
+              "auto": "auto",
+              "low": "niski",
+              "medium-low": "średnio niski",
+              "medium": "średni",
+              "medium-high": "średnio wysoki",
+              "high": "wysoki"
+            }
+          },
+          "preset_mode": {
+            "state": {
+              "eco": "eko",
+              "away": "poza domem",
+              "boost": "turbo",
+              "none": "brak",
+              "sleep": "sen"
             }
           },
           "swing_horizontal_mode": {
             "state": {
-              "center": "Środek",
-              "default": "Domyślny",
-              "full_swing": "Pełny zakres",
-              "left": "Lewo",
-              "left_center": "Lewy środek",
-              "right": "Prawo",
-              "right_center": "Prawy środek"
+              "default": "domyślny",
+              "full_swing": "lewo-prawo",
+              "left": "lewo",
+              "left_center": "lewy środek",
+              "center": "środek",
+              "right_center": "prawy środek",
+              "right": "prawo"
             }
           },
           "swing_mode": {
             "state": {
-              "default": "Domyślny",
-              "fixed_upper": "Góra",
-              "fixed_upper_middle": "Górny środek",
-              "fixed_middle": "Środek",
-              "fixed_lower_middle": "Dolny środek",
-              "fixed_lower": "Dół",
-              "full_swing": "Pełny zakres"
+              "default": "domyślny",
+              "full_swing": "góra-dół",
+              "fixed_upper": "góra",
+              "fixed_upper_middle": "górny środek",
+              "fixed_middle": "środek",
+              "fixed_lower_middle": "dolny środek",
+              "fixed_lower": "dół"
             }
           }
         }
