@@ -54,8 +54,21 @@
         "state_attributes": {
           "fan_mode": {
             "state": {
+              "auto": "Auto",
+              "low": "Low",
               "medium-low": "Medium Low",
-              "medium-high": "Medium High"
+              "medium": "Medium",
+              "medium-high": "Medium High",
+              "high": "High"
+            }
+          },
+          "preset_mode": {
+            "state": {
+              "eco": "Eco",
+              "away": "Away",
+              "boost": "Boost",
+              "none": "None",
+              "sleep": "Sleep"
             }
           },
           "swing_horizontal_mode": {

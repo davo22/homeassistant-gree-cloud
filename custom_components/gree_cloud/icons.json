@@ -1,5 +1,44 @@
 {
   "entity": {
+    "climate": {
+      "climate": {
+        "state_attributes": {
+          "fan_mode": {
+            "state": {
+              "medium-low": "mdi:fan-chevron-down",
+              "medium-high": "mdi:fan-chevron-up"
+            }
+          },
+          "preset_mode": {
+            "state": {
+              "none": "mdi:circle-off-outline"
+            }
+          },
+          "swing_mode": {
+            "state": {
+              "default": "mdi:arrow-collapse-vertical",
+              "full_swing": "mdi:arrow-up-down",
+              "fixed_upper": "mdi:chevron-double-up",
+              "fixed_upper_middle": "mdi:chevron-up",
+              "fixed_middle": "mdi:minus",
+              "fixed_lower_middle": "mdi:chevron-down",
+              "fixed_lower": "mdi:chevron-double-down"
+            }
+          },
+          "swing_horizontal_mode": {
+            "state": {
+              "default": "mdi:arrow-collapse-horizontal",
+              "full_swing": "mdi:arrow-left-right",
+              "left": "mdi:chevron-double-left",
+              "left_center": "mdi:chevron-left",
+              "center": "mdi:minus",
+              "right_center": "mdi:chevron-right",
+              "right": "mdi:chevron-double-right"
+            }
+          }
+        }
+      }
+    },
     "sensor": {
       "energy_total": {
         "default": "mdi:lightning-bolt"
