@@ -76,7 +76,7 @@ GREE_CLOUD_SERVERS = {
 GREE_MQTT_SERVERS = {
     "Australia": "mqtt-au.gree.com",
     "China Mainland": "mqtt.gree.com",
-    "East South Asia": "mqtt-as.gree.com",
+    "East South Asia": "mqtt-hk.gree.com",
     "Europe": "mqtt-eu.gree.com",
     "India": "mqtt-in.gree.com",
     "Latin American": "mqtt-la.gree.com",
