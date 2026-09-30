@@ -51,6 +51,9 @@
     },
     "climate": {
       "climate": {
+        "state": {
+          "auto": "auto"
+        },
         "state_attributes": {
           "fan_mode": {
             "state": {
@@ -72,6 +75,7 @@
             }
           },
           "swing_horizontal_mode": {
+            "name": "Tryb ruchu nawiewu w poziomie",
             "state": {
               "default": "domyślny",
               "full_swing": "lewo-prawo",
@@ -82,7 +86,11 @@
               "right": "prawo"
             }
           },
+          "swing_horizontal_modes": {
+            "name": "Tryby ruchu nawiewu w poziomie"
+          },
           "swing_mode": {
+            "name": "Tryb ruchu nawiewu w pionie",
             "state": {
               "default": "domyślny",
               "full_swing": "góra-dół",
@@ -92,6 +100,9 @@
               "fixed_lower_middle": "dolny środek",
               "fixed_lower": "dół"
             }
+          },
+          "swing_modes": {
+            "name": "Tryby ruchu nawiewu w pionie"
           }
         }
       }

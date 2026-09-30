@@ -5,8 +5,11 @@
         "state_attributes": {
           "fan_mode": {
             "state": {
-              "medium-low": "mdi:fan-chevron-down",
-              "medium-high": "mdi:fan-chevron-up"
+              "low": "mdi:circle-slice-1",
+              "medium-low": "mdi:circle-slice-2",
+              "medium": "mdi:circle-slice-4",
+              "medium-high": "mdi:circle-slice-6",
+              "high": "mdi:circle-slice-8"
             }
           },
           "preset_mode": {
