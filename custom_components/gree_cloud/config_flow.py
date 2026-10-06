@@ -34,7 +34,7 @@ class GreeCloudConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             # Validate credentials by attempting to login
             try:
-                from greeclimate.cloud_api import GreeCloudApi
+                from greeclimate_davo22.cloud_api import GreeCloudApi
 
                 api = GreeCloudApi.for_server(
                     user_input[CONF_SERVER],

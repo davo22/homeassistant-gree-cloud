@@ -11,7 +11,7 @@ pip install aiohttp pycryptodome aiomqtt netifaces
 ## Install forked greeclimate library
 
 ```bash
-pip install git+https://github.com/davo22/greeclimate.git@master
+pip install git+https://github.com/davo22/greeclimate_davo22.git@master
 ```
 
 ## Test Script
@@ -19,10 +19,10 @@ pip install git+https://github.com/davo22/greeclimate.git@master
 ```python
 import asyncio
 import logging
-from greeclimate.cloud_api import GreeCloudApi
-from greeclimate.mqtt_client import GreeMqttClient
-from greeclimate.cloud_device import CloudDevice
-from greeclimate.deviceinfo import DeviceInfo
+from greeclimate_davo22.cloud_api import GreeCloudApi
+from greeclimate_davo22.mqtt_client import GreeMqttClient
+from greeclimate_davo22.cloud_device import CloudDevice
+from greeclimate_davo22.deviceinfo import DeviceInfo
 
 logging.basicConfig(level=logging.DEBUG)
 
