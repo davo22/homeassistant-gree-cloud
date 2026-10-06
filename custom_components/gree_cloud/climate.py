@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from greeclimate.device import (
+from greeclimate_davo22.device import (
     TEMP_MAX,
     TEMP_MAX_F,
     TEMP_MIN,
@@ -108,7 +108,7 @@ HORIZONTAL_SWING_MODES_INVERSE: dict[HorizontalSwing, str] = {
     v: k for k, v in HORIZONTAL_SWING_MODES.items()
 }
 
-# greeclimate revisions older than 2.2.0 have no HalfTemEn property. Resolving it
+# A library predating the HalfTemEn property has no such attribute. Resolving it
 # leniently keeps the climate entity loadable when Home Assistant is still running
 # an outdated revision of the pinned library.
 _PROP_TEMP_HALF_ENABLED = getattr(Props, "TEMP_HALF_ENABLED", None)
@@ -122,8 +122,8 @@ async def async_setup_entry(
     """Set up the Gree Cloud HVAC device from a config entry."""
     if _PROP_TEMP_HALF_ENABLED is None:
         _LOGGER.warning(
-            "Installed greeclimate library is older than the pinned 2.2.0 and lacks "
-            "the HalfTemEn property; 0.5C steps are unavailable. Reinstall the "
+            "Installed greeclimate-davo22 library is older than the pinned 2.3.0 and "
+            "lacks the HalfTemEn property; 0.5C steps are unavailable. Reinstall the "
             "integration in HACS and restart Home Assistant to update the library"
         )
 

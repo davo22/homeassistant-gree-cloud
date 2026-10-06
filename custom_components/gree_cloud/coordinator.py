@@ -9,11 +9,11 @@ from datetime import timedelta
 import logging
 from typing import Any
 
-from greeclimate.cloud_api import CloudDeviceInfo, GreeCloudApi
-from greeclimate.cloud_device import CloudDevice
-from greeclimate.device import Props
-from greeclimate.deviceinfo import DeviceInfo
-from greeclimate.mqtt_client import GreeMqttClient
+from greeclimate_davo22.cloud_api import CloudDeviceInfo, GreeCloudApi
+from greeclimate_davo22.cloud_device import CloudDevice
+from greeclimate_davo22.device import Props
+from greeclimate_davo22.deviceinfo import DeviceInfo
+from greeclimate_davo22.mqtt_client import GreeMqttClient
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME

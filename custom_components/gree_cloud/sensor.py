@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from greeclimate.device import Device
+from greeclimate_davo22.device import Device
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
