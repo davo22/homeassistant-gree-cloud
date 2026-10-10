@@ -108,8 +108,13 @@ class GreeCloudWaterHeaterEntity(GreeCloudEntity, WaterHeaterEntity):
         if pow_consump is not None:
             attrs["power_consumption"] = pow_consump
 
+        # Devices that do not support Watpercent answer 0 for it; skip that
+        # instead of reporting -100 %.
         water_percent_raw = props.get(HWHP_PROP_WATER_PERCENT)
-        if water_percent_raw is not None:
+        if (
+            water_percent_raw is not None
+            and water_percent_raw >= HWHP_TEMP_ENCODING_OFFSET
+        ):
             attrs["water_level_percent"] = water_percent_raw - HWHP_TEMP_ENCODING_OFFSET
 
         return attrs
