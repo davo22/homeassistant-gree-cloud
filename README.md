@@ -112,11 +112,23 @@ Select the appropriate region for your account:
 - Russia
 - South American
 
+## How devices are reached
+
+The Gree cloud has two ways of talking to a Wi-Fi module, and the integration picks one per device from the module's protocol version (the `ver` field of its cloud record, visible in the debug log at startup):
+
+| Module protocol | Transport | Notes |
+|---|---|---|
+| `V3.2` and newer | MQTT broker (`mqtt-<region>.gree.com`) | Same path the Gree+ app uses for current firmware. |
+| older (`V2.x`, `V1.x`) | Legacy TLS gateway | These modules never join the MQTT broker. The integration asks the cloud which gateway the device is attached to (`QueryOnline`) and sends each request over a short TLS connection, exactly like the app does. |
+
+If a device that works in Gree+ never answers in Home Assistant (`Timeout waiting for state update` on every poll), check its `ver` in the debug log and open an issue with it.
+
 ## Known Limitations
 
 - **Cloud polling**: The integration polls the cloud every 60 seconds for state updates. Local changes may take up to a minute to reflect in Home Assistant.
 - **Internet required**: Devices must be connected to the internet and the Gree Cloud for this integration to work.
 - **No local control**: This integration does not support local UDP communication. For local-only devices, use the official Gree integration.
+- **Offline detection is poll-based**: a device that stops answering is marked unavailable after three failed polls (about three minutes), not instantly.
 
 ## Troubleshooting
 
@@ -154,7 +166,7 @@ logger:
   default: info
   logs:
     custom_components.gree_cloud: debug
-    greeclimate: debug
+    greeclimate_davo22: debug
 ```
 
 ## FAQ
@@ -181,7 +193,7 @@ logger:
 
 ### Q: My device shows as unavailable
 
-**A:** This can happen if:
+**A:** The device did not answer three status polls in a row. This can happen if:
 
 - The device is offline or not connected to WiFi
 - Your internet connection is unstable

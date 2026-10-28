@@ -5,6 +5,7 @@ from __future__ import annotations
 import logging
 
 from greeclimate_davo22.cloud_api import GreeCloudApi
+from greeclimate_davo22.cloud_gateway import GreeCloudGateway
 from greeclimate_davo22.mqtt_client import GreeMqttClient
 
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
@@ -65,6 +66,9 @@ async def async_reconnect_mqtt(hass: HomeAssistant, entry: GreeCloudConfigEntry)
         # Swap the client reference on every device and re-subscribe.
         for coordinator in runtime.coordinators:
             device = coordinator.device
+            if not device.uses_mqtt:
+                # Gateway devices never touch the broker.
+                continue
             try:
                 # Remove the old handler registered against the old client.
                 old_client.remove_message_handler(device._handle_mqtt_message)
@@ -121,16 +125,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: GreeCloudConfigEntry) ->
         mqtt_client = GreeMqttClient(credentials.user_id, credentials.token, server=mqtt_server)
         await mqtt_client.connect()
 
+        # Legacy gateway for modules with protocol < 3.2, which never join
+        # the MQTT broker (see README, "Older Wi-Fi modules").
+        gateway = GreeCloudGateway(api)
+
         # Store runtime data
         entry.runtime_data = GreeCloudRuntimeData(
             cloud_api=api,
             mqtt_client=mqtt_client,
             coordinators=[],
+            gateway=gateway,
         )
 
         # Discover and setup devices
         discovery = CloudDiscoveryService(hass, entry, api)
-        coordinators = await discovery.discover_devices(mqtt_client)
+        coordinators = await discovery.discover_devices(mqtt_client, gateway)
         entry.runtime_data.coordinators = coordinators
 
         _LOGGER.info("Successfully discovered %d cloud devices", len(coordinators))

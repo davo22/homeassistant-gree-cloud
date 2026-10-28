@@ -11,6 +11,7 @@ from typing import Any
 
 from greeclimate_davo22.cloud_api import CloudDeviceInfo, GreeCloudApi
 from greeclimate_davo22.cloud_device import CloudDevice
+from greeclimate_davo22.cloud_gateway import GreeCloudGateway
 from greeclimate_davo22.device import Props
 from greeclimate_davo22.deviceinfo import DeviceInfo
 from greeclimate_davo22.mqtt_client import GreeMqttClient
@@ -64,49 +65,20 @@ class HWHPAwareCloudDevice(CloudDevice):
 
     The Gree WHIO Hot Water Heat Pump reports current water temperature under
     the ``WatTem`` property key which is not part of the standard ``Props``
-    enum.  This subclass overrides ``update_state`` to include that key in the
-    status request so it is stored in ``raw_properties`` and can be read by the
-    water_heater entity.
+    enum.  This subclass extends the status request with that key so it is
+    stored in ``raw_properties`` and can be read by the water_heater entity.
 
     The same mechanism requests ``ElcAll`` (cumulative energy) for AC units,
     read by the sensor platform.
+
+    Transport (MQTT or the legacy TLS gateway) and the timeout handling live in
+    the library; a status poll that gets no answer raises
+    ``asyncio.TimeoutError`` so the coordinator can count it (#41).
     """
 
-    async def update_state(self) -> None:
-        """Update device state, including HWHP-specific properties."""
-        _LOGGER.debug(
-            "Updating HWHP-aware cloud device state: %s", self.device_info.name
-        )
-
-        props: list[str] = _STANDARD_PROPS + _HWHP_EXTRA_PROPS + _SENSOR_EXTRA_PROPS
-        if not self.hid:
-            props.append("hid")
-
-        self._response_event = asyncio.Event()
-        self._response_data = None
-
-        command = {"t": "status", "cols": props}
-
-        await self._mqtt_client.publish_command(
-            self._parent_mac,
-            command,
-            self.device_cipher,
-            self._child_mac,
-        )
-
-        try:
-            await asyncio.wait_for(
-                self._response_event.wait(), timeout=self._command_timeout
-            )
-            if self._response_data:
-                self.handle_state_update(**self._response_data)
-        except asyncio.TimeoutError:
-            _LOGGER.warning(
-                "Timeout waiting for state update from %s", self.device_info.name
-            )
-        finally:
-            self._response_event = None
-            self._response_data = None
+    def _status_columns(self) -> list[str]:
+        """Standard properties plus the HWHP and sensor extras."""
+        return _STANDARD_PROPS + _HWHP_EXTRA_PROPS + _SENSOR_EXTRA_PROPS
 
 
 def is_hwhp_device(coordinator: "CloudDeviceDataUpdateCoordinator") -> bool:
@@ -144,6 +116,7 @@ class GreeCloudRuntimeData:
     cloud_api: GreeCloudApi
     mqtt_client: GreeMqttClient
     coordinators: list[CloudDeviceDataUpdateCoordinator]
+    gateway: GreeCloudGateway | None = None
     mqtt_reconnect_lock: asyncio.Lock = None
 
     def __post_init__(self) -> None:
@@ -270,9 +243,14 @@ class CloudDiscoveryService:
         self.api = api
 
     async def discover_devices(
-        self, mqtt_client: GreeMqttClient
+        self, mqtt_client: GreeMqttClient, gateway: GreeCloudGateway | None = None
     ) -> list[CloudDeviceDataUpdateCoordinator]:
-        """Discover all cloud devices."""
+        """Discover all cloud devices.
+
+        Each device picks its transport from the protocol version in its cloud
+        record: MQTT for ``ver`` >= 3.2, the legacy TLS gateway otherwise
+        (only when *gateway* is given).
+        """
         coordinators = []
 
         try:
@@ -291,6 +269,8 @@ class CloudDiscoveryService:
                         port=0,  # Not used for cloud devices
                         mac=cloud_dev_info.mac,
                         name=cloud_dev_info.name,
+                        model=cloud_dev_info.model,
+                        version=cloud_dev_info.version,
                     )
 
                     # Create cloud device instance
@@ -299,15 +279,18 @@ class CloudDiscoveryService:
                         device_info=device_info,
                         device_key=cloud_dev_info.key,
                         cipher_version=1,  # Default to v1, can be made configurable
+                        gateway=gateway,
                     )
 
                     # Bind to cloud device (subscribe to MQTT topics)
                     await device.bind()
 
-                    _LOGGER.debug(
-                        "Bound to cloud device: %s (MAC: %s)",
+                    _LOGGER.info(
+                        "Bound to cloud device: %s (MAC: %s, firmware: %s, transport: %s)",
                         device.device_info.name,
                         device.device_info.mac,
+                        cloud_dev_info.version,
+                        device.transport,
                     )
 
                     # Create coordinator
