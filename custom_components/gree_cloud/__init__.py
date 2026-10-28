@@ -11,7 +11,7 @@ from greeclimate_davo22.mqtt_client import GreeMqttClient
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 
-from .const import CONF_SERVER, DOMAIN, GREE_MQTT_SERVERS
+from .const import CONF_SERVER, GREE_MQTT_SERVERS
 from .coordinator import (
     CloudDiscoveryService,
     GreeCloudConfigEntry,
@@ -26,6 +26,8 @@ PLATFORMS = [
     Platform.SENSOR,
     Platform.SWITCH,
     Platform.WATER_HEATER,
+    Platform.NUMBER,
+    Platform.BINARY_SENSOR,
 ]
 
 # Substrings that identify an MQTT "not connected" error from paho / aiomqtt.

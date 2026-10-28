@@ -30,6 +30,36 @@
       },
       "compressor_frequency": {
         "name": "Fréquence du compresseur"
+      },
+      "heating_water_target": {
+        "name": "Consigne eau de chauffage"
+      },
+      "heating_room_target": {
+        "name": "Consigne ambiante chauffage"
+      },
+      "dhw_target": {
+        "name": "Consigne ECS"
+      },
+      "cooling_water_target": {
+        "name": "Consigne eau refroidissement"
+      },
+      "cooling_room_target": {
+        "name": "Consigne ambiante refroidissement"
+      },
+      "water_inlet_temperature": {
+        "name": "Température entrée eau"
+      },
+      "water_outlet_temperature": {
+        "name": "Température sortie eau"
+      },
+      "heat_pump_outlet_temperature": {
+        "name": "Température sortie PAC"
+      },
+      "dhw_temperature": {
+        "name": "Température ballon ECS"
+      },
+      "room_temperature": {
+        "name": "Température ambiante"
       }
     },
     "switch": {
@@ -47,6 +77,9 @@
       },
       "health_mode": {
         "name": "Mode santé"
+      },
+      "versati_power": {
+        "name": "Alimentation globale PAC"
       }
     },
     "climate": {
@@ -81,9 +114,44 @@
             }
           }
         }
+      },
+      "versati_heating": {
+        "name": "Chauffage hydraulique"
+      }
+    },
+    "binary_sensor": {
+      "versati_power": {
+        "name": "Alimentation PAC"
+      }
+    },
+    "number": {
+      "heating_water_target": {
+        "name": "Consigne eau de chauffage"
+      },
+      "heating_room_target": {
+        "name": "Consigne ambiante chauffage"
+      },
+      "dhw_target": {
+        "name": "Consigne ECS"
+      },
+      "cooling_water_target": {
+        "name": "Consigne eau refroidissement"
+      },
+      "cooling_room_target": {
+        "name": "Consigne ambiante refroidissement"
       }
     },
     "select": {
+      "versati_mode": {
+        "name": "Mode PAC",
+        "state": {
+          "heat": "Chauffage",
+          "hot_water": "ECS",
+          "cool": "Refroidissement",
+          "heat_hot_water": "Chauffage + ECS",
+          "cool_hot_water": "Refroidissement + ECS"
+        }
+      },
       "power_limit": {
         "name": "Limite de puissance",
         "state": {

@@ -30,6 +30,36 @@
       },
       "compressor_frequency": {
         "name": "Compressor frequency"
+      },
+      "heating_water_target": {
+        "name": "Heating water target"
+      },
+      "heating_room_target": {
+        "name": "Heating room target"
+      },
+      "dhw_target": {
+        "name": "DHW target"
+      },
+      "cooling_water_target": {
+        "name": "Cooling water target"
+      },
+      "cooling_room_target": {
+        "name": "Cooling room target"
+      },
+      "water_inlet_temperature": {
+        "name": "Water inlet temperature"
+      },
+      "water_outlet_temperature": {
+        "name": "Water outlet temperature"
+      },
+      "heat_pump_outlet_temperature": {
+        "name": "Heat pump outlet temperature"
+      },
+      "dhw_temperature": {
+        "name": "DHW temperature"
+      },
+      "room_temperature": {
+        "name": "Room temperature"
       }
     },
     "switch": {
@@ -47,6 +77,9 @@
       },
       "health_mode": {
         "name": "Health mode"
+      },
+      "versati_power": {
+        "name": "Global heat pump power"
       }
     },
     "climate": {
@@ -94,9 +127,44 @@
             }
           }
         }
+      },
+      "versati_heating": {
+        "name": "Hydraulic heating"
+      }
+    },
+    "binary_sensor": {
+      "versati_power": {
+        "name": "Heat pump power"
+      }
+    },
+    "number": {
+      "heating_water_target": {
+        "name": "Heating water target"
+      },
+      "heating_room_target": {
+        "name": "Heating room target"
+      },
+      "dhw_target": {
+        "name": "DHW target"
+      },
+      "cooling_water_target": {
+        "name": "Cooling water target"
+      },
+      "cooling_room_target": {
+        "name": "Cooling room target"
       }
     },
     "select": {
+      "versati_mode": {
+        "name": "Heat pump mode",
+        "state": {
+          "heat": "Heat",
+          "hot_water": "Hot water",
+          "cool": "Cool",
+          "heat_hot_water": "Heat + hot water",
+          "cool_hot_water": "Cool + hot water"
+        }
+      },
       "power_limit": {
         "name": "Power limit",
         "state": {

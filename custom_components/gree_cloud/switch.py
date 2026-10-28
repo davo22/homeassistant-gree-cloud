@@ -26,8 +26,9 @@ from .entity import GreeCloudEntity
 class GreeCloudSwitchEntityDescription(SwitchEntityDescription):
     """Describes a Gree Cloud switch entity."""
 
-    get_value_fn: Callable[[Device], bool]
-    set_value_fn: Callable[[Device, bool], None]
+    get_value_fn: Callable[[Device], bool | None]
+    set_value_fn: Callable[[Device, bool], None] | None = None
+    command_key: str | None = None
 
 
 def _set_light(device: Device, value: bool) -> None:
@@ -90,6 +91,18 @@ GREE_CLOUD_SWITCHES: tuple[GreeCloudSwitchEntityDescription, ...] = (
 )
 
 
+HEATPUMP_POWER_SWITCH = GreeCloudSwitchEntityDescription(
+    key="versati_power_control",
+    translation_key="versati_power",
+    get_value_fn=lambda device: (
+        bool(device.raw_properties["Pow"])
+        if device.raw_properties.get("Pow") in (0, 1)
+        else None
+    ),
+    command_key="Pow",
+)
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: GreeCloudConfigEntry,
@@ -100,7 +113,11 @@ async def async_setup_entry(
     @callback
     def init_device(coordinator: CloudDeviceDataUpdateCoordinator) -> None:
         """Register the device."""
-        if is_hwhp_device(coordinator):
+        if coordinator.device_kind == "heatpump":
+            if "Pow" in coordinator.device.write_policy.approved:
+                async_add_entities([GreeCloudSwitch(coordinator, HEATPUMP_POWER_SWITCH)])
+            return
+        if coordinator.device_kind != "ac" or is_hwhp_device(coordinator):
             return
         async_add_entities(
             GreeCloudSwitch(coordinator=coordinator, description=description)
@@ -132,18 +149,28 @@ class GreeCloudSwitch(GreeCloudEntity, SwitchEntity):
         self._attr_unique_id = f"{coordinator.device.device_info.mac}_{description.key}"
 
     @property
-    def is_on(self) -> bool:
+    def is_on(self) -> bool | None:
         """Return if the state is turned on."""
         return self.entity_description.get_value_fn(self.coordinator.device)
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
-        self.entity_description.set_value_fn(self.coordinator.device, True)
-        await self.coordinator.push_state_update()
-        self.async_write_ha_state()
+        await self._async_set_value(True)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
-        self.entity_description.set_value_fn(self.coordinator.device, False)
+        await self._async_set_value(False)
+
+    async def _async_set_value(self, value: bool) -> None:
+        """Use the device's command path without staging air-to-water AC properties."""
+        description = self.entity_description
+        if description.command_key is not None:
+            await self.coordinator.async_heatpump_command(
+                description.command_key, int(value)
+            )
+            return
+        if description.set_value_fn is None:
+            raise ValueError("Switch has no command handler")
+        description.set_value_fn(self.coordinator.device, value)
         await self.coordinator.push_state_update()
         self.async_write_ha_state()
