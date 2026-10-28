@@ -58,6 +58,15 @@ PROP_COMPRESSOR_FREQ = "CompressorFqy"
 # it needs no extra request - only an entity to surface it.
 PROP_HUMIDITY = "DwatSen"
 
+# Compressor power limit ("power reduce" in the Gree+ app: an on/off switch
+# followed by a level, shown as A1 / A2). PowReduceGear is the level, 0 = off.
+# PowReduceType is non-zero on units that offer the feature; units without it
+# report 0 or omit the key, so it gates the entity (issue #43).
+PROP_POWER_REDUCE_GEAR = "PowReduceGear"
+PROP_POWER_REDUCE_TYPE = "PowReduceType"
+POWER_LIMIT_OFF = "off"
+POWER_LIMIT_LEVELS = {POWER_LIMIT_OFF: 0, "a1": 1, "a2": 2}
+
 # Gree Cloud servers
 GREE_CLOUD_SERVERS = {
     "Australia": "https://augrih.gree.com",

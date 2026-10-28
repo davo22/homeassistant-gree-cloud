@@ -97,6 +97,10 @@ Created for air conditioner and heat pump devices only (not hot water heat pumps
 - **XFan**: Enable/disable extra fan mode (helps dry coils)
 - **Health Mode**: Enable/disable anion/health mode (disabled by default)
 
+### Select Entities
+
+- **Power limit**: compressor power limit, the "power reduce" setting of the Gree+ app (Off / A1 / A2). Only created for units that report the feature (`PowReduceType` non-zero).
+
 ## Cloud Regions
 
 Select the appropriate region for your account:

@@ -39,6 +39,8 @@ from .const import (
     MAX_ERRORS,
     PROP_COMPRESSOR_FREQ,
     PROP_ENERGY_TOTAL,
+    PROP_POWER_REDUCE_GEAR,
+    PROP_POWER_REDUCE_TYPE,
     UPDATE_INTERVAL,
 )
 
@@ -59,7 +61,12 @@ _HWHP_EXTRA_PROPS = [
 # Extra properties reported by AC units, surfaced by the sensor platform. The
 # cloud serves these even though the local UDP protocol does not, so they are
 # only available on this integration.
-_SENSOR_EXTRA_PROPS = [PROP_ENERGY_TOTAL, PROP_COMPRESSOR_FREQ]
+_SENSOR_EXTRA_PROPS = [
+    PROP_ENERGY_TOTAL,
+    PROP_COMPRESSOR_FREQ,
+    PROP_POWER_REDUCE_GEAR,
+    PROP_POWER_REDUCE_TYPE,
+]
 
 
 class HWHPAwareCloudDevice(CloudDevice):
@@ -160,6 +167,9 @@ class CloudDeviceDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         try:
             await self.device.update_state()
             self._error_count = 0
+            _LOGGER.debug(
+                "Raw properties for %s: %s", self.name, self.device.raw_properties
+            )
             return copy.deepcopy(self.device.raw_properties)
 
         except asyncio.TimeoutError as error:

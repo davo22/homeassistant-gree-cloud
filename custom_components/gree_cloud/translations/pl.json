@@ -106,6 +106,16 @@
           }
         }
       }
+    },
+    "select": {
+      "power_limit": {
+        "name": "Limit mocy",
+        "state": {
+          "off": "Wył.",
+          "a1": "A1",
+          "a2": "A2"
+        }
+      }
     }
   }
 }

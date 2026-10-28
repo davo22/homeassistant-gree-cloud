@@ -82,6 +82,16 @@
           }
         }
       }
+    },
+    "select": {
+      "power_limit": {
+        "name": "Limite de potência",
+        "state": {
+          "off": "Desligado",
+          "a1": "A1",
+          "a2": "A2"
+        }
+      }
     }
   }
 }

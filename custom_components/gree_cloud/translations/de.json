@@ -82,6 +82,16 @@
           }
         }
       }
+    },
+    "select": {
+      "power_limit": {
+        "name": "Leistungsbegrenzung",
+        "state": {
+          "off": "Aus",
+          "a1": "A1",
+          "a2": "A2"
+        }
+      }
     }
   }
 }

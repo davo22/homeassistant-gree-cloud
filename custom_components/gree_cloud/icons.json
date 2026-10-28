@@ -69,6 +69,16 @@
       "health_mode": {
         "default": "mdi:leaf"
       }
+    },
+    "select": {
+      "power_limit": {
+        "default": "mdi:speedometer",
+        "state": {
+          "off": "mdi:speedometer",
+          "a1": "mdi:speedometer-medium",
+          "a2": "mdi:speedometer-slow"
+        }
+      }
     }
   }
 }

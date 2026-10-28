@@ -95,6 +95,16 @@
           }
         }
       }
+    },
+    "select": {
+      "power_limit": {
+        "name": "Power limit",
+        "state": {
+          "off": "Off",
+          "a1": "A1",
+          "a2": "A2"
+        }
+      }
     }
   }
 }
