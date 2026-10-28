@@ -9,7 +9,8 @@
               "medium-low": "mdi:circle-slice-2",
               "medium": "mdi:circle-slice-4",
               "medium-high": "mdi:circle-slice-6",
-              "high": "mdi:circle-slice-8"
+              "high": "mdi:circle-slice-8",
+              "quiet": "mdi:volume-off"
             }
           },
           "preset_mode": {
@@ -51,6 +52,12 @@
       },
       "compressor_frequency": {
         "default": "mdi:sine-wave"
+      },
+      "outdoor_temperature": {
+        "default": "mdi:home-thermometer-outline"
+      },
+      "compressor_temperature": {
+        "default": "mdi:thermometer"
       }
     },
     "switch": {
@@ -68,6 +75,22 @@
       },
       "health_mode": {
         "default": "mdi:leaf"
+      },
+      "dehumidify": {
+        "default": "mdi:water-percent"
+      },
+      "continuous_dry": {
+        "default": "mdi:water-off"
+      },
+      "smart_drying": {
+        "default": "mdi:water-check"
+      },
+      "silent_mode": {
+        "default": "mdi:bell-off",
+        "state": {
+          "on": "mdi:bell-off",
+          "off": "mdi:bell-ring"
+        }
       }
     },
     "select": {
@@ -77,6 +100,14 @@
           "off": "mdi:speedometer",
           "a1": "mdi:speedometer-medium",
           "a2": "mdi:speedometer-slow"
+        }
+      },
+      "panel_light": {
+        "default": "mdi:lightbulb",
+        "state": {
+          "on": "mdi:lightbulb-on",
+          "auto": "mdi:lightbulb-auto",
+          "off": "mdi:lightbulb-off"
         }
       }
     }

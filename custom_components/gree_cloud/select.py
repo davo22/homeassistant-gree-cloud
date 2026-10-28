@@ -3,9 +3,8 @@
 from __future__ import annotations
 
 import logging
-from typing import NamedTuple
 
-from greeclimate_davo22.device import Device
+from greeclimate_davo22.device import Device, Props
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.const import EntityCategory
@@ -15,7 +14,11 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
     DISPATCH_DEVICE_DISCOVERED,
+    PANEL_LIGHT_AUTO,
+    PANEL_LIGHT_OFF,
+    PANEL_LIGHT_ON,
     POWER_LIMIT_LEVELS,
+    PROP_LIGHT_SENSOR,
     PROP_POWER_REDUCE_GEAR,
     PROP_POWER_REDUCE_TYPE,
 )
@@ -24,22 +27,13 @@ from .coordinator import (
     GreeCloudConfigEntry,
     is_hwhp_device,
 )
-from .entity import GreeCloudEntity
+from .entity import GreeCloudEntity, RawProp
 
 _LOGGER = logging.getLogger(__name__)
 
 
-class _RawProp(NamedTuple):
-    """Stand-in for a ``Props`` member, for keys the library enum lacks.
-
-    ``Device.set_property`` only reads ``name.value``, so this is enough to
-    stage a raw property for the next ``push_state_update()``.
-    """
-
-    value: str
-
-
-_POWER_REDUCE_GEAR = _RawProp(PROP_POWER_REDUCE_GEAR)
+_POWER_REDUCE_GEAR = RawProp(PROP_POWER_REDUCE_GEAR)
+_LIGHT_SENSOR = RawProp(PROP_LIGHT_SENSOR)
 _GEAR_TO_OPTION = {gear: option for option, gear in POWER_LIMIT_LEVELS.items()}
 
 POWER_LIMIT_DESCRIPTION = SelectEntityDescription(
@@ -59,6 +53,18 @@ def _supports_power_limit(device: Device) -> bool:
     return bool(device.raw_properties.get(PROP_POWER_REDUCE_TYPE))
 
 
+PANEL_LIGHT_DESCRIPTION = SelectEntityDescription(
+    key="Panel Light",
+    translation_key="panel_light",
+    options=[PANEL_LIGHT_ON, PANEL_LIGHT_AUTO, PANEL_LIGHT_OFF],
+)
+
+
+def _has_panel_light(device: Device) -> bool:
+    """Return True if the device reports the panel light (Lig) property."""
+    return device.get_property(Props.LIGHT) is not None
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: GreeCloudConfigEntry,
@@ -71,14 +77,18 @@ async def async_setup_entry(
         """Register the device."""
         if is_hwhp_device(coordinator):
             return
-        if not _supports_power_limit(coordinator.device):
+        entities: list[SelectEntity] = []
+        if _has_panel_light(coordinator.device):
+            entities.append(GreeCloudPanelLightSelect(coordinator))
+        if _supports_power_limit(coordinator.device):
+            entities.append(GreeCloudPowerLimitSelect(coordinator))
+        else:
             _LOGGER.debug(
                 "%s does not report %s, skipping power limit select",
                 coordinator.device.device_info.name,
                 PROP_POWER_REDUCE_TYPE,
             )
-            return
-        async_add_entities([GreeCloudPowerLimitSelect(coordinator)])
+        async_add_entities(entities)
 
     for coordinator in entry.runtime_data.coordinators:
         init_device(coordinator)
@@ -120,5 +130,42 @@ class GreeCloudPowerLimitSelect(GreeCloudEntity, SelectEntity):
         self.coordinator.device.set_property(
             _POWER_REDUCE_GEAR, POWER_LIMIT_LEVELS[option]
         )
+        await self.coordinator.push_state_update()
+        self.async_write_ha_state()
+
+
+class GreeCloudPanelLightSelect(GreeCloudEntity, SelectEntity):
+    """Panel light with its three states (on / auto / off)."""
+
+    entity_description = PANEL_LIGHT_DESCRIPTION
+
+    def __init__(self, coordinator: CloudDeviceDataUpdateCoordinator) -> None:
+        """Initialize the select."""
+        super().__init__(coordinator)
+        self._attr_unique_id = (
+            f"{coordinator.device.device_info.mac}_{self.entity_description.key}"
+        )
+
+    @property
+    def current_option(self) -> str | None:
+        """Return the panel light state read from Lig/LigSen."""
+        device = self.coordinator.device
+        lig = device.get_property(Props.LIGHT)
+        if lig == 0:
+            return PANEL_LIGHT_OFF
+        if lig == 1:
+            lig_sen = device.raw_properties.get(PROP_LIGHT_SENSOR)
+            return PANEL_LIGHT_ON if lig_sen == 1 else PANEL_LIGHT_AUTO
+        return None
+
+    async def async_select_option(self, option: str) -> None:
+        """Set the panel light state.
+
+        Lig has a setter (device.light); LigSen has none in the library, so it
+        is staged as a raw property. Both go out in the same push.
+        """
+        device = self.coordinator.device
+        device.light = option != PANEL_LIGHT_OFF
+        device.set_property(_LIGHT_SENSOR, 1 if option == PANEL_LIGHT_ON else 0)
         await self.coordinator.push_state_update()
         self.async_write_ha_state()

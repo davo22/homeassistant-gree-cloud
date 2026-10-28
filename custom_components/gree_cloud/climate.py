@@ -44,9 +44,15 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
+    DEHUMIDIFY_MODE_ON,
     DISPATCH_DEVICE_DISCOVERED,
     FAN_MEDIUM_HIGH,
     FAN_MEDIUM_LOW,
+    HUMIDITY_MAX_COOL,
+    HUMIDITY_MAX_DRY,
+    HUMIDITY_MIN_COOL,
+    HUMIDITY_MIN_DRY,
+    HUMIDITY_STEP,
     TARGET_TEMPERATURE_STEP,
     TARGET_TEMPERATURE_STEP_HALF,
 )
@@ -81,6 +87,25 @@ FAN_MODES = {
     FanSpeed.High: FAN_HIGH,
 }
 FAN_MODES_REVERSE = {v: k for k, v in FAN_MODES.items()}
+
+# "Quiet" is a separate device flag (device.quiet), not a FanSpeed value, so
+# it can't live in FAN_MODES/FAN_MODES_REVERSE alongside the real speeds -
+# it's handled separately in fan_mode/async_set_fan_mode below. Kept as its
+# own ordered list (rather than [*FAN_MODES_REVERSE]) so it can be inserted
+# between Auto and Low.
+FAN_QUIET = "quiet"
+FAN_MODES_LIST = [
+    FAN_AUTO,
+    FAN_QUIET,
+    FAN_LOW,
+    FAN_MEDIUM_LOW,
+    FAN_MEDIUM,
+    FAN_MEDIUM_HIGH,
+    FAN_HIGH,
+]
+
+# Target humidity is only meaningful while actively cooling or drying.
+HUMIDITY_MODES = (Mode.Cool, Mode.Dry)
 
 VERTICAL_SWING_MODES: dict[str, VerticalSwing] = {
     "default": VerticalSwing.Default,
@@ -160,7 +185,7 @@ class GreeCloudClimateEntity(GreeCloudEntity, ClimateEntity):
     )
     _attr_hvac_modes = [*HVAC_MODES_REVERSE, HVACMode.OFF]
     _attr_preset_modes = PRESET_MODES
-    _attr_fan_modes = [*FAN_MODES_REVERSE]
+    _attr_fan_modes = FAN_MODES_LIST
     _attr_swing_modes = [*VERTICAL_SWING_MODES]
     _attr_swing_horizontal_modes = [*HORIZONTAL_SWING_MODES]
     _attr_name = None
@@ -173,6 +198,72 @@ class GreeCloudClimateEntity(GreeCloudEntity, ClimateEntity):
         """Initialize the Gree Cloud device."""
         super().__init__(coordinator)
         self._attr_unique_id = coordinator.device.device_info.mac
+
+    @property
+    def supported_features(self) -> ClimateEntityFeature:
+        """Return the supported features, adding humidity control in Cool/Dry."""
+        features = self._attr_supported_features
+        if self.coordinator.device.mode in HUMIDITY_MODES:
+            features |= ClimateEntityFeature.TARGET_HUMIDITY
+        return features
+
+    @property
+    def min_humidity(self) -> int:
+        """Return the minimum target humidity for the current mode."""
+        if self.coordinator.device.mode == Mode.Dry:
+            return HUMIDITY_MIN_DRY
+        return HUMIDITY_MIN_COOL
+
+    @property
+    def max_humidity(self) -> int:
+        """Return the maximum target humidity for the current mode."""
+        if self.coordinator.device.mode == Mode.Dry:
+            return HUMIDITY_MAX_DRY
+        return HUMIDITY_MAX_COOL
+
+    @property
+    def target_humidity_step(self) -> int:
+        """Return the target humidity step; the unit only accepts multiples of 5."""
+        return HUMIDITY_STEP
+
+    @property
+    def target_humidity(self) -> int | None:
+        """Return the target humidity, only meaningful in Cool/Dry mode."""
+        if self.coordinator.device.mode not in HUMIDITY_MODES:
+            return None
+        return self.coordinator.device.target_humidity
+
+    async def async_set_humidity(self, humidity: int) -> None:
+        """Set new target humidity."""
+        mode = self.coordinator.device.mode
+        if mode not in HUMIDITY_MODES:
+            raise ValueError(f"Target humidity can only be set in Cool or Dry mode, not {mode}")
+
+        min_humidity, max_humidity = (
+            (HUMIDITY_MIN_DRY, HUMIDITY_MAX_DRY)
+            if mode == Mode.Dry
+            else (HUMIDITY_MIN_COOL, HUMIDITY_MAX_COOL)
+        )
+        # target_humidity_step keeps the UI slider on multiples of 5, but a
+        # direct service call can still pass an arbitrary value.
+        humidity = round(humidity / HUMIDITY_STEP) * HUMIDITY_STEP
+        humidity = max(min_humidity, min(humidity, max_humidity))
+
+        _LOGGER.debug(
+            "Setting target humidity to %s for %s",
+            humidity,
+            self._attr_name,
+        )
+
+        device = self.coordinator.device
+        device.target_humidity = humidity  # Dwet
+        # Setting a target implies dehumidify should be on. Dmod has no
+        # setter in the library, so it's staged through set_property; this
+        # takes over from whatever Dmod held before (including Smart
+        # Drying), and both go out together in the push below.
+        device.set_property(Props.DEHUMIDIFIER_MODE, DEHUMIDIFY_MODE_ON)
+        await self.coordinator.push_state_update()
+        self.async_write_ha_state()
 
     @property
     def _supports_half_degree(self) -> bool:
@@ -311,16 +402,28 @@ class GreeCloudClimateEntity(GreeCloudEntity, ClimateEntity):
 
     @property
     def fan_mode(self) -> str | None:
-        """Return the current fan mode for the device."""
+        """Return the current fan mode for the device.
+
+        Quiet is a separate device flag from fan speed, so it's checked
+        first - the unit can report a fan speed and quiet at the same time,
+        but this integration only has one fan_mode slot to show it in.
+        """
+        if self.coordinator.device.quiet:
+            return FAN_QUIET
         speed = self.coordinator.device.fan_speed
         return FAN_MODES.get(speed)
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""
-        if fan_mode not in FAN_MODES_REVERSE:
+        if fan_mode not in FAN_MODES_LIST:
             raise ValueError(f"Invalid fan mode: {fan_mode}")
 
-        self.coordinator.device.fan_speed = FAN_MODES_REVERSE.get(fan_mode)
+        if fan_mode == FAN_QUIET:
+            self.coordinator.device.quiet = True
+        else:
+            self.coordinator.device.quiet = False
+            self.coordinator.device.fan_speed = FAN_MODES_REVERSE.get(fan_mode)
+
         await self.coordinator.push_state_update()
         self.async_write_ha_state()
 
