@@ -128,11 +128,10 @@ Select the appropriate region for your account:
 - East South Asia
 - Europe
 - India
-- Latin American
 - Middle East
 - North American
 - Russia
-- South American
+- South American (also serves Latin America)
 
 ## How devices are reached
 
