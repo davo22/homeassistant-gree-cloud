@@ -93,6 +93,14 @@
           "a1": "mdi:speedometer-medium",
           "a2": "mdi:speedometer-slow"
         }
+      },
+      "pool_function": {
+        "default": "mdi:tune-variant",
+        "state": {
+          "smart": "mdi:auto-mode",
+          "fast": "mdi:speedometer",
+          "eco": "mdi:leaf"
+        }
       }
     },
     "binary_sensor": {

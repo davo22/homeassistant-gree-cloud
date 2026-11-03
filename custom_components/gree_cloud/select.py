@@ -26,6 +26,7 @@ from .coordinator import (
     is_pool_device,
 )
 from .entity import GreeCloudEntity
+from .pool import GreeCloudPoolFunctionSelect
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -70,7 +71,10 @@ async def async_setup_entry(
     @callback
     def init_device(coordinator: CloudDeviceDataUpdateCoordinator) -> None:
         """Register the device."""
-        if is_hwhp_device(coordinator) or is_pool_device(coordinator):
+        if is_hwhp_device(coordinator):
+            return
+        if is_pool_device(coordinator):
+            async_add_entities([GreeCloudPoolFunctionSelect(coordinator)])
             return
         if not _supports_power_limit(coordinator.device):
             _LOGGER.debug(
