@@ -109,8 +109,11 @@ custom_components/gree_cloud/
 
 ### Dependencies
 
-The integration depends on the forked `greeclimate` library:
+The integration depends on the forked `greeclimate` library, published on PyPI as
+[`greeclimate-davo22`](https://pypi.org/project/greeclimate-davo22/) (module `greeclimate_davo22`):
 - Repository: https://github.com/davo22/greeclimate
-- Branch: master
+- Releases: https://github.com/davo22/greeclimate/releases
 
-To update the library, modify the `requirements` field in `manifest.json`.
+To update the library, bump the `greeclimate-davo22==<version>` pin in `manifest.json`.
+Home Assistant only reinstalls the package when the version changes, so every library
+release needs a new version number, never a re-tag.

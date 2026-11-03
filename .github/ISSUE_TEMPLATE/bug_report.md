@@ -36,7 +36,7 @@ logger:
   default: info
   logs:
     custom_components.gree_cloud: debug
-    greeclimate: debug
+    greeclimate_davo22: debug
 ```
 
 ```

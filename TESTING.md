@@ -11,7 +11,7 @@ pip install aiohttp pycryptodome aiomqtt netifaces
 ## Install forked greeclimate library
 
 ```bash
-pip install git+https://github.com/davo22/greeclimate_davo22.git@master
+pip install greeclimate-davo22
 ```
 
 ## Test Script
