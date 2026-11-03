@@ -94,6 +94,26 @@
           "a2": "mdi:speedometer-slow"
         }
       }
+    },
+    "binary_sensor": {
+      "pump_running": {
+        "default": "mdi:pump-off",
+        "state": {
+          "on": "mdi:pump"
+        }
+      },
+      "compressor_running": {
+        "default": "mdi:engine-off",
+        "state": {
+          "on": "mdi:engine"
+        }
+      },
+      "defrosting": {
+        "default": "mdi:snowflake-off",
+        "state": {
+          "on": "mdi:snowflake-melt"
+        }
+      }
     }
   }
 }

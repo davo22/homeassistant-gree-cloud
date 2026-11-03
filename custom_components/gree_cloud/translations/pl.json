@@ -128,6 +128,17 @@
           "a2": "A2"
         }
       }
+    },
+    "binary_sensor": {
+      "pump_running": {
+        "name": "Pompa"
+      },
+      "compressor_running": {
+        "name": "Sprężarka"
+      },
+      "defrosting": {
+        "name": "Odszranianie"
+      }
     }
   },
   "options": {
