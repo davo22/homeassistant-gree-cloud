@@ -292,17 +292,23 @@ class CloudDiscoveryService:
                         device_key=cloud_dev_info.key,
                         cipher_version=1,  # Default to v1, can be made configurable
                         gateway=gateway,
+                        # Module MAC from the cloud record (pmac); indoor units
+                        # of multi-head systems are reached through it (#6, #33).
+                        parent_mac=cloud_dev_info.parent_mac,
                     )
 
                     # Bind to cloud device (subscribe to MQTT topics)
                     await device.bind()
 
                     _LOGGER.info(
-                        "Bound to cloud device: %s (MAC: %s, firmware: %s, transport: %s)",
+                        "Bound to cloud device: %s (MAC: %s, module: %s, firmware: %s, "
+                        "transport: %s, addressing: %s)",
                         device.device_info.name,
                         device.device_info.mac,
+                        device._parent_mac,
                         cloud_dev_info.version,
                         device.transport,
+                        device.addressing,
                     )
 
                     # Create coordinator
