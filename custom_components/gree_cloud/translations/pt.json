@@ -30,6 +30,12 @@
       },
       "compressor_frequency": {
         "name": "Frequência do compressor"
+      },
+      "water_inlet_temperature": {
+        "name": "Temperatura da água na entrada"
+      },
+      "water_outlet_temperature": {
+        "name": "Temperatura da água na saída"
       }
     },
     "switch": {
@@ -84,6 +90,9 @@
             }
           }
         }
+      },
+      "pool": {
+        "name": "Bomba de calor de piscina"
       }
     },
     "select": {

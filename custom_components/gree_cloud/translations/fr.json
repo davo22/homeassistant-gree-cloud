@@ -30,6 +30,12 @@
       },
       "compressor_frequency": {
         "name": "Fréquence du compresseur"
+      },
+      "water_inlet_temperature": {
+        "name": "Température d'eau en entrée"
+      },
+      "water_outlet_temperature": {
+        "name": "Température d'eau en sortie"
       }
     },
     "switch": {
@@ -84,6 +90,9 @@
             }
           }
         }
+      },
+      "pool": {
+        "name": "Pompe à chaleur de piscine"
       }
     },
     "select": {

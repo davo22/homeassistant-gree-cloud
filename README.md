@@ -91,6 +91,17 @@ Created for Gree WHIO / Hot Water Heat Pump devices (auto-detected):
 - **Temperature Control**: Target temperature 40–80°C with 1° step
 - **Current Temperature**: Live tank water temperature
 
+### Swimming-Pool Heat Pump — Climate Entity
+
+Created for Gree pool heat pumps (cloud model id `9302`, e.g. GRS-CP11Pd/NbA-K), auto-detected from the cloud record:
+
+- **HVAC Modes**: Off, Heat, Cool, Auto (the unit's `Wmod`)
+- **Target Temperature**: water setpoint in 0.5 °C steps, within the limits the unit reports (typically 15–40 °C heating, 10–40 °C cooling)
+- **Current Temperature**: water inlet temperature; the outlet temperature, pump/compressor/defrost status and error code are attributes
+- **Sensors**: water inlet and outlet temperature
+
+No air-conditioner switches or selects are created for these units. Protocol mapped in #48; reports from other pool models are welcome.
+
 ### Switch Entities
 
 Created for air conditioner and heat pump devices only (not hot water heat pumps):
