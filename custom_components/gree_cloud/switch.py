@@ -13,9 +13,11 @@ from homeassistant.components.switch import (
     SwitchEntity,
     SwitchEntityDescription,
 )
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.restore_state import RestoreEntity
 
 from .const import DISPATCH_DEVICE_DISCOVERED
 from .coordinator import CloudDeviceDataUpdateCoordinator, GreeCloudConfigEntry, is_hwhp_device
@@ -103,8 +105,13 @@ async def async_setup_entry(
         if is_hwhp_device(coordinator):
             return
         async_add_entities(
-            GreeCloudSwitch(coordinator=coordinator, description=description)
-            for description in GREE_CLOUD_SWITCHES
+            [
+                *(
+                    GreeCloudSwitch(coordinator=coordinator, description=description)
+                    for description in GREE_CLOUD_SWITCHES
+                ),
+                GreeCloudBeeperSwitch(coordinator),
+            ]
         )
 
     for coordinator in entry.runtime_data.coordinators:
@@ -146,4 +153,49 @@ class GreeCloudSwitch(GreeCloudEntity, SwitchEntity):
         """Turn the entity off."""
         self.entity_description.set_value_fn(self.coordinator.device, False)
         await self.coordinator.push_state_update()
+        self.async_write_ha_state()
+
+
+class GreeCloudBeeperSwitch(GreeCloudEntity, SwitchEntity, RestoreEntity):
+    """Confirmation beep on commands (#50).
+
+    Off adds ``Buzzer_ON_OFF=1`` to every command the integration sends, so the
+    indoor unit stays silent. The unit does not report this flag, so the state
+    lives in Home Assistant and is restored across restarts; nothing is sent to
+    the device when it is toggled.
+    """
+
+    _attr_device_class = SwitchDeviceClass.SWITCH
+    _attr_entity_category = EntityCategory.CONFIG
+    _attr_translation_key = "beeper"
+    _attr_is_on = True
+
+    def __init__(self, coordinator: CloudDeviceDataUpdateCoordinator) -> None:
+        """Initialize the switch."""
+        super().__init__(coordinator)
+        self._attr_unique_id = f"{coordinator.device.device_info.mac}_Beeper"
+
+    async def async_added_to_hass(self) -> None:
+        """Restore the last state and apply it to the device object."""
+        await super().async_added_to_hass()
+        last = await self.async_get_last_state()
+        if last is not None and last.state in ("on", "off"):
+            self._attr_is_on = last.state == "on"
+        self.coordinator.device.beeper = self._attr_is_on
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """The device never reports the flag; keep our own state."""
+        self.async_write_ha_state()
+
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Let the unit beep on commands."""
+        self._attr_is_on = True
+        self.coordinator.device.beeper = True
+        self.async_write_ha_state()
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Silence the unit on commands."""
+        self._attr_is_on = False
+        self.coordinator.device.beeper = False
         self.async_write_ha_state()

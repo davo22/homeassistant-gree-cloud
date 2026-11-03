@@ -47,6 +47,9 @@
       },
       "health_mode": {
         "name": "Gesundheitsmodus"
+      },
+      "beeper": {
+        "name": "Signalton"
       }
     },
     "climate": {
@@ -92,6 +95,27 @@
           "a2": "A2"
         }
       }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Gree Climate Cloud Optionen",
+        "description": "Gerät wählen, dessen aktuelle Temperatur von einem anderen Sensor kommen soll.",
+        "data": {
+          "device": "Gerät"
+        }
+      },
+      "device": {
+        "title": "Externer Temperatursensor",
+        "description": "Sensor, der als aktuelle Temperatur von {device} verwendet wird. Leer lassen, um den Messwert des Geräts zu verwenden.",
+        "data": {
+          "temperature_sensor": "Temperatursensor"
+        }
+      }
+    },
+    "abort": {
+      "no_devices": "Noch keine Geräte gefunden; Optionen öffnen, sobald die Integration geladen ist."
     }
   }
 }

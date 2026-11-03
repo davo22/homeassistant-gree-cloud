@@ -68,6 +68,12 @@
       },
       "health_mode": {
         "default": "mdi:leaf"
+      },
+      "beeper": {
+        "default": "mdi:volume-high",
+        "state": {
+          "off": "mdi:volume-off"
+        }
       }
     },
     "select": {

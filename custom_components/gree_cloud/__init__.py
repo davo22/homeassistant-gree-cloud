@@ -153,11 +153,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: GreeCloudConfigEntry) ->
         # Setup platforms
         await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
+        # Options (external temperature sensors) apply on reload.
+        entry.async_on_unload(entry.add_update_listener(_async_update_listener))
+
         return True
 
     except Exception as err:
         _LOGGER.exception("Failed to setup Gree Climate Cloud: %s", err)
         return False
+
+
+async def _async_update_listener(hass: HomeAssistant, entry: GreeCloudConfigEntry) -> None:
+    """Reload the entry when its options change."""
+    await hass.config_entries.async_reload(entry.entry_id)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: GreeCloudConfigEntry) -> bool:

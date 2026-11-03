@@ -7,6 +7,13 @@ CONF_SERVER = "server"
 CONF_USERNAME = "username"
 CONF_PASSWORD = "password"
 
+# Options (entry.options): {mac: entity_id} of sensors whose value replaces
+# the unit's own room temperature reading (#10). Older ducted/central units
+# expose no indoor sensor and report the setpoint instead.
+CONF_EXTERNAL_TEMPERATURE_SENSORS = "external_temperature_sensors"
+OPT_DEVICE = "device"
+OPT_TEMPERATURE_SENSOR = "temperature_sensor"
+
 # Update intervals
 UPDATE_INTERVAL = 60  # Cloud polling interval in seconds
 DISCOVERY_TIMEOUT = 10

@@ -47,6 +47,9 @@
       },
       "health_mode": {
         "name": "Tryb zdrowotny"
+      },
+      "beeper": {
+        "name": "Sygnał dźwiękowy"
       }
     },
     "climate": {
@@ -116,6 +119,27 @@
           "a2": "A2"
         }
       }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Opcje Gree Climate Cloud",
+        "description": "Wybierz jednostkę, której temperatura bieżąca ma pochodzić z innego czujnika.",
+        "data": {
+          "device": "Jednostka"
+        }
+      },
+      "device": {
+        "title": "Zewnętrzny czujnik temperatury",
+        "description": "Czujnik używany jako temperatura bieżąca dla {device}. Zostaw puste, aby używać odczytu jednostki.",
+        "data": {
+          "temperature_sensor": "Czujnik temperatury"
+        }
+      }
+    },
+    "abort": {
+      "no_devices": "Nie wykryto jeszcze jednostek; otwórz opcje po załadowaniu integracji."
     }
   }
 }

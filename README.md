@@ -67,6 +67,10 @@ Any Gree Smart air conditioner or heat pump working with the Gree+ app should be
 
 The integration will automatically discover all devices associated with your Gree+ account.
 
+### Options: external temperature sensor
+
+Older ducted and central units expose no indoor temperature over the protocol and show the setpoint as the current temperature. Open the integration's **Configure** dialog, pick the unit and choose any temperature sensor (a Zigbee thermometer, a thermostat's reading, …); its value is then shown as the climate entity's current temperature and follows the sensor live. Leave the field empty to go back to the unit's own reading. The chosen sensor is exposed as the `external_temperature_sensor` attribute.
+
 ## Available Entities
 
 ### Air Conditioner / Heat Pump — Climate Entity
@@ -96,6 +100,7 @@ Created for air conditioner and heat pump devices only (not hot water heat pumps
 - **Fresh Air**: Enable/disable fresh air intake
 - **XFan**: Enable/disable extra fan mode (helps dry coils)
 - **Health Mode**: Enable/disable anion/health mode (disabled by default)
+- **Beeper**: whether the unit beeps when it receives a command from Home Assistant. Off adds `Buzzer_ON_OFF=1` to every command; the setting lives in Home Assistant (the unit does not report it) and survives restarts. Found under the device's configuration section.
 
 ### Select Entities
 
