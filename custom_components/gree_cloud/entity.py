@@ -21,5 +21,6 @@ class GreeCloudEntity(CoordinatorEntity[CloudDeviceDataUpdateCoordinator]):
             identifiers={(DOMAIN, coordinator.device.device_info.mac)},
             name=coordinator.device.device_info.name,
             manufacturer="Gree",
-            model=coordinator.device.hid or "Unknown Model",
+            model=("Air-to-water heat pump" if coordinator.device_kind == "heatpump"
+                   else coordinator.device.hid or "Unknown Model"),
         )

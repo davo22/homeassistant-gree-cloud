@@ -18,6 +18,7 @@ from homeassistant.const import (
     EntityCategory,
     UnitOfEnergy,
     UnitOfFrequency,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -36,6 +37,14 @@ from .coordinator import (
     is_hwhp_device,
 )
 from .entity import GreeCloudEntity
+from .heatpump import (
+    COOLING_SETPOINTS,
+    SETPOINTS,
+    TEMPERATURE_PAIRS,
+    cooling_confirmed,
+    setpoint,
+    temperature,
+)
 
 
 @dataclass(kw_only=True, frozen=True)
@@ -127,6 +136,44 @@ GREE_CLOUD_SENSORS: tuple[GreeCloudSensorEntityDescription, ...] = (
 )
 
 
+def _heatpump_sensor_description(
+    key: str, translation_key: str, *, measurement: bool = False
+) -> GreeCloudSensorEntityDescription:
+    """Describe a air-to-water value using the common cloud sensor implementation."""
+
+    def value_fn(device: Device) -> float | None:
+        decoder = temperature if measurement else setpoint
+        return decoder(device.raw_properties, key)
+
+    def exists_fn(device: Device) -> bool:
+        if key in COOLING_SETPOINTS and not cooling_confirmed(device.raw_properties):
+            return False
+        return value_fn(device) is not None
+
+    return GreeCloudSensorEntityDescription(
+        key=f"versati_{key}",
+        translation_key=translation_key,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        state_class=SensorStateClass.MEASUREMENT if measurement else None,
+        suggested_display_precision=1 if measurement else None,
+        value_fn=value_fn,
+        exists_fn=exists_fn,
+    )
+
+
+HEATPUMP_SENSORS: tuple[GreeCloudSensorEntityDescription, ...] = (
+    *(
+        _heatpump_sensor_description(key, translation)
+        for key, translation in (SETPOINTS | COOLING_SETPOINTS).items()
+    ),
+    *(
+        _heatpump_sensor_description(key, key, measurement=True)
+        for key in TEMPERATURE_PAIRS
+    ),
+)
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: GreeCloudConfigEntry,
@@ -134,11 +181,31 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Gree Cloud sensors from a config entry."""
 
+    heatpump_registered: set[str] = set()
+
     @callback
     def init_device(coordinator: CloudDeviceDataUpdateCoordinator) -> None:
         """Register the device."""
         # Hot water heat pumps report consumption under a different key.
-        if is_hwhp_device(coordinator):
+        if coordinator.device_kind == "heatpump":
+
+            @callback
+            def add_new_sensors():
+                entities = []
+                for description in HEATPUMP_SENSORS:
+                    if not description.exists_fn(coordinator.device):
+                        continue
+                    entity = GreeCloudSensor(coordinator, description)
+                    if entity.unique_id not in heatpump_registered:
+                        heatpump_registered.add(entity.unique_id)
+                        entities.append(entity)
+                if entities:
+                    async_add_entities(entities)
+
+            add_new_sensors()
+            entry.async_on_unload(coordinator.async_add_listener(add_new_sensors))
+            return
+        if coordinator.device_kind != "ac" or is_hwhp_device(coordinator):
             return
         async_add_entities(
             GreeCloudSensor(coordinator=coordinator, description=description)
