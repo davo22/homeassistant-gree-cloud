@@ -25,6 +25,7 @@ from .coordinator import (
     is_hwhp_device,
 )
 from .entity import GreeCloudEntity
+from .heatpump import MODE_NAMES
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -69,6 +70,11 @@ async def async_setup_entry(
     @callback
     def init_device(coordinator: CloudDeviceDataUpdateCoordinator) -> None:
         """Register the device."""
+        if coordinator.device_kind == "heatpump":
+            policy = coordinator.device.write_policy
+            if "Mod" in policy.approved and policy.modes:
+                async_add_entities([HeatPumpMode(coordinator)])
+            return
         if is_hwhp_device(coordinator):
             return
         if not _supports_power_limit(coordinator.device):
@@ -122,3 +128,33 @@ class GreeCloudPowerLimitSelect(GreeCloudEntity, SelectEntity):
         )
         await self.coordinator.push_state_update()
         self.async_write_ha_state()
+
+
+class HeatPumpMode(GreeCloudEntity, SelectEntity):
+    """Exact combined mode; selecting it never toggles global PAC power."""
+
+    _attr_translation_key = "versati_mode"
+
+    def __init__(self, coordinator):
+        super().__init__(coordinator)
+        self._attr_unique_id = (
+            f"{coordinator.device.device_info.mac}_versati_mode_control"
+        )
+        self._attr_options = [
+            MODE_NAMES[mode]
+            for mode in sorted(coordinator.device.write_policy.modes)
+            if mode in MODE_NAMES
+        ]
+
+    @property
+    def current_option(self):
+        return MODE_NAMES.get((self.coordinator.data or {}).get("Mod"))
+
+    async def async_select_option(self, option):
+        if option not in self.options:
+            from homeassistant.exceptions import HomeAssistantError
+
+            raise HomeAssistantError("Unsupported mode")
+        await self.coordinator.async_heatpump_command(
+            "Mod", next(key for key, value in MODE_NAMES.items() if value == option)
+        )

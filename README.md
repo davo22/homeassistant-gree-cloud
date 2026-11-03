@@ -31,11 +31,17 @@ Any Gree Smart air conditioner or heat pump working with the Gree+ app should be
 - Lessar
 - Tosot
 - Wilfa
+- Arthur Martin
 
 ### Hot Water Heat Pumps
 
 - Gree WHIO (New Zealand)
 - Gree Hot Water Heat Pump (Australia)
+
+### Versati Air-to-Water Heat Pumps
+
+Gree Versati devices reporting model ID `9300`, including Arthur Martin rebadges,
+are supported through cloud MQTT. Other Versati model IDs are not covered.
 
 ## Installation
 
@@ -86,6 +92,18 @@ Created for Gree WHIO / Hot Water Heat Pump devices (auto-detected):
 - **Operation Modes**: Heat Pump (normal), Performance (boost), Off
 - **Temperature Control**: Target temperature 40–80°C with 1° step
 - **Current Temperature**: Live tank water temperature
+
+### Air-to-Water Heat Pump — Climate, Sensors and Controls
+
+Created for Gree Versati model 9300 air-to-water heat pumps, including Arthur Martin rebadges (auto-detected):
+
+- **HVAC Modes**: Off, Heat, Cool
+- **Temperature Control**: Water target with 1° step; heating 20–60°C, cooling 5–25°C when supported
+- **Current Temperature**: Outlet water temperature
+- **Temperature Sensors**: Water inlet, water outlet and heat-pump outlet; tank and room temperatures only when usable measurements are available
+- **Setpoint Controls**: Heating water, heating room (18–30°C), domestic hot water (40–60°C), and cooling water/room when supported; also exposed as sensors
+- **Power**: global power switch and power-state binary sensor.
+- **Operation Modes**: Heating, domestic hot water (DHW), combined heating/DHW, and cooling modes when supported, through a separate select entity
 
 ### Switch Entities
 

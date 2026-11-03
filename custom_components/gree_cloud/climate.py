@@ -130,6 +130,11 @@ async def async_setup_entry(
     @callback
     def init_device(coordinator: CloudDeviceDataUpdateCoordinator) -> None:
         """Register the device."""
+        if coordinator.device_kind == "heatpump":
+            async_add_entities([GreeHeatPumpClimate(coordinator)])
+            return
+        if coordinator.device_kind == "unknown":
+            return
         if is_hwhp_device(coordinator):
             _LOGGER.debug(
                 "Skipping climate entity for HWHP device %s",
@@ -144,6 +149,122 @@ async def async_setup_entry(
     entry.async_on_unload(
         async_dispatcher_connect(hass, DISPATCH_DEVICE_DISCOVERED, init_device)
     )
+
+
+class GreeHeatPumpClimate(GreeCloudEntity, ClimateEntity):
+    """Hydraulic circuit with per-device write gate, never air/air properties."""
+
+    _attr_translation_key = "versati_heating"
+    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_supported_features = ClimateEntityFeature(0)
+    _attr_hvac_modes = [HVACMode.OFF, HVACMode.HEAT]
+    _enable_turn_on_off_backwards_compatibility = False
+
+    def __init__(self, coordinator):
+        super().__init__(coordinator)
+        self._attr_unique_id = f"{coordinator.device.device_info.mac}_versati_heating"
+
+    @property
+    def supported_features(self):
+        policy = self.coordinator.device.write_policy
+        features = ClimateEntityFeature(0)
+        key = "CoWatOutTemSet" if self.hvac_mode == HVACMode.COOL else "HeWatOutTemSet"
+        if key in policy.approved and key in policy.limits:
+            features |= ClimateEntityFeature.TARGET_TEMPERATURE
+        if "Pow" in policy.approved:
+            features |= ClimateEntityFeature.TURN_ON | ClimateEntityFeature.TURN_OFF
+        return features
+
+    @property
+    def hvac_mode(self):
+        props = self.coordinator.data or {}
+        if props.get("Pow") == 0:
+            return HVACMode.OFF
+        if props.get("Pow") != 1:
+            return None
+        mode = props.get("Mod")
+        if mode in (1, 4):
+            return HVACMode.HEAT
+        if mode in (3, 5):
+            return HVACMode.COOL
+        # ECS-only means the hydraulic space circuit is off, not heating.
+        return HVACMode.OFF if mode == 2 else None
+
+    @property
+    def hvac_modes(self):
+        from .heatpump import cooling_confirmed
+        modes = [HVACMode.OFF, HVACMode.HEAT]
+        if cooling_confirmed(self.coordinator.data or {}) or 5 in self.coordinator.device.write_policy.modes:
+            modes.append(HVACMode.COOL)
+        return modes
+
+    @property
+    def min_temp(self):
+        key = "CoWatOutTemSet" if self.hvac_mode == HVACMode.COOL else "HeWatOutTemSet"
+        return self.coordinator.device.write_policy.limits.get(key, (20, 60))[0]
+
+    @property
+    def max_temp(self):
+        key = "CoWatOutTemSet" if self.hvac_mode == HVACMode.COOL else "HeWatOutTemSet"
+        return self.coordinator.device.write_policy.limits.get(key, (20, 60))[1]
+
+    _attr_target_temperature_step = 1
+
+    @property
+    def target_temperature(self):
+        from .heatpump import setpoint
+        key = "CoWatOutTemSet" if self.hvac_mode == HVACMode.COOL else "HeWatOutTemSet"
+        return setpoint(self.coordinator.data or {}, key)
+
+    @property
+    def current_temperature(self):
+        from .heatpump import temperature
+        return temperature(self.coordinator.data or {}, "water_outlet_temperature")
+
+    @property
+    def extra_state_attributes(self):
+        from .heatpump import MODE_NAMES
+        props = self.coordinator.data or {}
+        return {"raw_mode": props.get("Mod"), "pac_mode": MODE_NAMES.get(props.get("Mod")),
+                "power": props.get("Pow"), "writes_enabled": bool(self.coordinator.device.write_policy.approved),
+                "temperature_source": "water_outlet_setpoint"}
+
+    async def async_set_temperature(self, **kwargs):
+        if not self.coordinator.device.write_policy.approved:
+            from homeassistant.exceptions import HomeAssistantError
+            raise HomeAssistantError("Air-to-water writes are disabled pending protocol validation")
+        if ATTR_HVAC_MODE in kwargs:
+            from homeassistant.exceptions import HomeAssistantError
+            raise HomeAssistantError("Send mode and setpoint separately to avoid partial commands")
+        key = "CoWatOutTemSet" if self.hvac_mode == HVACMode.COOL else "HeWatOutTemSet"
+        await self.coordinator.async_heatpump_command(key, kwargs.get(ATTR_TEMPERATURE))
+
+    async def async_set_hvac_mode(self, hvac_mode):
+        from homeassistant.exceptions import HomeAssistantError
+        if not self.coordinator.device.write_policy.approved:
+            raise HomeAssistantError("Air-to-water writes are disabled pending protocol validation")
+        if hvac_mode == HVACMode.OFF:
+            # Do not turn off ECS implicitly through the space-heating entity.
+            if (self.coordinator.data or {}).get("Mod") in (2, 3, 4):
+                raise HomeAssistantError("Use the global power control; ECS is active in this mode")
+            await self.coordinator.async_heatpump_command("Pow", 0)
+            return
+        current = (self.coordinator.data or {}).get("Mod")
+        modes = {HVACMode.HEAT: 4 if current in (2, 3, 4) else 1,
+                 HVACMode.COOL: 3 if current in (2, 3, 4) else 5}
+        if hvac_mode not in modes:
+            raise HomeAssistantError("Unsupported air-to-water HVAC mode")
+        # Mode selection does not power on implicitly.
+        await self.coordinator.async_heatpump_command("Mod", modes[hvac_mode])
+
+    async def async_turn_on(self):
+        if "Pow" not in self.coordinator.device.write_policy.approved:
+            from homeassistant.exceptions import HomeAssistantError
+            raise HomeAssistantError("Air-to-water power writes are disabled")
+        await self.coordinator.async_heatpump_command("Pow", 1)
+
+    async def async_turn_off(self):
+        await self.async_set_hvac_mode(HVACMode.OFF)
 
 
 class GreeCloudClimateEntity(GreeCloudEntity, ClimateEntity):
