@@ -110,14 +110,17 @@ POOL_WMOD_AUTO = 2
 POOL_TEMP_MIN_DEFAULT = 10
 POOL_TEMP_MAX_DEFAULT = 40
 
-# Gree Cloud servers
+# Gree Cloud servers. "Latin American" was removed in 1.7.0: its hosts never
+# existed and Gree's own region directory (globalgrih.gree.com) has no such
+# region -- Latin America is served by the South American hosts (#34).
+# Entries created with the old name keep working through this alias.
+REGION_ALIASES = {"Latin American": "South American"}
 GREE_CLOUD_SERVERS = {
     "Australia": "https://augrih.gree.com",
     "China Mainland": "https://grih.gree.com",
     "East South Asia": "https://hkgrih.gree.com",
     "Europe": "https://eugrih.gree.com",
     "India": "https://ingrih.gree.com",
-    "Latin American": 'https://lagrih.gree.com',
     "Middle East": "https://megrih.gree.com",
     "North American": "https://nagrih.gree.com",
     "Russia": "https://rugrih.gree.com",
@@ -131,7 +134,6 @@ GREE_MQTT_SERVERS = {
     "East South Asia": "mqtt-hk.gree.com",
     "Europe": "mqtt-eu.gree.com",
     "India": "mqtt-in.gree.com",
-    "Latin American": "mqtt-la.gree.com",
     "Middle East": "mqtt-me.gree.com",
     "North American": "mqtt-na.gree.com",
     "Russia": "mqtt-ru.gree.com",

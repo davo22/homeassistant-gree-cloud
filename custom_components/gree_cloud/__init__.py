@@ -11,7 +11,7 @@ from greeclimate_davo22.mqtt_client import GreeMqttClient
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 
-from .const import CONF_SERVER, DOMAIN, GREE_MQTT_SERVERS
+from .const import CONF_SERVER, DOMAIN, GREE_MQTT_SERVERS, REGION_ALIASES
 from .coordinator import (
     CloudDiscoveryService,
     GreeCloudConfigEntry,
@@ -54,7 +54,7 @@ async def async_reconnect_mqtt(hass: HomeAssistant, entry: GreeCloudConfigEntry)
         _LOGGER.warning("MQTT disconnected — attempting to reconnect")
 
         old_client = runtime.mqtt_client
-        mqtt_server = GREE_MQTT_SERVERS.get(entry.data[CONF_SERVER], "mqtt-eu.gree.com")
+        mqtt_server = GREE_MQTT_SERVERS.get(_region(entry), "mqtt-eu.gree.com")
 
         try:
             # Re-login to get a fresh token (tokens can expire).
@@ -105,14 +105,26 @@ async def async_reconnect_mqtt(hass: HomeAssistant, entry: GreeCloudConfigEntry)
         return True
 
 
+def _region(entry: GreeCloudConfigEntry) -> str:
+    """Return the entry's region with legacy names resolved (#34)."""
+    return REGION_ALIASES.get(entry.data[CONF_SERVER], entry.data[CONF_SERVER])
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: GreeCloudConfigEntry) -> bool:
     """Set up Gree Climate Cloud from a config entry."""
     _LOGGER.info("Setting up Gree Climate Cloud integration")
 
     try:
         # Create Cloud API client
+        region = _region(entry)
+        if region != entry.data[CONF_SERVER]:
+            _LOGGER.info(
+                "Region '%s' is served by '%s'; using its hosts",
+                entry.data[CONF_SERVER],
+                region,
+            )
         api = GreeCloudApi.for_server(
-            entry.data[CONF_SERVER],
+            region,
             entry.data[CONF_USERNAME],
             entry.data[CONF_PASSWORD],
         )
@@ -123,11 +135,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: GreeCloudConfigEntry) ->
 
         # Create MQTT client
         _LOGGER.debug("Connecting to Gree MQTT broker")
-        mqtt_server = GREE_MQTT_SERVERS.get(entry.data[CONF_SERVER], "mqtt-eu.gree.com")
-        if entry.data[CONF_SERVER] not in GREE_MQTT_SERVERS:
+        mqtt_server = GREE_MQTT_SERVERS.get(region, "mqtt-eu.gree.com")
+        if region not in GREE_MQTT_SERVERS:
             _LOGGER.warning(
                 "Unknown server region '%s', falling back to Europe MQTT server",
-                entry.data[CONF_SERVER],
+                region,
             )
         mqtt_client = GreeMqttClient(credentials.user_id, credentials.token, server=mqtt_server)
         await mqtt_client.connect()
