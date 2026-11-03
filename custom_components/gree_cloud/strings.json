@@ -117,6 +117,17 @@
           "a2": "A2"
         }
       }
+    },
+    "binary_sensor": {
+      "pump_running": {
+        "name": "Pump"
+      },
+      "compressor_running": {
+        "name": "Compressor"
+      },
+      "defrosting": {
+        "name": "Defrosting"
+      }
     }
   },
   "options": {
