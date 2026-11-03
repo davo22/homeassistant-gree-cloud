@@ -99,6 +99,7 @@ Created for Gree pool heat pumps (cloud model id `9302`, e.g. GRS-CP11Pd/NbA-K),
 - **Target Temperature**: water setpoint in 0.5 °C steps, within the limits the unit reports (typically 15–40 °C heating, 10–40 °C cooling)
 - **Current Temperature**: water inlet temperature; the outlet temperature, pump/compressor/defrost status and error code are attributes
 - **Sensors**: water inlet and outlet temperature
+- **Function select**: the Gree+ *Function* menu — Smart / Fast / ECO — independent of the operating mode
 - **Binary sensors**: pump running, compressor running (both with the *running* device class, for operating-hour statistics) and defrosting
 
 No air-conditioner switches or selects are created for these units. Protocol mapped in #48; reports from other pool models are welcome.

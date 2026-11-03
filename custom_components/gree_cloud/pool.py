@@ -24,6 +24,7 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
+from homeassistant.components.select import SelectEntity
 from homeassistant.const import ATTR_TEMPERATURE, PRECISION_HALVES, UnitOfTemperature
 from homeassistant.exceptions import HomeAssistantError
 
@@ -33,6 +34,7 @@ from .const import (
     POOL_PROP_COOL_TEM_MAX,
     POOL_PROP_COOL_TEM_MIN,
     POOL_PROP_DEFROST,
+    POOL_FUNCTIONS,
     POOL_PROP_ERROR,
     POOL_PROP_FLAG,
     POOL_PROP_FUNC,
@@ -86,6 +88,62 @@ def pool_temperature(props: Mapping[str, Any], int_key: str, dec_key: str | None
         return None
     tenths = _number(props.get(dec_key)) if dec_key else None
     return round(whole - POOL_TEMP_OFFSET + (tenths or 0) / 10, 1)
+
+
+async def pool_send_command(
+    coordinator: CloudDeviceDataUpdateCoordinator, opt: list[str], p: list[Any]
+) -> None:
+    """Send one command with FlagPool in front, as the app does, and wait for the ack.
+
+    Accepted values are written into the raw properties right away and a
+    refresh is requested so the next poll confirms them.
+    """
+    device = coordinator.device
+    try:
+        reply = await device.send_command(
+            [POOL_PROP_FLAG, *opt], [1, *p], strict_ack=True, timeout=_COMMAND_TIMEOUT
+        )
+    except asyncio.TimeoutError as err:
+        raise HomeAssistantError(
+            f"{device.device_info.name} did not acknowledge the command"
+        ) from err
+    except Exception as err:  # transport errors (MQTT disconnected, ...)
+        raise HomeAssistantError(
+            f"Could not send the command to {device.device_info.name}: {err}"
+        ) from err
+    if isinstance(reply, dict) and reply.get("r") not in (None, 200):
+        raise HomeAssistantError(
+            f"{device.device_info.name} rejected the command (r={reply.get('r')})"
+        )
+    for key, value in zip(opt, p):
+        device.raw_properties[key] = value
+    await coordinator.async_request_refresh()
+
+
+class GreeCloudPoolFunctionSelect(GreeCloudEntity, SelectEntity):
+    """The Gree+ "Function" menu: Smart / Fast / ECO (PoolFunc), independent of the mode."""
+
+    _attr_translation_key = "pool_function"
+    _attr_options = list(POOL_FUNCTIONS)
+
+    def __init__(self, coordinator: CloudDeviceDataUpdateCoordinator) -> None:
+        """Initialize."""
+        super().__init__(coordinator)
+        self._attr_unique_id = f"{coordinator.device.device_info.mac}_Pool Function"
+
+    @property
+    def current_option(self) -> str | None:
+        """Return the function, or None for a value we do not know."""
+        raw = _number(self.coordinator.device.raw_properties.get(POOL_PROP_FUNC))
+        for option, value in POOL_FUNCTIONS.items():
+            if raw is not None and int(raw) == value:
+                return option
+        return None
+
+    async def async_select_option(self, option: str) -> None:
+        """Write PoolFunc."""
+        await pool_send_command(self.coordinator, [POOL_PROP_FUNC], [POOL_FUNCTIONS[option]])
+        self.async_write_ha_state()
 
 
 class GreeCloudPoolClimateEntity(GreeCloudEntity, ClimateEntity):
@@ -203,29 +261,9 @@ class GreeCloudPoolClimateEntity(GreeCloudEntity, ClimateEntity):
         }
 
     async def _send(self, opt: list[str], p: list[Any]) -> None:
-        """Send one command with FlagPool in front, as the app does, and wait for the ack."""
-        device = self.coordinator.device
-        try:
-            reply = await device.send_command(
-                [POOL_PROP_FLAG, *opt], [1, *p], strict_ack=True, timeout=_COMMAND_TIMEOUT
-            )
-        except asyncio.TimeoutError as err:
-            raise HomeAssistantError(
-                f"{device.device_info.name} did not acknowledge the command"
-            ) from err
-        except Exception as err:  # transport errors (MQTT disconnected, ...)
-            raise HomeAssistantError(
-                f"Could not send the command to {device.device_info.name}: {err}"
-            ) from err
-        if isinstance(reply, dict) and reply.get("r") not in (None, 200):
-            raise HomeAssistantError(
-                f"{device.device_info.name} rejected the command (r={reply.get('r')})"
-            )
-        # Reflect the accepted values right away; the next poll confirms them.
-        for key, value in zip(opt, p):
-            device.raw_properties[key] = value
+        """Send one command and reflect it; see pool_send_command()."""
+        await pool_send_command(self.coordinator, opt, p)
         self.async_write_ha_state()
-        await self.coordinator.async_request_refresh()
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set the water setpoint in 0.5 C steps."""

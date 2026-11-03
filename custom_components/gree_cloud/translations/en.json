@@ -116,6 +116,14 @@
           "a1": "A1",
           "a2": "A2"
         }
+      },
+      "pool_function": {
+        "name": "Function",
+        "state": {
+          "smart": "Smart",
+          "fast": "Fast",
+          "eco": "ECO"
+        }
       }
     },
     "binary_sensor": {

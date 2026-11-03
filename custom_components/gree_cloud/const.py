@@ -101,6 +101,8 @@ POOL_PROP_DEFROST = "Defrost"
 POOL_PROP_AUX_STATUS = "AuxStatus"
 POOL_PROP_ERROR = "AllErr"
 POOL_TEMP_OFFSET = 100
+# Gree+ "Function" menu (PoolFunc), independent of Wmod: 0 Smart, 1 Fast, 2 ECO.
+POOL_FUNCTIONS = {"smart": 0, "fast": 1, "eco": 2}
 POOL_WMOD_HEAT = 0
 POOL_WMOD_COOL = 1
 POOL_WMOD_AUTO = 2
