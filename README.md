@@ -17,6 +17,8 @@ This integration is based on a fork of the [greeclimate](https://github.com/cmro
 
 ## Supported Devices
 
+### Air Conditioners & Heat Pumps
+
 Any Gree Smart air conditioner or heat pump working with the Gree+ app should be supported, including non-Gree branded devices such as:
 
 - Trane
@@ -30,7 +32,12 @@ Any Gree Smart air conditioner or heat pump working with the Gree+ app should be
 - Tosot
 - Wilfa
 
-Hot water heat pumps (Gree WHIO, Gree HWHP) and swimming-pool heat pumps (model 9302) get their own entities; multi-head / VRF systems are supported from 1.7.0. See [SUPPORTED_DEVICES.md](SUPPORTED_DEVICES.md) for device classes, Wi-Fi module firmware and the models users have reported working.
+### Hot Water Heat Pumps
+
+- Gree WHIO (New Zealand)
+- Gree Hot Water Heat Pump (Australia)
+
+See [SUPPORTED_DEVICES.md](SUPPORTED_DEVICES.md) for device classes, Wi-Fi module firmware and the models users have reported working, including swimming-pool heat pumps and multi-head / VRF systems.
 
 ## Installation
 
