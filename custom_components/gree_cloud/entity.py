@@ -2,11 +2,23 @@
 
 from __future__ import annotations
 
+from typing import NamedTuple
+
 from homeassistant.helpers.device_registry import DeviceInfo as HADeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import CloudDeviceDataUpdateCoordinator
+
+
+class RawProp(NamedTuple):
+    """Stand-in for a ``Props`` member, for keys the library enum lacks.
+
+    ``Device.set_property`` only reads ``name.value``, so this is enough to
+    stage a raw property for the next ``push_state_update()``.
+    """
+
+    value: str
 
 
 class GreeCloudEntity(CoordinatorEntity[CloudDeviceDataUpdateCoordinator]):

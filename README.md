@@ -11,7 +11,10 @@ This integration is based on a fork of the [greeclimate](https://github.com/cmro
 - 🌐 **Cloud-only device support** - Works with Gree devices that only communicate via cloud
 - 🔄 **Full climate control** - Temperature, mode, fan speed, swing modes
 - �️ **Hot water heat pump support** - Control Gree WHIO / Hot Water Heat Pump devices
-- 🎛️ **Additional switches** - Panel light, quiet mode, fresh air, XFan, health mode (AC/heat pump devices)
+- 💧 **Humidity control** - Target humidity in Cool & Dry, plus Target Dehumidify, Smart Drying, and Continuous Dry modes
+- 🔇 **Silent operation** - Quiet fan mode and a dedicated Silent Mode switch to mute the unit's beeper
+- 🎛️ **Additional switches** - Fresh air, XFan, health mode (AC/heat pump devices)
+- 📊 **Diagnostic sensors** - Outdoor temperature, compressor temperature, compressor frequency
 - 🔐 **Secure authentication** - Uses your existing Gree+ account credentials
 - 🌍 **Multi-region support** - Works with all Gree Cloud regions
 
@@ -75,9 +78,12 @@ Created for standard Gree air conditioner and heat pump devices:
 
 - **HVAC Modes**: Off, Auto, Cool, Heat, Dry, Fan Only
 - **Preset Modes**: None, Eco, Away (8°C mode), Boost (Turbo), Sleep
-- **Fan Modes**: Auto, Low, Medium Low, Medium, Medium High, High
+- **Fan Modes**: Auto, Quiet, Low, Medium Low, Medium, Medium High, High
+- **Target Humidity**: settable in Cool (40–80%) and Dry (30–70%), in 5% steps
 - **Swing Modes**: Off, Vertical, Horizontal, Both
 - **Temperature Control**: Target temperature with 1° step
+
+Quiet operation is available as **Quiet** in the fan mode list (between Auto and Low) — the recommended way to use it. Selecting Quiet leaves the current fan speed untouched; picking any other fan mode restores real fan speed control. A separate `Quiet` switch also still exists for backward compatibility (see Switch Entities below) but is deprecated and will be removed in a future release.
 
 ### Hot Water Heat Pump — Water Heater Entity
 
@@ -89,17 +95,29 @@ Created for Gree WHIO / Hot Water Heat Pump devices (auto-detected):
 
 ### Switch Entities
 
-Created for air conditioner and heat pump devices only (not hot water heat pumps):
+Created for air conditioner and heat pump devices only (not hot water heat pumps). The dehumidify and Silent Mode switches are only created when the device reports the underlying feature:
 
-- **Panel Light**: Control the front panel LED
-- **Quiet Mode**: Enable/disable quiet operation
+- **Target Dehumidify**: Dehumidify to the target humidity level (Cool + Dry)
+- **Smart Drying**: Automatic drying without a target (Cool only)
+- **Continuous Dry**: Continuous dehumidify without a target (Dry only)
 - **Fresh Air**: Enable/disable fresh air intake
-- **XFan**: Enable/disable extra fan mode (helps dry coils)
+- **XFan**: Enable/disable extra fan mode (helps dry coils, Cool + Dry only)
 - **Health Mode**: Enable/disable anion/health mode (disabled by default)
+- **Silent Mode**: Mute the unit's beeper/buzzer
+- **Quiet** *(deprecated)*: Same underlying setting as the climate entity's Quiet fan mode — always in sync, since both read/write the same property. Kept for backward compatibility with existing automations; toggling it logs a deprecation warning. Prefer the fan mode.
+- **Panel Light** *(deprecated)*: Same underlying setting as the Panel Light select, which also offers Auto. Kept for backward compatibility; toggling it logs a deprecation warning.
 
 ### Select Entities
 
+- **Panel Light**: On / Auto / Off. Only created for units that report the panel light.
 - **Power limit**: compressor power limit, the "power reduce" setting of the Gree+ app (Off / A1 / A2). Only created for units that report the feature (`PowReduceType` non-zero).
+
+### Sensor Entities
+
+Shown only when the device reports the corresponding value:
+
+- **Energy**, **Humidity**, **Compressor Frequency**
+- **Outdoor Temperature**, **Compressor Temperature** (the device always reports these in °F, whatever its display unit; they are converted to °C)
 
 ## Cloud Regions
 

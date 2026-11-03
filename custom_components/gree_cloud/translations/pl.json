@@ -30,6 +30,12 @@
       },
       "compressor_frequency": {
         "name": "Częstotliwość sprężarki"
+      },
+      "outdoor_temperature": {
+        "name": "Temperatura zewnętrzna"
+      },
+      "compressor_temperature": {
+        "name": "Temperatura sprężarki"
       }
     },
     "switch": {
@@ -47,6 +53,18 @@
       },
       "health_mode": {
         "name": "Tryb zdrowotny"
+      },
+      "dehumidify": {
+        "name": "Osuszanie docelowe"
+      },
+      "continuous_dry": {
+        "name": "Osuszanie ciągłe"
+      },
+      "smart_drying": {
+        "name": "Inteligentne osuszanie"
+      },
+      "silent_mode": {
+        "name": "Wyciszenie sygnału"
       }
     },
     "climate": {
@@ -62,7 +80,8 @@
               "medium-low": "średnio niski",
               "medium": "średni",
               "medium-high": "średnio wysoki",
-              "high": "wysoki"
+              "high": "wysoki",
+              "quiet": "cichy"
             }
           },
           "preset_mode": {
@@ -114,6 +133,14 @@
           "off": "Wył.",
           "a1": "A1",
           "a2": "A2"
+        }
+      },
+      "panel_light": {
+        "name": "Podświetlenie panelu",
+        "state": {
+          "on": "Wł.",
+          "auto": "Auto",
+          "off": "Wył."
         }
       }
     }
