@@ -72,7 +72,10 @@ PROP_HUMIDITY = "DwatSen"
 PROP_POWER_REDUCE_GEAR = "PowReduceGear"
 PROP_POWER_REDUCE_TYPE = "PowReduceType"
 POWER_LIMIT_OFF = "off"
-POWER_LIMIT_LEVELS = {POWER_LIMIT_OFF: 0, "a1": 1, "a2": 2}
+# Gear values captured from a V3.2.M split unit while toggling the Gree+ app
+# through Off / A1 / A2 (#43): the levels are 0, 2 and 4, not 0, 1, 2 --
+# writing 1 or 2 made the app show A1 either way.
+POWER_LIMIT_LEVELS = {POWER_LIMIT_OFF: 0, "a1": 2, "a2": 4}
 
 # Gree swimming-pool heat pumps (cloud model id 9302, e.g. GRS-CP11Pd/NbA-K),
 # mapped from live captures in #48. Temperatures use a +100 offset with a
