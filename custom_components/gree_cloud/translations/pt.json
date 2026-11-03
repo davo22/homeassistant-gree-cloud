@@ -47,6 +47,9 @@
       },
       "health_mode": {
         "name": "Modo saúde"
+      },
+      "beeper": {
+        "name": "Sinal sonoro"
       }
     },
     "climate": {
@@ -92,6 +95,27 @@
           "a2": "A2"
         }
       }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Opções do Gree Climate Cloud",
+        "description": "Escolha a unidade cuja temperatura atual deve vir de outro sensor.",
+        "data": {
+          "device": "Unidade"
+        }
+      },
+      "device": {
+        "title": "Sensor de temperatura externo",
+        "description": "Sensor usado como temperatura atual de {device}. Deixe vazio para usar a leitura da unidade.",
+        "data": {
+          "temperature_sensor": "Sensor de temperatura"
+        }
+      }
+    },
+    "abort": {
+      "no_devices": "Ainda não foram descobertas unidades; abra as opções depois de a integração carregar."
     }
   }
 }

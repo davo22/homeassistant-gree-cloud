@@ -47,6 +47,9 @@
       },
       "health_mode": {
         "name": "Health mode"
+      },
+      "beeper": {
+        "name": "Beeper"
       }
     },
     "climate": {
@@ -105,6 +108,27 @@
           "a2": "A2"
         }
       }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Gree Climate Cloud options",
+        "description": "Pick the unit whose current temperature should come from another sensor.",
+        "data": {
+          "device": "Unit"
+        }
+      },
+      "device": {
+        "title": "External temperature sensor",
+        "description": "Sensor used as the current temperature of {device}. Leave empty to use the unit's own reading.",
+        "data": {
+          "temperature_sensor": "Temperature sensor"
+        }
+      }
+    },
+    "abort": {
+      "no_devices": "No units discovered yet; open the options once the integration has loaded."
     }
   }
 }
