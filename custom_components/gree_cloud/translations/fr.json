@@ -63,8 +63,12 @@
         "state_attributes": {
           "fan_mode": {
             "state": {
+              "auto": "Automatique",
+              "low": "Bas",
               "medium-low": "Moyen-Bas",
-              "medium-high": "Moyen-Haut"
+              "medium": "Moyen",
+              "medium-high": "Moyen-Haut",
+              "high": "Haut"
             }
           },
           "swing_horizontal_mode": {
@@ -87,6 +91,15 @@
               "fixed_lower_middle": "Fixe bas-milieu",
               "fixed_lower": "Fixe bas",
               "full_swing": "Oscillation complète"
+            }
+          },
+          "preset_mode": {
+            "state": {
+              "eco": "Éco",
+              "away": "Absent",
+              "boost": "Boost",
+              "none": "Aucun",
+              "sleep": "Nuit"
             }
           }
         }
