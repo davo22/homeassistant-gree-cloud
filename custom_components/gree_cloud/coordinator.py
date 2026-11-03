@@ -9,7 +9,7 @@ from datetime import timedelta
 import logging
 from typing import Any
 
-from greeclimate_davo22.cloud_api import CloudDeviceInfo, GreeCloudApi
+from greeclimate_davo22.cloud_api import GreeCloudApi
 from greeclimate_davo22.cloud_device import CloudDevice
 from greeclimate_davo22.cloud_gateway import GreeCloudGateway
 from greeclimate_davo22.device import Props
@@ -17,7 +17,6 @@ from greeclimate_davo22.deviceinfo import DeviceInfo
 from greeclimate_davo22.mqtt_client import GreeMqttClient
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -28,7 +27,6 @@ _RECONNECT_FUNC_NAME = "async_reconnect_mqtt"
 _RECONNECT_MODULE = __name__.rsplit(".", 1)[0]  # custom_components.gree_cloud
 
 from .const import (
-    CONF_SERVER,
     DISPATCH_DEVICE_DISCOVERED,
     DOMAIN,
     HWHP_PROP_POW_CONSUMP,
