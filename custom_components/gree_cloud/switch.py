@@ -20,7 +20,12 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from .const import DISPATCH_DEVICE_DISCOVERED
-from .coordinator import CloudDeviceDataUpdateCoordinator, GreeCloudConfigEntry, is_hwhp_device
+from .coordinator import (
+    CloudDeviceDataUpdateCoordinator,
+    GreeCloudConfigEntry,
+    is_hwhp_device,
+    is_pool_device,
+)
 from .entity import GreeCloudEntity
 
 
@@ -102,7 +107,7 @@ async def async_setup_entry(
     @callback
     def init_device(coordinator: CloudDeviceDataUpdateCoordinator) -> None:
         """Register the device."""
-        if is_hwhp_device(coordinator):
+        if is_hwhp_device(coordinator) or is_pool_device(coordinator):
             return
         async_add_entities(
             [

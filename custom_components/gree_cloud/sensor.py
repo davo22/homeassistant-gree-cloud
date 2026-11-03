@@ -18,6 +18,7 @@ from homeassistant.const import (
     EntityCategory,
     UnitOfEnergy,
     UnitOfFrequency,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -26,6 +27,10 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .const import (
     DISPATCH_DEVICE_DISCOVERED,
     ENERGY_SCALE,
+    POOL_PROP_IN_TEM_DEC,
+    POOL_PROP_IN_TEM_INT,
+    POOL_PROP_OUT_TEM_DEC,
+    POOL_PROP_OUT_TEM_INT,
     PROP_COMPRESSOR_FREQ,
     PROP_ENERGY_TOTAL,
     PROP_HUMIDITY,
@@ -34,7 +39,9 @@ from .coordinator import (
     CloudDeviceDataUpdateCoordinator,
     GreeCloudConfigEntry,
     is_hwhp_device,
+    is_pool_device,
 )
+from .pool import pool_temperature
 from .entity import GreeCloudEntity
 
 
@@ -127,6 +134,26 @@ GREE_CLOUD_SENSORS: tuple[GreeCloudSensorEntityDescription, ...] = (
 )
 
 
+def _pool_sensor(key: str, translation_key: str, int_key: str, dec_key: str) -> GreeCloudSensorEntityDescription:
+    """Describe a pool heat pump water temperature (+100 offset, tenths key)."""
+    return GreeCloudSensorEntityDescription(
+        key=key,
+        translation_key=translation_key,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        suggested_display_precision=1,
+        value_fn=lambda device: pool_temperature(device.raw_properties, int_key, dec_key),
+        exists_fn=lambda device: pool_temperature(device.raw_properties, int_key, dec_key) is not None,
+    )
+
+
+POOL_SENSORS: tuple[GreeCloudSensorEntityDescription, ...] = (
+    _pool_sensor("Water inlet temperature", "water_inlet_temperature", POOL_PROP_IN_TEM_INT, POOL_PROP_IN_TEM_DEC),
+    _pool_sensor("Water outlet temperature", "water_outlet_temperature", POOL_PROP_OUT_TEM_INT, POOL_PROP_OUT_TEM_DEC),
+)
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: GreeCloudConfigEntry,
@@ -140,9 +167,10 @@ async def async_setup_entry(
         # Hot water heat pumps report consumption under a different key.
         if is_hwhp_device(coordinator):
             return
+        descriptions = POOL_SENSORS if is_pool_device(coordinator) else GREE_CLOUD_SENSORS
         async_add_entities(
             GreeCloudSensor(coordinator=coordinator, description=description)
-            for description in GREE_CLOUD_SENSORS
+            for description in descriptions
             if description.exists_fn(coordinator.device)
         )
 

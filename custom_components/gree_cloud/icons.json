@@ -40,6 +40,9 @@
             }
           }
         }
+      },
+      "pool": {
+        "default": "mdi:pool-thermometer"
       }
     },
     "sensor": {
@@ -51,6 +54,12 @@
       },
       "compressor_frequency": {
         "default": "mdi:sine-wave"
+      },
+      "water_inlet_temperature": {
+        "default": "mdi:thermometer-water"
+      },
+      "water_outlet_temperature": {
+        "default": "mdi:thermometer-water"
       }
     },
     "switch": {

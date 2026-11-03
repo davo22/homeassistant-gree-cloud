@@ -74,6 +74,37 @@ PROP_POWER_REDUCE_TYPE = "PowReduceType"
 POWER_LIMIT_OFF = "off"
 POWER_LIMIT_LEVELS = {POWER_LIMIT_OFF: 0, "a1": 1, "a2": 2}
 
+# Gree swimming-pool heat pumps (cloud model id 9302, e.g. GRS-CP11Pd/NbA-K),
+# mapped from live captures in #48. Temperatures use a +100 offset with a
+# separate tenths key: InTemInt 120 / InTemDec 5 -> 20.5 C. Every command the
+# Gree+ app sends to these units carries FlagPool=1.
+POOL_MODEL_ID = "9302"
+POOL_PROP_FLAG = "FlagPool"
+POOL_PROP_FUNC = "PoolFunc"
+POOL_PROP_WMOD = "Wmod"  # 0 = heat, 1 = cool, 2 = auto
+POOL_PROP_SET_TEM_INT = "SetTemInt"
+POOL_PROP_SET_TEM_DEC = "SetTemDec"  # 0 or 5 (tenths)
+POOL_PROP_IN_TEM_INT = "InTemInt"  # water inlet, +100
+POOL_PROP_IN_TEM_DEC = "InTemDec"
+POOL_PROP_OUT_TEM_INT = "OutTemInt"  # water outlet, +100
+POOL_PROP_OUT_TEM_DEC = "OutTemDec"
+POOL_PROP_HEAT_TEM_MIN = "HeatTemMin"  # setpoint limits, +100
+POOL_PROP_HEAT_TEM_MAX = "HeatTemMax"
+POOL_PROP_COOL_TEM_MIN = "CoolTemMin"
+POOL_PROP_COOL_TEM_MAX = "CoolTemMax"
+POOL_PROP_PUMP_STATUS = "PumpStatus"
+POOL_PROP_COMPRESSOR_STATUS = "ComStatus"
+POOL_PROP_DEFROST = "Defrost"
+POOL_PROP_AUX_STATUS = "AuxStatus"
+POOL_PROP_ERROR = "AllErr"
+POOL_TEMP_OFFSET = 100
+POOL_WMOD_HEAT = 0
+POOL_WMOD_COOL = 1
+POOL_WMOD_AUTO = 2
+# Fallbacks when the unit does not report its limits.
+POOL_TEMP_MIN_DEFAULT = 10
+POOL_TEMP_MAX_DEFAULT = 40
+
 # Gree Cloud servers
 GREE_CLOUD_SERVERS = {
     "Australia": "https://augrih.gree.com",

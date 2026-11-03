@@ -30,6 +30,12 @@
       },
       "compressor_frequency": {
         "name": "Częstotliwość sprężarki"
+      },
+      "water_inlet_temperature": {
+        "name": "Temperatura wody na wlocie"
+      },
+      "water_outlet_temperature": {
+        "name": "Temperatura wody na wylocie"
       }
     },
     "switch": {
@@ -108,6 +114,9 @@
             "name": "Tryby ruchu nawiewu w pionie"
           }
         }
+      },
+      "pool": {
+        "name": "Pompa ciepła basenowa"
       }
     },
     "select": {

@@ -37,6 +37,25 @@ from .const import (
     HWHP_PROP_WATER_TEMP,
     HWHP_PROP_WSTATE,
     MAX_ERRORS,
+    POOL_MODEL_ID,
+    POOL_PROP_AUX_STATUS,
+    POOL_PROP_COMPRESSOR_STATUS,
+    POOL_PROP_COOL_TEM_MAX,
+    POOL_PROP_COOL_TEM_MIN,
+    POOL_PROP_DEFROST,
+    POOL_PROP_ERROR,
+    POOL_PROP_FLAG,
+    POOL_PROP_FUNC,
+    POOL_PROP_HEAT_TEM_MAX,
+    POOL_PROP_HEAT_TEM_MIN,
+    POOL_PROP_IN_TEM_DEC,
+    POOL_PROP_IN_TEM_INT,
+    POOL_PROP_OUT_TEM_DEC,
+    POOL_PROP_OUT_TEM_INT,
+    POOL_PROP_PUMP_STATUS,
+    POOL_PROP_SET_TEM_DEC,
+    POOL_PROP_SET_TEM_INT,
+    POOL_PROP_WMOD,
     PROP_COMPRESSOR_FREQ,
     PROP_ENERGY_TOTAL,
     PROP_POWER_REDUCE_GEAR,
@@ -69,6 +88,33 @@ _SENSOR_EXTRA_PROPS = [
 ]
 
 
+# Everything a pool heat pump (model 9302) is asked for. These units answer
+# with their whole property set anyway, but the AC columns are meaningless
+# for them, so the request is kept to what the entities read (#48).
+_POOL_PROPS = [
+    Props.POWER.value,
+    POOL_PROP_WMOD,
+    POOL_PROP_SET_TEM_INT,
+    POOL_PROP_SET_TEM_DEC,
+    POOL_PROP_IN_TEM_INT,
+    POOL_PROP_IN_TEM_DEC,
+    POOL_PROP_OUT_TEM_INT,
+    POOL_PROP_OUT_TEM_DEC,
+    POOL_PROP_HEAT_TEM_MIN,
+    POOL_PROP_HEAT_TEM_MAX,
+    POOL_PROP_COOL_TEM_MIN,
+    POOL_PROP_COOL_TEM_MAX,
+    POOL_PROP_FLAG,
+    POOL_PROP_FUNC,
+    POOL_PROP_PUMP_STATUS,
+    POOL_PROP_COMPRESSOR_STATUS,
+    POOL_PROP_DEFROST,
+    POOL_PROP_AUX_STATUS,
+    POOL_PROP_ERROR,
+    HWHP_PROP_WSTATE,
+]
+
+
 class HWHPAwareCloudDevice(CloudDevice):
     """CloudDevice subclass that also requests HWHP-specific properties.
 
@@ -85,9 +131,26 @@ class HWHPAwareCloudDevice(CloudDevice):
     ``asyncio.TimeoutError`` so the coordinator can count it (#41).
     """
 
+    def __init__(self, *args: Any, model_id: str | None = None, **kwargs: Any) -> None:
+        """Remember the cloud model id (``mid``); it selects the device profile."""
+        super().__init__(*args, **kwargs)
+        self.model_id = model_id
+
+    @property
+    def is_pool_heat_pump(self) -> bool:
+        """True for swimming-pool heat pumps (model 9302)."""
+        return self.model_id == POOL_MODEL_ID
+
     def _status_columns(self) -> list[str]:
-        """Standard properties plus the HWHP and sensor extras."""
+        """Standard properties plus the HWHP and sensor extras (or the pool set)."""
+        if self.is_pool_heat_pump:
+            return list(_POOL_PROPS)
         return _STANDARD_PROPS + _HWHP_EXTRA_PROPS + _SENSOR_EXTRA_PROPS
+
+
+def is_pool_device(coordinator: "CloudDeviceDataUpdateCoordinator") -> bool:
+    """Return True if the device is a swimming-pool heat pump (model 9302)."""
+    return bool(getattr(coordinator.device, "is_pool_heat_pump", False))
 
 
 def is_hwhp_device(coordinator: "CloudDeviceDataUpdateCoordinator") -> bool:
@@ -295,6 +358,7 @@ class CloudDiscoveryService:
                         # Module MAC from the cloud record (pmac); indoor units
                         # of multi-head systems are reached through it (#6, #33).
                         parent_mac=cloud_dev_info.parent_mac,
+                        model_id=cloud_dev_info.mid,
                     )
 
                     # Bind to cloud device (subscribe to MQTT topics)

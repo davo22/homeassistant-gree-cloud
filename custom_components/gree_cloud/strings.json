@@ -30,6 +30,12 @@
       },
       "compressor_frequency": {
         "name": "Compressor frequency"
+      },
+      "water_inlet_temperature": {
+        "name": "Water inlet temperature"
+      },
+      "water_outlet_temperature": {
+        "name": "Water outlet temperature"
       }
     },
     "switch": {
@@ -97,6 +103,9 @@
             }
           }
         }
+      },
+      "pool": {
+        "name": "Pool heat pump"
       }
     },
     "select": {

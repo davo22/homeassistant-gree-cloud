@@ -54,8 +54,14 @@ from .const import (
     TARGET_TEMPERATURE_STEP,
     TARGET_TEMPERATURE_STEP_HALF,
 )
-from .coordinator import CloudDeviceDataUpdateCoordinator, GreeCloudConfigEntry, is_hwhp_device
+from .coordinator import (
+    CloudDeviceDataUpdateCoordinator,
+    GreeCloudConfigEntry,
+    is_hwhp_device,
+    is_pool_device,
+)
 from .entity import GreeCloudEntity
+from .pool import GreeCloudPoolClimateEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -139,6 +145,9 @@ async def async_setup_entry(
                 "Skipping climate entity for HWHP device %s",
                 coordinator.device.device_info.name,
             )
+            return
+        if is_pool_device(coordinator):
+            async_add_entities([GreeCloudPoolClimateEntity(coordinator)])
             return
         async_add_entities([GreeCloudClimateEntity(coordinator)])
 

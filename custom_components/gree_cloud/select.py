@@ -23,6 +23,7 @@ from .coordinator import (
     CloudDeviceDataUpdateCoordinator,
     GreeCloudConfigEntry,
     is_hwhp_device,
+    is_pool_device,
 )
 from .entity import GreeCloudEntity
 
@@ -69,7 +70,7 @@ async def async_setup_entry(
     @callback
     def init_device(coordinator: CloudDeviceDataUpdateCoordinator) -> None:
         """Register the device."""
-        if is_hwhp_device(coordinator):
+        if is_hwhp_device(coordinator) or is_pool_device(coordinator):
             return
         if not _supports_power_limit(coordinator.device):
             _LOGGER.debug(
