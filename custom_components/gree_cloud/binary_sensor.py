@@ -26,6 +26,7 @@ from .coordinator import (
     CloudDeviceDataUpdateCoordinator,
     GreeCloudConfigEntry,
     is_pool_device,
+    is_heatpump_device,
 )
 from .entity import GreeCloudEntity
 
@@ -84,6 +85,10 @@ async def async_setup_entry(
     @callback
     def init_device(coordinator: CloudDeviceDataUpdateCoordinator) -> None:
         """Register the device (pool heat pumps only, #48)."""
+        if is_heatpump_device(coordinator):
+            if coordinator.device_kind == "heatpump" and (coordinator.data or {}).get("Pow") in (0, 1):
+                async_add_entities([HeatPumpPower(coordinator)])
+            return
         if not is_pool_device(coordinator):
             return
         async_add_entities(
@@ -119,3 +124,18 @@ class GreeCloudBinarySensor(GreeCloudEntity, BinarySensorEntity):
     def is_on(self) -> bool | None:
         """Return the flag."""
         return _flag(self.coordinator.device, self.entity_description.prop)
+
+
+class HeatPumpPower(GreeCloudEntity, BinarySensorEntity):
+    """Global PAC power, distinct from the hydraulic circuit's mode."""
+
+    _attr_translation_key = "versati_power"
+
+    def __init__(self, coordinator):
+        super().__init__(coordinator)
+        self._attr_unique_id = f"{coordinator.device.device_info.mac}_versati_power"
+
+    @property
+    def is_on(self):
+        value = (self.coordinator.data or {}).get("Pow")
+        return bool(value) if value in (0, 1) else None
