@@ -361,19 +361,31 @@ class CloudDiscoveryService:
                         model_id=cloud_dev_info.mid,
                     )
 
-                    # Bind to cloud device (subscribe to MQTT topics)
-                    await device.bind()
-
-                    _LOGGER.info(
-                        "Bound to cloud device: %s (MAC: %s, module: %s, firmware: %s, "
-                        "transport: %s, addressing: %s)",
-                        device.device_info.name,
-                        device.device_info.mac,
-                        device._parent_mac,
-                        cloud_dev_info.version,
-                        device.transport,
-                        device.addressing,
-                    )
+                    # Bind to cloud device (subscribe to MQTT topics). A unit
+                    # that does not answer now is kept anyway: its entities
+                    # come up unavailable and the regular polls keep trying,
+                    # so a slow or busy controller recovers without a restart
+                    # (#6). Only a failure to create the device drops it.
+                    try:
+                        await device.bind()
+                    except asyncio.TimeoutError as err:
+                        _LOGGER.warning(
+                            "Cloud device %s did not answer during setup (%s); "
+                            "keeping it and retrying on the next polls",
+                            device.device_info.name,
+                            err,
+                        )
+                    else:
+                        _LOGGER.info(
+                            "Bound to cloud device: %s (MAC: %s, module: %s, firmware: %s, "
+                            "transport: %s, addressing: %s)",
+                            device.device_info.name,
+                            device.device_info.mac,
+                            device._parent_mac,
+                            cloud_dev_info.version,
+                            device.transport,
+                            device.addressing,
+                        )
 
                     # Create coordinator
                     coordinator = CloudDeviceDataUpdateCoordinator(
@@ -381,8 +393,17 @@ class CloudDiscoveryService:
                     )
                     coordinators.append(coordinator)
 
-                    # Initial refresh
-                    await coordinator.async_config_entry_first_refresh()
+                    # Initial refresh (a failure here leaves the entities
+                    # unavailable until a poll succeeds; it does not drop the
+                    # device)
+                    try:
+                        await coordinator.async_config_entry_first_refresh()
+                    except Exception as refresh_err:  # noqa: BLE001 - ConfigEntryNotReady & co.
+                        _LOGGER.warning(
+                            "First poll of %s failed (%s); entities start unavailable",
+                            device.device_info.name,
+                            refresh_err,
+                        )
 
                     # Notify about discovered device
                     async_dispatcher_send(
