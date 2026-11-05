@@ -326,7 +326,10 @@ class CloudDiscoveryService:
         record: MQTT for ``ver`` >= 3.2, the legacy TLS gateway otherwise
         (only when *gateway* is given).
         """
-        coordinators = []
+        # Shared with the platforms: a coordinator is appended as soon as its
+        # device exists, and the DISPATCH_DEVICE_DISCOVERED signal tells the
+        # platforms (already set up) to create the entities.
+        coordinators = self.entry.runtime_data.coordinators
 
         try:
             # Get all devices from cloud
@@ -417,7 +420,10 @@ class CloudDiscoveryService:
                         err,
                     )
 
+        except asyncio.CancelledError:
+            raise
         except Exception as err:
             _LOGGER.exception("Failed to discover cloud devices: %s", err)
 
+        _LOGGER.info("Successfully discovered %d cloud devices", len(coordinators))
         return coordinators
