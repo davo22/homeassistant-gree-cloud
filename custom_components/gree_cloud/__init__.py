@@ -157,14 +157,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: GreeCloudConfigEntry) ->
         )
 
         # Discover and setup devices
-        discovery = CloudDiscoveryService(hass, entry, api)
-        coordinators = await discovery.discover_devices(mqtt_client, gateway)
-        entry.runtime_data.coordinators = coordinators
-
-        _LOGGER.info("Successfully discovered %d cloud devices", len(coordinators))
-
-        # Setup platforms
+        # Setup platforms first; devices are announced to them as they come.
         await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+        # Discover and bind the devices in the background. Binding a unit can
+        # take tens of seconds (transport and addressing probes on commercial
+        # controllers, #6); done inline it pushed the entry setup past Home
+        # Assistant's limit and the whole integration got cancelled.
+        discovery = CloudDiscoveryService(hass, entry, api)
+        entry.async_create_background_task(
+            hass,
+            discovery.discover_devices(mqtt_client, gateway),
+            name=f"{DOMAIN} discovery",
+        )
 
         # Options (external temperature sensors) apply on reload.
         entry.async_on_unload(entry.add_update_listener(_async_update_listener))

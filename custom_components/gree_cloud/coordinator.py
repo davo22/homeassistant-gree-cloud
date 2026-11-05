@@ -326,7 +326,10 @@ class CloudDiscoveryService:
         record: MQTT for ``ver`` >= 3.2, the legacy TLS gateway otherwise
         (only when *gateway* is given).
         """
-        coordinators = []
+        # Shared with the platforms: a coordinator is appended as soon as its
+        # device exists, and the DISPATCH_DEVICE_DISCOVERED signal tells the
+        # platforms (already set up) to create the entities.
+        coordinators = self.entry.runtime_data.coordinators
 
         try:
             # Get all devices from cloud
@@ -393,16 +396,16 @@ class CloudDiscoveryService:
                     )
                     coordinators.append(coordinator)
 
-                    # Initial refresh (a failure here leaves the entities
-                    # unavailable until a poll succeeds; it does not drop the
-                    # device)
-                    try:
-                        await coordinator.async_config_entry_first_refresh()
-                    except Exception as refresh_err:  # noqa: BLE001 - ConfigEntryNotReady & co.
+                    # Initial refresh. Discovery runs after the entry is
+                    # loaded, so this is a plain refresh, not the
+                    # config-entry first refresh. A failure leaves the
+                    # entities unavailable until a poll succeeds; it does
+                    # not drop the device.
+                    await coordinator.async_refresh()
+                    if not coordinator.last_update_success:
                         _LOGGER.warning(
-                            "First poll of %s failed (%s); entities start unavailable",
+                            "First poll of %s failed; entities start unavailable",
                             device.device_info.name,
-                            refresh_err,
                         )
 
                     # Notify about discovered device
@@ -417,7 +420,10 @@ class CloudDiscoveryService:
                         err,
                     )
 
+        except asyncio.CancelledError:
+            raise
         except Exception as err:
             _LOGGER.exception("Failed to discover cloud devices: %s", err)
 
+        _LOGGER.info("Successfully discovered %d cloud devices", len(coordinators))
         return coordinators
