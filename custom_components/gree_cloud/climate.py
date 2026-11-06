@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from greeclimate.device import (
+from ._greeclimate.device import (
     TEMP_MAX,
     TEMP_MAX_F,
     TEMP_MIN,

@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import logging
 
-from greeclimate.cloud_api import GreeCloudApi
-from greeclimate.mqtt_client import GreeMqttClient
+from ._greeclimate.cloud_api import GreeCloudApi
+from ._greeclimate.mqtt_client import GreeMqttClient
 
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant

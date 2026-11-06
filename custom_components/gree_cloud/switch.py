@@ -6,7 +6,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
 
-from greeclimate.device import Device
+from ._greeclimate.device import Device
 
 from homeassistant.components.switch import (
     SwitchDeviceClass,
