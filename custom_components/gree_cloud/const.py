@@ -71,6 +71,10 @@ PROP_HUMIDITY = "DwatSen"
 # report 0 or omit the key, so it gates the entity (issue #43).
 PROP_POWER_REDUCE_GEAR = "PowReduceGear"
 PROP_POWER_REDUCE_TYPE = "PowReduceType"
+
+# Room temperature on commercial indoor units, which leave TemSen empty. Same
+# +40 offset; the library uses it in place of a missing TemSen (#6, #33).
+PROP_ROOM_TEMP = "InTem"
 POWER_LIMIT_OFF = "off"
 # Gear values captured from a V3.2.M split unit while toggling the Gree+ app
 # through Off / A1 / A2 (#43): the levels are 0, 2 and 4, not 0, 1, 2 --
