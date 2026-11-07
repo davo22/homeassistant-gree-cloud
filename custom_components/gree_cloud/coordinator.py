@@ -60,6 +60,7 @@ from .const import (
     PROP_ENERGY_TOTAL,
     PROP_POWER_REDUCE_GEAR,
     PROP_POWER_REDUCE_TYPE,
+    PROP_ROOM_TEMP,
     UPDATE_INTERVAL,
 )
 
@@ -145,7 +146,10 @@ class HWHPAwareCloudDevice(CloudDevice):
         """Standard properties plus the HWHP and sensor extras (or the pool set)."""
         if self.is_pool_heat_pump:
             return list(_POOL_PROPS)
-        return _STANDARD_PROPS + _HWHP_EXTRA_PROPS + _SENSOR_EXTRA_PROPS
+        columns = _STANDARD_PROPS + _HWHP_EXTRA_PROPS + _SENSOR_EXTRA_PROPS
+        if self.is_sub_device:
+            columns = [*columns, PROP_ROOM_TEMP]
+        return columns
 
 
 def is_pool_device(coordinator: "CloudDeviceDataUpdateCoordinator") -> bool:
@@ -376,7 +380,7 @@ class CloudDiscoveryService:
                             "Cloud device %s did not answer during setup (%s); "
                             "keeping it and retrying on the next polls",
                             device.device_info.name,
-                            err,
+                            str(err) or "no answer",
                         )
                     else:
                         _LOGGER.info(
