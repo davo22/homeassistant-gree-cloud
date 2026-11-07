@@ -37,6 +37,8 @@ Any Gree Smart air conditioner or heat pump working with the Gree+ app should be
 - Gree WHIO (New Zealand)
 - Gree Hot Water Heat Pump (Australia)
 
+See [SUPPORTED_DEVICES.md](SUPPORTED_DEVICES.md) for device classes, Wi-Fi module firmware and the models users have reported working, including swimming-pool heat pumps and multi-head / VRF systems.
+
 ## Installation
 
 ### HACS (Recommended)
