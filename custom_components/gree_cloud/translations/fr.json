@@ -60,6 +60,24 @@
       },
       "room_temperature": {
         "name": "Température ambiante"
+      },
+      "outdoor_temperature": {
+        "name": "Température extérieure"
+      },
+      "compressor_temperature": {
+        "name": "Température du compresseur"
+      },
+      "tank_bottom_temperature": {
+        "name": "Température bas du ballon"
+      },
+      "discharge_temperature": {
+        "name": "Température de refoulement"
+      },
+      "outdoor_coil_temperature": {
+        "name": "Température échangeur extérieur"
+      },
+      "tank_coil_temperature": {
+        "name": "Température échangeur du ballon"
       }
     },
     "switch": {
@@ -178,6 +196,24 @@
       },
       "versati_power": {
         "name": "Alimentation PAC"
+      },
+      "backup_heater": {
+        "name": "Appoint électrique"
+      },
+      "outdoor_fan": {
+        "name": "Ventilateur extérieur"
+      },
+      "error": {
+        "name": "Erreur"
+      },
+      "disinfection_enabled": {
+        "name": "Anti-légionelle"
+      },
+      "disinfecting": {
+        "name": "Anti-légionelle en cours"
+      },
+      "holiday_mode": {
+        "name": "Mode vacances"
       }
     },
     "number": {

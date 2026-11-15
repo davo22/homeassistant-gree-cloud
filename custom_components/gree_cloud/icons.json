@@ -60,6 +60,24 @@
       },
       "water_outlet_temperature": {
         "default": "mdi:thermometer-water"
+      },
+      "outdoor_temperature": {
+        "default": "mdi:home-thermometer-outline"
+      },
+      "compressor_temperature": {
+        "default": "mdi:thermometer-high"
+      },
+      "tank_bottom_temperature": {
+        "default": "mdi:thermometer-water"
+      },
+      "discharge_temperature": {
+        "default": "mdi:thermometer-high"
+      },
+      "outdoor_coil_temperature": {
+        "default": "mdi:coolant-temperature"
+      },
+      "tank_coil_temperature": {
+        "default": "mdi:coolant-temperature"
       }
     },
     "switch": {
@@ -121,6 +139,30 @@
         "state": {
           "on": "mdi:snowflake-melt"
         }
+      },
+      "backup_heater": {
+        "default": "mdi:heating-coil"
+      },
+      "outdoor_fan": {
+        "default": "mdi:fan-off",
+        "state": {
+          "on": "mdi:fan"
+        }
+      },
+      "error": {
+        "default": "mdi:check-circle-outline",
+        "state": {
+          "on": "mdi:alert-circle"
+        }
+      },
+      "disinfection_enabled": {
+        "default": "mdi:bacteria-outline"
+      },
+      "disinfecting": {
+        "default": "mdi:bacteria"
+      },
+      "holiday_mode": {
+        "default": "mdi:palm-tree"
       }
     }
   }

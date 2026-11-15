@@ -36,6 +36,48 @@
       },
       "water_outlet_temperature": {
         "name": "Wasseraustrittstemperatur"
+      },
+      "outdoor_temperature": {
+        "name": "Außentemperatur"
+      },
+      "compressor_temperature": {
+        "name": "Verdichtertemperatur"
+      },
+      "tank_bottom_temperature": {
+        "name": "Speichertemperatur unten"
+      },
+      "discharge_temperature": {
+        "name": "Heißgastemperatur"
+      },
+      "outdoor_coil_temperature": {
+        "name": "Temperatur Außenwärmetauscher"
+      },
+      "tank_coil_temperature": {
+        "name": "Temperatur Speicherwärmetauscher"
+      },
+      "cooling_room_target": {
+        "name": "Raumsoll Kühlen"
+      },
+      "cooling_water_target": {
+        "name": "Wassersoll Kühlen"
+      },
+      "dhw_target": {
+        "name": "Warmwasser Soll"
+      },
+      "dhw_temperature": {
+        "name": "Warmwassertemperatur"
+      },
+      "heat_pump_outlet_temperature": {
+        "name": "Vorlauftemperatur Wärmepumpe"
+      },
+      "heating_room_target": {
+        "name": "Raumsoll Heizen"
+      },
+      "heating_water_target": {
+        "name": "Wassersoll Heizen"
+      },
+      "room_temperature": {
+        "name": "Raumtemperatur"
       }
     },
     "switch": {
@@ -56,6 +98,9 @@
       },
       "beeper": {
         "name": "Signalton"
+      },
+      "versati_power": {
+        "name": "Wärmepumpe Hauptschalter"
       }
     },
     "climate": {
@@ -106,6 +151,9 @@
       },
       "pool": {
         "name": "Pool-Wärmepumpe"
+      },
+      "versati_heating": {
+        "name": "Wasserheizung"
       }
     },
     "select": {
@@ -124,6 +172,16 @@
           "fast": "Schnell",
           "eco": "ECO"
         }
+      },
+      "versati_mode": {
+        "name": "Wärmepumpenmodus",
+        "state": {
+          "cool": "Kühlen",
+          "cool_hot_water": "Kühlen + Warmwasser",
+          "heat": "Heizen",
+          "heat_hot_water": "Heizen + Warmwasser",
+          "hot_water": "Warmwasser"
+        }
       }
     },
     "binary_sensor": {
@@ -135,6 +193,44 @@
       },
       "defrosting": {
         "name": "Abtauen"
+      },
+      "backup_heater": {
+        "name": "Heizstab"
+      },
+      "outdoor_fan": {
+        "name": "Außenventilator"
+      },
+      "error": {
+        "name": "Störung"
+      },
+      "disinfection_enabled": {
+        "name": "Legionellenschutz"
+      },
+      "disinfecting": {
+        "name": "Legionellenschutz aktiv"
+      },
+      "holiday_mode": {
+        "name": "Urlaubsmodus"
+      },
+      "versati_power": {
+        "name": "Wärmepumpe Betrieb"
+      }
+    },
+    "number": {
+      "cooling_room_target": {
+        "name": "Raumsoll Kühlen"
+      },
+      "cooling_water_target": {
+        "name": "Wassersoll Kühlen"
+      },
+      "dhw_target": {
+        "name": "Warmwasser Soll"
+      },
+      "heating_room_target": {
+        "name": "Raumsoll Heizen"
+      },
+      "heating_water_target": {
+        "name": "Wassersoll Heizen"
       }
     }
   },

@@ -25,15 +25,24 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
+    AC_TEMP_OFFSET,
     DISPATCH_DEVICE_DISCOVERED,
     ENERGY_SCALE,
+    HWHP_PROP_BOTTOM_TEMP,
+    HWHP_PROP_COIL_TEMP,
+    HWHP_PROP_DISCHARGE_TEMP,
+    HWHP_PROP_OUT_EXCHANGER_TEMP,
+    HWHP_PROP_OUTDOOR_TEMP,
+    HWHP_TEMP_ENCODING_OFFSET,
     POOL_PROP_IN_TEM_DEC,
     POOL_PROP_IN_TEM_INT,
     POOL_PROP_OUT_TEM_DEC,
     POOL_PROP_OUT_TEM_INT,
     PROP_COMPRESSOR_FREQ,
+    PROP_COMPRESSOR_TEMP,
     PROP_ENERGY_TOTAL,
     PROP_HUMIDITY,
+    PROP_OUTDOOR_TEMP,
 )
 from .coordinator import (
     CloudDeviceDataUpdateCoordinator,
@@ -110,6 +119,39 @@ def _has_humidity(device: Device) -> bool:
     return isinstance(raw, (int, float)) and 0 < raw <= 100
 
 
+def _offset_temperature(prop: str, offset: int) -> Callable[[Device], float | None]:
+    """Read an offset-encoded temperature; 0, empty or missing means not reported."""
+
+    def value(device: Device) -> float | None:
+        raw = device.raw_properties.get(prop)
+        if isinstance(raw, bool) or not isinstance(raw, (int, float)) or raw <= 0:
+            return None
+        return float(raw - offset)
+
+    return value
+
+
+def _offset_sensor(
+    key: str,
+    translation_key: str,
+    prop: str,
+    offset: int,
+    diagnostic: bool = False,
+) -> GreeCloudSensorEntityDescription:
+    """Describe an offset-encoded temperature sensor created only when reported."""
+    value = _offset_temperature(prop, offset)
+    return GreeCloudSensorEntityDescription(
+        key=key,
+        translation_key=translation_key,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        entity_category=EntityCategory.DIAGNOSTIC if diagnostic else None,
+        value_fn=value,
+        exists_fn=lambda device: value(device) is not None,
+    )
+
+
 GREE_CLOUD_SENSORS: tuple[GreeCloudSensorEntityDescription, ...] = (
     GreeCloudSensorEntityDescription(
         key="Energy",
@@ -139,6 +181,31 @@ GREE_CLOUD_SENSORS: tuple[GreeCloudSensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=_compressor_frequency,
         exists_fn=_has_compressor_frequency,
+    ),
+)
+
+
+# Outdoor and compressor temperature (#23, from #28 by gabidigab). The keys match
+# #28's, so anyone who ran that branch keeps the same entities.
+AC_TEMPERATURE_SENSORS: tuple[GreeCloudSensorEntityDescription, ...] = (
+    _offset_sensor("Outdoor Temperature", "outdoor_temperature", PROP_OUTDOOR_TEMP, AC_TEMP_OFFSET),
+    _offset_sensor(
+        "Compressor Temperature", "compressor_temperature", PROP_COMPRESSOR_TEMP, AC_TEMP_OFFSET, diagnostic=True
+    ),
+)
+
+# Hot water heat pump temperatures (#74).
+HWHP_SENSORS: tuple[GreeCloudSensorEntityDescription, ...] = (
+    _offset_sensor("Tank bottom temperature", "tank_bottom_temperature", HWHP_PROP_BOTTOM_TEMP, HWHP_TEMP_ENCODING_OFFSET),
+    _offset_sensor("Outdoor temperature", "outdoor_temperature", HWHP_PROP_OUTDOOR_TEMP, HWHP_TEMP_ENCODING_OFFSET),
+    _offset_sensor(
+        "Discharge temperature", "discharge_temperature", HWHP_PROP_DISCHARGE_TEMP, HWHP_TEMP_ENCODING_OFFSET, diagnostic=True
+    ),
+    _offset_sensor(
+        "Outdoor coil temperature", "outdoor_coil_temperature", HWHP_PROP_OUT_EXCHANGER_TEMP, HWHP_TEMP_ENCODING_OFFSET, diagnostic=True
+    ),
+    _offset_sensor(
+        "Tank coil temperature", "tank_coil_temperature", HWHP_PROP_COIL_TEMP, HWHP_TEMP_ENCODING_OFFSET, diagnostic=True
     ),
 )
 
@@ -235,8 +302,11 @@ async def async_setup_entry(
             entry.async_on_unload(coordinator.async_add_listener(add_new_sensors))
             return
         if is_hwhp_device(coordinator):
-            return
-        descriptions = POOL_SENSORS if is_pool_device(coordinator) else GREE_CLOUD_SENSORS
+            descriptions = HWHP_SENSORS
+        elif is_pool_device(coordinator):
+            descriptions = POOL_SENSORS
+        else:
+            descriptions = GREE_CLOUD_SENSORS + AC_TEMPERATURE_SENSORS
         async_add_entities(
             GreeCloudSensor(coordinator=coordinator, description=description)
             for description in descriptions

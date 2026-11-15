@@ -9,6 +9,6 @@
   "integration_type": "hub",
   "loggers": ["greeclimate_davo22"],
   "requirements": ["greeclimate-davo22==2.7.5"],
-  "version": "1.7.6",
+  "version": "1.8.0",
   "brand": "gree"
 }

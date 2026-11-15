@@ -60,6 +60,24 @@
       },
       "room_temperature": {
         "name": "Room temperature"
+      },
+      "outdoor_temperature": {
+        "name": "Outdoor temperature"
+      },
+      "compressor_temperature": {
+        "name": "Compressor temperature"
+      },
+      "tank_bottom_temperature": {
+        "name": "Tank bottom temperature"
+      },
+      "discharge_temperature": {
+        "name": "Discharge temperature"
+      },
+      "outdoor_coil_temperature": {
+        "name": "Outdoor coil temperature"
+      },
+      "tank_coil_temperature": {
+        "name": "Tank coil temperature"
       }
     },
     "switch": {
@@ -178,6 +196,24 @@
       },
       "versati_power": {
         "name": "Heat pump power"
+      },
+      "backup_heater": {
+        "name": "Backup heater"
+      },
+      "outdoor_fan": {
+        "name": "Outdoor fan"
+      },
+      "error": {
+        "name": "Error"
+      },
+      "disinfection_enabled": {
+        "name": "Disinfection"
+      },
+      "disinfecting": {
+        "name": "Disinfecting"
+      },
+      "holiday_mode": {
+        "name": "Holiday mode"
       }
     },
     "number": {
