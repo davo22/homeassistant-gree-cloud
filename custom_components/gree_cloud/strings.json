@@ -36,6 +36,30 @@
       },
       "water_outlet_temperature": {
         "name": "Water outlet temperature"
+      },
+      "heating_water_target": {
+        "name": "Heating water target"
+      },
+      "heating_room_target": {
+        "name": "Heating room target"
+      },
+      "dhw_target": {
+        "name": "DHW target"
+      },
+      "cooling_water_target": {
+        "name": "Cooling water target"
+      },
+      "cooling_room_target": {
+        "name": "Cooling room target"
+      },
+      "heat_pump_outlet_temperature": {
+        "name": "Heat pump outlet temperature"
+      },
+      "dhw_temperature": {
+        "name": "DHW temperature"
+      },
+      "room_temperature": {
+        "name": "Room temperature"
       }
     },
     "switch": {
@@ -56,6 +80,9 @@
       },
       "beeper": {
         "name": "Beeper"
+      },
+      "versati_power": {
+        "name": "Global heat pump power"
       }
     },
     "climate": {
@@ -106,6 +133,9 @@
       },
       "pool": {
         "name": "Pool heat pump"
+      },
+      "versati_heating": {
+        "name": "Hydraulic heating"
       }
     },
     "select": {
@@ -124,6 +154,16 @@
           "fast": "Fast",
           "eco": "ECO"
         }
+      },
+      "versati_mode": {
+        "name": "Heat pump mode",
+        "state": {
+          "heat": "Heat",
+          "hot_water": "Hot water",
+          "cool": "Cool",
+          "heat_hot_water": "Heat + hot water",
+          "cool_hot_water": "Cool + hot water"
+        }
       }
     },
     "binary_sensor": {
@@ -135,6 +175,26 @@
       },
       "defrosting": {
         "name": "Defrosting"
+      },
+      "versati_power": {
+        "name": "Heat pump power"
+      }
+    },
+    "number": {
+      "heating_water_target": {
+        "name": "Heating water target"
+      },
+      "heating_room_target": {
+        "name": "Heating room target"
+      },
+      "dhw_target": {
+        "name": "DHW target"
+      },
+      "cooling_water_target": {
+        "name": "Cooling water target"
+      },
+      "cooling_room_target": {
+        "name": "Cooling room target"
       }
     }
   },

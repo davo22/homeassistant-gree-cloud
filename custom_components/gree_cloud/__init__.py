@@ -27,6 +27,7 @@ PLATFORMS = [
     Platform.SENSOR,
     Platform.SWITCH,
     Platform.WATER_HEATER,
+    Platform.NUMBER,
 ]
 
 # Substrings that identify an MQTT "not connected" error from paho / aiomqtt.

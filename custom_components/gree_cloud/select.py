@@ -10,6 +10,7 @@ from greeclimate_davo22.device import Device
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -24,9 +25,11 @@ from .coordinator import (
     GreeCloudConfigEntry,
     is_hwhp_device,
     is_pool_device,
+    is_heatpump_device,
 )
 from .entity import GreeCloudEntity
 from .pool import GreeCloudPoolFunctionSelect
+from .heatpump import MODE_NAMES
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -71,6 +74,13 @@ async def async_setup_entry(
     @callback
     def init_device(coordinator: CloudDeviceDataUpdateCoordinator) -> None:
         """Register the device."""
+        if is_heatpump_device(coordinator):
+            if coordinator.device_kind != "heatpump":
+                return
+            policy = coordinator.device.write_policy
+            if "Mod" in policy.approved and policy.modes:
+                async_add_entities([HeatPumpMode(coordinator)])
+            return
         if is_hwhp_device(coordinator):
             return
         if is_pool_device(coordinator):
@@ -127,3 +137,32 @@ class GreeCloudPowerLimitSelect(GreeCloudEntity, SelectEntity):
         )
         await self.coordinator.push_state_update()
         self.async_write_ha_state()
+
+
+class HeatPumpMode(GreeCloudEntity, SelectEntity):
+    """Exact combined mode; selecting it never toggles global PAC power."""
+
+    _attr_translation_key = "versati_mode"
+
+    def __init__(self, coordinator):
+        super().__init__(coordinator)
+        self._attr_unique_id = (
+            f"{coordinator.device.device_info.mac}_versati_mode_control"
+        )
+        self._attr_options = [
+            MODE_NAMES[mode]
+            for mode in sorted(coordinator.device.write_policy.modes)
+            if mode in MODE_NAMES
+        ]
+
+    @property
+    def current_option(self):
+        return MODE_NAMES.get((self.coordinator.data or {}).get("Mod"))
+
+    async def async_select_option(self, option):
+        if option not in self.options:
+
+            raise HomeAssistantError("Unsupported mode")
+        await self.coordinator.async_heatpump_command(
+            "Mod", next(key for key, value in MODE_NAMES.items() if value == option)
+        )
