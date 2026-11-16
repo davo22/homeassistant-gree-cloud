@@ -284,8 +284,6 @@ class HWHPAwareCloudDevice(CloudDevice):
             columns = _STANDARD_PROPS + [HWHP_PROP_WATER_TEMP] + _SENSOR_EXTRA_PROPS
         if self.is_sub_device:
             columns = [*columns, PROP_ROOM_TEMP]
-        if not self.hid:
-            columns = [*columns, "hid"]
         return columns
 
     async def _update_in_chunks(self) -> None:
@@ -300,7 +298,11 @@ class HWHPAwareCloudDevice(CloudDevice):
         may be the one that shows the unit to be a HWHP, and the platforms
         create entities for the properties present after the first refresh.
         """
-        first = _column_chunks(self._status_columns())[0]
+        def columns() -> list[str]:
+            wanted = self._status_columns()
+            return wanted if self.hid else [*wanted, "hid"]
+
+        first = _column_chunks(columns())[0]
         try:
             data = dict(await self.request_status(first) or {})
         except asyncio.TimeoutError:
@@ -310,8 +312,10 @@ class HWHPAwareCloudDevice(CloudDevice):
             raise
         if data:
             self.handle_state_update(**data)
-        rest = [c for c in self._status_columns() if c not in first and c not in data]
-        for chunk in _column_chunks(rest) if rest else []:
+        rest = [c for c in columns() if c not in first and c not in data]
+        if not rest:
+            return
+        for chunk in _column_chunks(rest):
             try:
                 more = await self.request_status(chunk)
             except asyncio.TimeoutError:
