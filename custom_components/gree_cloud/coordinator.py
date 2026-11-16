@@ -84,15 +84,19 @@ from .heatpump import (HEATPUMP_COLUMNS, TEMPERATURE_PAIRS, WritePolicy, classif
 _LOGGER = logging.getLogger(__name__)
 
 # Extra raw properties requested from the device in addition to the standard Props enum.
-# These cover Hot Water Heat Pump (HWHP) devices that expose different sensor keys.
 _STANDARD_PROPS: list[str] = [x.value for x in Props]
-_HWHP_EXTRA_PROPS = [
+
+# Hot Water Heat Pump (HWHP) keys. A unit is a HWHP when it reports ``WatTmp``;
+# only then is it asked for the rest of these.
+_HWHP_BASE_PROPS = [
     HWHP_PROP_WATER_TEMP,
     HWHP_PROP_SET_TEM_INT,
     HWHP_PROP_SET_TEM_DEC,
     HWHP_PROP_WSTATE,
     HWHP_PROP_POW_CONSUMP,
     HWHP_PROP_WATER_PERCENT,
+]
+_HWHP_DETAIL_PROPS = [
     HWHP_PROP_BOTTOM_TEMP,
     HWHP_PROP_OUTDOOR_TEMP,
     HWHP_PROP_DISCHARGE_TEMP,
@@ -120,6 +124,23 @@ _SENSOR_EXTRA_PROPS = [
     PROP_OUTDOOR_TEMP,
     PROP_COMPRESSOR_TEMP,
 ]
+
+# Most columns a single status request may carry. Some Wi-Fi modules silently
+# drop a longer request: 1.8.0-beta.1 asked every AC for 57 columns and a
+# V3.4.M module that had answered the 39 columns of 1.7.x on every poll stopped
+# answering altogether. 40 is the longest request 1.7.x ever sent (a unit
+# behind a module, first poll). Anything beyond it goes into further requests,
+# so think twice before adding a column to what every AC is asked for.
+MAX_STATUS_COLUMNS = 40
+
+
+def _column_chunks(columns: list[str]) -> list[list[str]]:
+    """Split *columns* into requests of at most MAX_STATUS_COLUMNS, evenly."""
+    count = -(-len(columns) // MAX_STATUS_COLUMNS)
+    if count <= 1:
+        return [list(columns)]
+    size = -(-len(columns) // count)
+    return [list(columns[i:i + size]) for i in range(0, len(columns), size)]
 
 
 # Everything a pool heat pump (model 9302) is asked for. These units answer
@@ -243,22 +264,74 @@ class HWHPAwareCloudDevice(CloudDevice):
             return copy.deepcopy(self.raw_properties)
 
     def _status_columns(self) -> list[str]:
-        """Standard properties plus the HWHP and sensor extras (or the pool set)."""
+        """Everything this unit is asked for, by the kind of device it is.
+
+        The list is kept as short as the entities allow, because modules drop
+        requests that are too long (see MAX_STATUS_COLUMNS). A unit that
+        reports ``WatTmp`` is a hot water heat pump and gets the standard and
+        the HWHP keys. Anything else, including a unit that has not answered
+        yet, is treated as an AC: standard keys, the AC sensors, and ``WatTmp``
+        alone, which is how a HWHP gives itself away.
+        """
         if self.is_heat_pump:
             return list(HEATPUMP_COLUMNS)
         if self.is_pool_heat_pump:
             return list(_POOL_PROPS)
-        columns = _STANDARD_PROPS + _HWHP_EXTRA_PROPS + _SENSOR_EXTRA_PROPS
+        water = self.raw_properties.get(HWHP_PROP_WATER_TEMP)
+        if isinstance(water, (int, float)) and water > 0:
+            columns = _HWHP_BASE_PROPS + _STANDARD_PROPS + _HWHP_DETAIL_PROPS
+        else:
+            columns = _STANDARD_PROPS + [HWHP_PROP_WATER_TEMP] + _SENSOR_EXTRA_PROPS
         if self.is_sub_device:
             columns = [*columns, PROP_ROOM_TEMP]
         return columns
 
+    async def _update_in_chunks(self) -> None:
+        """Poll an AC, HWHP or pool unit without ever sending a long request.
+
+        An AC is covered by a single request. A HWHP has more columns than fit
+        into one: the first request decides whether the poll succeeded and the
+        rest is asked for afterwards, unless the unit sent it along already. A
+        follow-up that goes unanswered does not fail the poll.
+
+        The list is drawn up again after the first answer, because that answer
+        may be the one that shows the unit to be a HWHP, and the platforms
+        create entities for the properties present after the first refresh.
+        """
+        def columns() -> list[str]:
+            wanted = self._status_columns()
+            return wanted if self.hid else [*wanted, "hid"]
+
+        first = _column_chunks(columns())[0]
+        try:
+            data = dict(await self.request_status(first) or {})
+        except asyncio.TimeoutError:
+            _LOGGER.warning(
+                "Timeout waiting for state update from %s", self.device_info.name
+            )
+            raise
+        if data:
+            self.handle_state_update(**data)
+        rest = [c for c in columns() if c not in first and c not in data]
+        if not rest:
+            return
+        for chunk in _column_chunks(rest):
+            try:
+                more = await self.request_status(chunk)
+            except asyncio.TimeoutError:
+                _LOGGER.debug(
+                    "%s did not answer the follow-up request for %s",
+                    self.device_info.name, chunk,
+                )
+                break
+            if more:
+                self.handle_state_update(**more)
 
     async def update_state(self) -> None:
         """Read only; reject empty acknowledgements instead of reporting success."""
         if model_profile(self.model_id) is None:
             self.device_kind = "ac"
-            await super().update_state()
+            await self._update_in_chunks()
             return
         async with self.request_lock:
             data = await self.request_status(self._status_columns())
