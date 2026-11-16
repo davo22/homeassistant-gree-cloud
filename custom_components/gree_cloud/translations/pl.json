@@ -36,6 +36,48 @@
       },
       "water_outlet_temperature": {
         "name": "Temperatura wody na wylocie"
+      },
+      "outdoor_temperature": {
+        "name": "Temperatura zewnętrzna"
+      },
+      "compressor_temperature": {
+        "name": "Temperatura sprężarki"
+      },
+      "tank_bottom_temperature": {
+        "name": "Temperatura dołu zbiornika"
+      },
+      "discharge_temperature": {
+        "name": "Temperatura tłoczenia"
+      },
+      "outdoor_coil_temperature": {
+        "name": "Temperatura wymiennika zewnętrznego"
+      },
+      "tank_coil_temperature": {
+        "name": "Temperatura wężownicy zbiornika"
+      },
+      "cooling_room_target": {
+        "name": "Zadana temperatura pokoju (chłodzenie)"
+      },
+      "cooling_water_target": {
+        "name": "Zadana temperatura wody (chłodzenie)"
+      },
+      "dhw_target": {
+        "name": "Zadana temperatura CWU"
+      },
+      "dhw_temperature": {
+        "name": "Temperatura CWU"
+      },
+      "heat_pump_outlet_temperature": {
+        "name": "Temperatura na wyjściu pompy ciepła"
+      },
+      "heating_room_target": {
+        "name": "Zadana temperatura pokoju (grzanie)"
+      },
+      "heating_water_target": {
+        "name": "Zadana temperatura wody (grzanie)"
+      },
+      "room_temperature": {
+        "name": "Temperatura pokoju"
       }
     },
     "switch": {
@@ -56,6 +98,9 @@
       },
       "beeper": {
         "name": "Sygnał dźwiękowy"
+      },
+      "versati_power": {
+        "name": "Zasilanie całej pompy ciepła"
       }
     },
     "climate": {
@@ -117,6 +162,9 @@
       },
       "pool": {
         "name": "Pompa ciepła basenowa"
+      },
+      "versati_heating": {
+        "name": "Ogrzewanie wodne"
       }
     },
     "select": {
@@ -135,6 +183,16 @@
           "fast": "Szybko",
           "eco": "ECO"
         }
+      },
+      "versati_mode": {
+        "name": "Tryb pompy ciepła",
+        "state": {
+          "cool": "Chłodzenie",
+          "cool_hot_water": "Chłodzenie + CWU",
+          "heat": "Grzanie",
+          "heat_hot_water": "Grzanie + CWU",
+          "hot_water": "CWU"
+        }
       }
     },
     "binary_sensor": {
@@ -146,6 +204,44 @@
       },
       "defrosting": {
         "name": "Odszranianie"
+      },
+      "backup_heater": {
+        "name": "Grzałka"
+      },
+      "outdoor_fan": {
+        "name": "Wentylator zewnętrzny"
+      },
+      "error": {
+        "name": "Błąd"
+      },
+      "disinfection_enabled": {
+        "name": "Dezynfekcja"
+      },
+      "disinfecting": {
+        "name": "Dezynfekcja w toku"
+      },
+      "holiday_mode": {
+        "name": "Tryb urlopowy"
+      },
+      "versati_power": {
+        "name": "Zasilanie pompy ciepła"
+      }
+    },
+    "number": {
+      "cooling_room_target": {
+        "name": "Zadana temperatura pokoju (chłodzenie)"
+      },
+      "cooling_water_target": {
+        "name": "Zadana temperatura wody (chłodzenie)"
+      },
+      "dhw_target": {
+        "name": "Zadana temperatura CWU"
+      },
+      "heating_room_target": {
+        "name": "Zadana temperatura pokoju (grzanie)"
+      },
+      "heating_water_target": {
+        "name": "Zadana temperatura wody (grzanie)"
       }
     }
   },

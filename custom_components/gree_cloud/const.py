@@ -50,15 +50,33 @@ HWHP_WMOD_BOOST = 2
 HWHP_OPERATION_HEAT_PUMP = "heat_pump"  # Normal heat pump operation
 HWHP_OPERATION_BOOST = "performance"  # Boost / turbo operation
 
+# More HWHP state, from a Gree Hombask status push (#74). Temperatures use the
+# same +100 offset as WatTmp (upperTemp 153 = WatTmp 153 = 53 C in the app);
+# 0 means "not reported". Flags are 0/1, error codes 0 when healthy.
+HWHP_PROP_BOTTOM_TEMP = "bottomTemp"
+HWHP_PROP_OUTDOOR_TEMP = "outTemp"
+HWHP_PROP_DISCHARGE_TEMP = "exhaustTemp1"
+HWHP_PROP_OUT_EXCHANGER_TEMP = "outHeatExchangTemp"
+HWHP_PROP_COIL_TEMP = "intankPipeTemp"
+HWHP_PROP_BACKUP_HEATER = "auxiHeatFlag"
+HWHP_PROP_FAN_HIGH = "outFanHigFlag"
+HWHP_PROP_FAN_LOW = "outFanLowFlag"
+HWHP_PROP_DEFROST = "fourWay1Flag"
+HWHP_PROP_PUMP = "pumpFlag"
+HWHP_PROP_DISINFECT_ON = "DisinfectSwitch"
+HWHP_PROP_DISINFECT_RUNNING = "DisinfectStatus"
+HWHP_PROP_HOLIDAY = "HolidaySwitch"
+HWHP_ERROR_PROPS = ("AllErr", "ErrHeat", "JFerr", "BwErr")
+
 # Energy metering (AC units).
 # ElcAll is a cumulative counter in tenths of a kWh; it does not reset daily.
 # ElcAllConsumption carries the same value and is not read separately.
 PROP_ENERGY_TOTAL = "ElcAll"
 ENERGY_SCALE = 0.1
 
-# Compressor frequency in Hz. Reads 0 while the unit is idle and non-zero while
-# it is actually running, so it tracks load far more responsively than the
-# energy counter, which only moves in whole 0.1 kWh steps.
+# Compressor frequency in Hz. On units that report it, 0 while idle and
+# non-zero while running (25 Hz seen in #43). Some modules return the key but
+# always 0, e.g. U-WB05RT13 V1.45 over more than 1,900 hours of heating.
 PROP_COMPRESSOR_FREQ = "CompressorFqy"
 
 # Relative humidity. Already part of the standard Props enum (HUM_SENSOR), so
@@ -71,6 +89,14 @@ PROP_HUMIDITY = "DwatSen"
 # report 0 or omit the key, so it gates the entity (issue #43).
 PROP_POWER_REDUCE_GEAR = "PowReduceGear"
 PROP_POWER_REDUCE_TYPE = "PowReduceType"
+
+# Outdoor and compressor temperature on AC units, +40 offset like TemSen.
+# Verified on a V3.4.M split: OutEnvTem 46 while two outdoor thermometers read
+# 5.6 and 6.2 C (the earlier assumption of Fahrenheit gave 7.8 C). From #28
+# by gabidigab, who found the keys on a Clivia.
+PROP_OUTDOOR_TEMP = "OutEnvTem"
+PROP_COMPRESSOR_TEMP = "CompressorTem"
+AC_TEMP_OFFSET = 40
 
 # Room temperature on commercial indoor units, which leave TemSen empty. Same
 # +40 offset; the library uses it in place of a missing TemSen (#6, #33).

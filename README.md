@@ -96,6 +96,8 @@ Created for Gree WHIO / Hot Water Heat Pump devices (auto-detected):
 - **Operation Modes**: Heat Pump (normal), Performance (boost), Off
 - **Temperature Control**: Target temperature 40–80°C with 1° step
 - **Current Temperature**: Live tank water temperature
+- **Sensors**: tank bottom, outdoor, discharge, outdoor coil and tank coil temperature, each only when the unit reports it
+- **Binary sensors**: backup heater, outdoor fan, defrosting, pump, error (raw codes as attributes), disinfection enabled and running, holiday mode
 
 ### Swimming-Pool Heat Pump — Climate Entity
 
@@ -121,6 +123,15 @@ Created for Gree Versati model 9300 air-to-water heat pumps, including Arthur Ma
 - **Setpoint Controls**: Heating water, heating room (18–30°C), domestic hot water (40–60°C), and cooling water/room when supported; also exposed as sensors
 - **Power**: global power switch and power-state binary sensor.
 - **Operation Modes**: Heating, domestic hot water (DHW), combined heating/DHW, and cooling modes when supported, through a separate select entity
+
+### Sensors (air conditioners)
+
+Created only for values the unit actually reports:
+
+- **Energy**: cumulative kWh, on units with a built-in meter (`ElcEn` 1)
+- **Humidity**: room humidity, on units with a sensor
+- **Compressor frequency** (diagnostic)
+- **Outdoor temperature** and **compressor temperature** (diagnostic)
 
 ### Switch Entities
 

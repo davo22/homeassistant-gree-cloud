@@ -36,6 +36,48 @@
       },
       "water_outlet_temperature": {
         "name": "Temperatura da água na saída"
+      },
+      "outdoor_temperature": {
+        "name": "Temperatura exterior"
+      },
+      "compressor_temperature": {
+        "name": "Temperatura do compressor"
+      },
+      "tank_bottom_temperature": {
+        "name": "Temperatura inferior do depósito"
+      },
+      "discharge_temperature": {
+        "name": "Temperatura de descarga"
+      },
+      "outdoor_coil_temperature": {
+        "name": "Temperatura do permutador exterior"
+      },
+      "tank_coil_temperature": {
+        "name": "Temperatura da serpentina do depósito"
+      },
+      "cooling_room_target": {
+        "name": "Alvo ambiente (arrefecimento)"
+      },
+      "cooling_water_target": {
+        "name": "Alvo da água (arrefecimento)"
+      },
+      "dhw_target": {
+        "name": "Alvo AQS"
+      },
+      "dhw_temperature": {
+        "name": "Temperatura AQS"
+      },
+      "heat_pump_outlet_temperature": {
+        "name": "Temperatura de saída da bomba de calor"
+      },
+      "heating_room_target": {
+        "name": "Alvo ambiente (aquecimento)"
+      },
+      "heating_water_target": {
+        "name": "Alvo da água (aquecimento)"
+      },
+      "room_temperature": {
+        "name": "Temperatura ambiente"
       }
     },
     "switch": {
@@ -56,6 +98,9 @@
       },
       "beeper": {
         "name": "Sinal sonoro"
+      },
+      "versati_power": {
+        "name": "Alimentação geral da bomba de calor"
       }
     },
     "climate": {
@@ -106,6 +151,9 @@
       },
       "pool": {
         "name": "Bomba de calor de piscina"
+      },
+      "versati_heating": {
+        "name": "Aquecimento hidráulico"
       }
     },
     "select": {
@@ -124,6 +172,16 @@
           "fast": "Rápido",
           "eco": "ECO"
         }
+      },
+      "versati_mode": {
+        "name": "Modo da bomba de calor",
+        "state": {
+          "cool": "Arrefecimento",
+          "cool_hot_water": "Arrefecimento + AQS",
+          "heat": "Aquecimento",
+          "heat_hot_water": "Aquecimento + AQS",
+          "hot_water": "AQS"
+        }
       }
     },
     "binary_sensor": {
@@ -135,6 +193,44 @@
       },
       "defrosting": {
         "name": "Descongelamento"
+      },
+      "backup_heater": {
+        "name": "Resistência de apoio"
+      },
+      "outdoor_fan": {
+        "name": "Ventilador exterior"
+      },
+      "error": {
+        "name": "Erro"
+      },
+      "disinfection_enabled": {
+        "name": "Desinfeção"
+      },
+      "disinfecting": {
+        "name": "Desinfeção em curso"
+      },
+      "holiday_mode": {
+        "name": "Modo férias"
+      },
+      "versati_power": {
+        "name": "Alimentação da bomba de calor"
+      }
+    },
+    "number": {
+      "cooling_room_target": {
+        "name": "Alvo ambiente (arrefecimento)"
+      },
+      "cooling_water_target": {
+        "name": "Alvo da água (arrefecimento)"
+      },
+      "dhw_target": {
+        "name": "Alvo AQS"
+      },
+      "heating_room_target": {
+        "name": "Alvo ambiente (aquecimento)"
+      },
+      "heating_water_target": {
+        "name": "Alvo da água (aquecimento)"
       }
     }
   },
