@@ -68,7 +68,7 @@
         "name": "Temperatura AQS"
       },
       "heat_pump_outlet_temperature": {
-        "name": "Temperatura de saída da bomba de calor"
+        "name": "Temperatura do sensor de água opcional"
       },
       "heating_room_target": {
         "name": "Alvo ambiente (aquecimento)"
@@ -154,6 +154,9 @@
       },
       "versati_heating": {
         "name": "Aquecimento hidráulico"
+      },
+      "versati_room_heating": {
+        "name": "Termóstato ambiente"
       }
     },
     "select": {

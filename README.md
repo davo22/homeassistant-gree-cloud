@@ -116,10 +116,11 @@ No air-conditioner switches or selects are created for these units. Protocol map
 
 Created for Gree Versati model 9300 air-to-water heat pumps, including Arthur Martin rebadges (auto-detected):
 
-- **HVAC Modes**: Off, Heat, Cool
+- **HVAC Modes**: Off, Heat, Cool. Off switches the whole unit off, hot water included, like the power button in Gree+
 - **Temperature Control**: Water target with 1° step; heating 20–60°C, cooling 5–25°C when supported
 - **Current Temperature**: Outlet water temperature
-- **Temperature Sensors**: Water inlet, water outlet and heat-pump outlet; tank and room temperatures only when usable measurements are available
+- **Room thermostat**: a second thermostat on the room sensor and the room target (18–30°C), on units that report a room temperature
+- **Temperature Sensors**: Water inlet, water outlet and the optional water sensor; tank and room temperatures only when usable measurements are available
 - **Setpoint Controls**: Heating water, heating room (18–30°C), domestic hot water (40–60°C), and cooling water/room when supported; also exposed as sensors
 - **Power**: global power switch and power-state binary sensor.
 - **Operation Modes**: Heating, domestic hot water (DHW), combined heating/DHW, and cooling modes when supported, through a separate select entity

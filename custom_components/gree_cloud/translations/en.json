@@ -53,7 +53,7 @@
         "name": "Cooling room target"
       },
       "heat_pump_outlet_temperature": {
-        "name": "Heat pump outlet temperature"
+        "name": "Optional water sensor temperature"
       },
       "dhw_temperature": {
         "name": "DHW temperature"
@@ -154,6 +154,9 @@
       },
       "versati_heating": {
         "name": "Hydraulic heating"
+      },
+      "versati_room_heating": {
+        "name": "Room thermostat"
       }
     },
     "select": {

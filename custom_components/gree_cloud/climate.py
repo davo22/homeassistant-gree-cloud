@@ -140,6 +140,8 @@ async def async_setup_entry(
             "integration in HACS and restart Home Assistant to update the library"
         )
 
+    room_thermostats: set[str] = set()
+
     @callback
     def init_device(coordinator: CloudDeviceDataUpdateCoordinator) -> None:
         """Register the device."""
@@ -147,6 +149,20 @@ async def async_setup_entry(
             if coordinator.device_kind != "heatpump":
                 return
             async_add_entities([GreeHeatPumpClimate(coordinator)])
+
+            @callback
+            def add_room_thermostat() -> None:
+                """Once the unit reports a room sensor and a room target."""
+                mac = coordinator.device.device_info.mac
+                if mac in room_thermostats or not has_room_thermostat(
+                    coordinator.data or {}, coordinator.device.write_policy
+                ):
+                    return
+                room_thermostats.add(mac)
+                async_add_entities([GreeHeatPumpRoomClimate(coordinator)])
+
+            add_room_thermostat()
+            entry.async_on_unload(coordinator.async_add_listener(add_room_thermostat))
             return
         if is_hwhp_device(coordinator):
             _LOGGER.debug(
@@ -167,6 +183,15 @@ async def async_setup_entry(
     )
 
 
+def has_room_thermostat(props, policy) -> bool:
+    """Whether the unit has a room sensor and a room target that may be set."""
+    return (
+        temperature(props, "room_temperature") is not None
+        and "HeHomTemSet" in policy.approved
+        and "HeHomTemSet" in policy.limits
+    )
+
+
 class GreeHeatPumpClimate(GreeCloudEntity, ClimateEntity):
     """Hydraulic circuit with per-device write gate, never air/air properties."""
 
@@ -176,15 +201,28 @@ class GreeHeatPumpClimate(GreeCloudEntity, ClimateEntity):
     _attr_hvac_modes = [HVACMode.OFF, HVACMode.HEAT]
     _enable_turn_on_off_backwards_compatibility = False
 
+    # The setpoints this thermostat sets and the temperature it shows.
+    _heating_key = "HeWatOutTemSet"
+    _cooling_key = "CoWatOutTemSet"
+    _current_key = "water_outlet_temperature"
+    _temperature_source = "water_outlet_setpoint"
+    _default_limits = (20, 60)
+
     def __init__(self, coordinator):
         super().__init__(coordinator)
-        self._attr_unique_id = f"{coordinator.device.device_info.mac}_versati_heating"
+        self._attr_unique_id = (
+            f"{coordinator.device.device_info.mac}_{self._attr_translation_key}"
+        )
+
+    @property
+    def _setpoint_key(self):
+        return self._cooling_key if self.hvac_mode == HVACMode.COOL else self._heating_key
 
     @property
     def supported_features(self):
         policy = self.coordinator.device.write_policy
         features = ClimateEntityFeature(0)
-        key = "CoWatOutTemSet" if self.hvac_mode == HVACMode.COOL else "HeWatOutTemSet"
+        key = self._setpoint_key
         if key in policy.approved and key in policy.limits:
             features |= ClimateEntityFeature.TARGET_TEMPERATURE
         if "Pow" in policy.approved:
@@ -215,47 +253,48 @@ class GreeHeatPumpClimate(GreeCloudEntity, ClimateEntity):
 
     @property
     def min_temp(self):
-        key = "CoWatOutTemSet" if self.hvac_mode == HVACMode.COOL else "HeWatOutTemSet"
-        return self.coordinator.device.write_policy.limits.get(key, (20, 60))[0]
+        return self.coordinator.device.write_policy.limits.get(
+            self._setpoint_key, self._default_limits
+        )[0]
 
     @property
     def max_temp(self):
-        key = "CoWatOutTemSet" if self.hvac_mode == HVACMode.COOL else "HeWatOutTemSet"
-        return self.coordinator.device.write_policy.limits.get(key, (20, 60))[1]
+        return self.coordinator.device.write_policy.limits.get(
+            self._setpoint_key, self._default_limits
+        )[1]
 
     _attr_target_temperature_step = 1
 
     @property
     def target_temperature(self):
-        key = "CoWatOutTemSet" if self.hvac_mode == HVACMode.COOL else "HeWatOutTemSet"
-        return setpoint(self.coordinator.data or {}, key)
+        return setpoint(self.coordinator.data or {}, self._setpoint_key)
 
     @property
     def current_temperature(self):
-        return temperature(self.coordinator.data or {}, "water_outlet_temperature")
+        return temperature(self.coordinator.data or {}, self._current_key)
 
     @property
     def extra_state_attributes(self):
         props = self.coordinator.data or {}
         return {"raw_mode": props.get("Mod"), "pac_mode": MODE_NAMES.get(props.get("Mod")),
                 "power": props.get("Pow"), "writes_enabled": bool(self.coordinator.device.write_policy.approved),
-                "temperature_source": "water_outlet_setpoint"}
+                "temperature_source": self._temperature_source}
 
     async def async_set_temperature(self, **kwargs):
         if not self.coordinator.device.write_policy.approved:
             raise HomeAssistantError("Air-to-water writes are disabled pending protocol validation")
         if ATTR_HVAC_MODE in kwargs:
             raise HomeAssistantError("Send mode and setpoint separately to avoid partial commands")
-        key = "CoWatOutTemSet" if self.hvac_mode == HVACMode.COOL else "HeWatOutTemSet"
-        await self.coordinator.async_heatpump_command(key, kwargs.get(ATTR_TEMPERATURE))
+        await self.coordinator.async_heatpump_command(
+            self._setpoint_key, kwargs.get(ATTR_TEMPERATURE)
+        )
 
     async def async_set_hvac_mode(self, hvac_mode):
         if not self.coordinator.device.write_policy.approved:
             raise HomeAssistantError("Air-to-water writes are disabled pending protocol validation")
         if hvac_mode == HVACMode.OFF:
-            # Do not turn off ECS implicitly through the space-heating entity.
-            if (self.coordinator.data or {}).get("Mod") in (2, 3, 4):
-                raise HomeAssistantError("Use the global power control; ECS is active in this mode")
+            # The whole unit, hot water included, like its power button (#75).
+            # To keep the hot water, pick that mode instead.
             await self.coordinator.async_heatpump_command("Pow", 0)
             return
         current = (self.coordinator.data or {}).get("Mod")
@@ -263,8 +302,11 @@ class GreeHeatPumpClimate(GreeCloudEntity, ClimateEntity):
                  HVACMode.COOL: 3 if current in (2, 3, 4) else 5}
         if hvac_mode not in modes:
             raise HomeAssistantError("Unsupported air-to-water HVAC mode")
-        # Mode selection does not power on implicitly.
-        await self.coordinator.async_heatpump_command("Mod", modes[hvac_mode])
+        # The mode goes first: a unit that is off takes it for certain.
+        if current != modes[hvac_mode]:
+            await self.coordinator.async_heatpump_command("Mod", modes[hvac_mode])
+        if (self.coordinator.data or {}).get("Pow") == 0:
+            await self.coordinator.async_heatpump_command("Pow", 1)
 
     async def async_turn_on(self):
         if "Pow" not in self.coordinator.device.write_policy.approved:
@@ -273,6 +315,17 @@ class GreeHeatPumpClimate(GreeCloudEntity, ClimateEntity):
 
     async def async_turn_off(self):
         await self.async_set_hvac_mode(HVACMode.OFF)
+
+
+class GreeHeatPumpRoomClimate(GreeHeatPumpClimate):
+    """The same unit by its room sensor and room target, as Gree+ shows it (#75)."""
+
+    _attr_translation_key = "versati_room_heating"
+    _heating_key = "HeHomTemSet"
+    _cooling_key = "CoHomTemSet"
+    _current_key = "room_temperature"
+    _temperature_source = "room_setpoint"
+    _default_limits = (18, 30)
 
 
 class GreeCloudClimateEntity(GreeCloudEntity, ClimateEntity):

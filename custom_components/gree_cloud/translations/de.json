@@ -68,7 +68,7 @@
         "name": "Warmwassertemperatur"
       },
       "heat_pump_outlet_temperature": {
-        "name": "Vorlauftemperatur Wärmepumpe"
+        "name": "Temperatur optionaler Wasserfühler"
       },
       "heating_room_target": {
         "name": "Raumsoll Heizen"
@@ -154,6 +154,9 @@
       },
       "versati_heating": {
         "name": "Wasserheizung"
+      },
+      "versati_room_heating": {
+        "name": "Raumthermostat"
       }
     },
     "select": {
