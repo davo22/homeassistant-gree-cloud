@@ -143,6 +143,15 @@
       "backup_heater": {
         "default": "mdi:heating-coil"
       },
+      "tank_heater": {
+        "default": "mdi:heating-coil"
+      },
+      "electric_heater_1": {
+        "default": "mdi:heating-coil"
+      },
+      "electric_heater_2": {
+        "default": "mdi:heating-coil"
+      },
       "outdoor_fan": {
         "default": "mdi:fan-off",
         "state": {

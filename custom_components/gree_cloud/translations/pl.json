@@ -208,6 +208,15 @@
       "backup_heater": {
         "name": "Grzałka"
       },
+      "tank_heater": {
+        "name": "Grzałka zasobnika"
+      },
+      "electric_heater_1": {
+        "name": "Grzałka elektryczna 1"
+      },
+      "electric_heater_2": {
+        "name": "Grzałka elektryczna 2"
+      },
       "outdoor_fan": {
         "name": "Wentylator zewnętrzny"
       },

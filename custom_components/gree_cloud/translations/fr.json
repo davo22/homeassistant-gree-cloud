@@ -200,6 +200,15 @@
       "backup_heater": {
         "name": "Appoint électrique"
       },
+      "tank_heater": {
+        "name": "Résistance du ballon"
+      },
+      "electric_heater_1": {
+        "name": "Résistance électrique 1"
+      },
+      "electric_heater_2": {
+        "name": "Résistance électrique 2"
+      },
       "outdoor_fan": {
         "name": "Ventilateur extérieur"
       },

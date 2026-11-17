@@ -56,6 +56,15 @@ HEATPUMP_COLUMNS = (
 # only; the series 7 unit of #47 is switched by Pow alone.
 ZONE_POWER_COLUMNS = ("ZonePow1", "ZonePow2")
 ZONE_POWER_SERIES = (1,)
+# Error code and run states of the heaters and the defrost, as that unit
+# reports them (#75). Read on the same series only.
+RUN_STATE_COLUMNS = (
+    "AllErr",
+    "WatBoxElcHeRunSta",
+    "ElcHe1RunSta",
+    "ElcHe2RunSta",
+    "SyAnFroRunSta",
+)
 
 
 def numeric(value: Any) -> float | None:
@@ -65,10 +74,15 @@ def numeric(value: Any) -> float | None:
     return float(value) if math.isfinite(value) else None
 
 
+def reads_run_states(props: Mapping[str, Any]) -> bool:
+    """Whether this unit is asked for its zone flags and run states."""
+    return numeric(props.get("VersatiSeries")) in ZONE_POWER_SERIES
+
+
 def status_columns(props: Mapping[str, Any]) -> tuple[str, ...]:
     """The columns to ask this unit for, by the series it reported."""
-    if numeric(props.get("VersatiSeries")) in ZONE_POWER_SERIES:
-        return (*HEATPUMP_COLUMNS, *ZONE_POWER_COLUMNS)
+    if reads_run_states(props):
+        return (*HEATPUMP_COLUMNS, *ZONE_POWER_COLUMNS, *RUN_STATE_COLUMNS)
     return HEATPUMP_COLUMNS
 
 
@@ -80,7 +94,7 @@ def power_keys(props: Mapping[str, Any]) -> list[str]:
     left alone.
     """
     power = props.get("Pow")
-    if numeric(props.get("VersatiSeries")) in ZONE_POWER_SERIES and all(
+    if reads_run_states(props) and all(
         numeric(props.get(key)) == power for key in ZONE_POWER_COLUMNS
     ):
         return ["Pow", *ZONE_POWER_COLUMNS]
