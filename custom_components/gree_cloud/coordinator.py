@@ -79,7 +79,7 @@ from .const import (
     UPDATE_INTERVAL,
 )
 
-from .heatpump import (HEATPUMP_COLUMNS, TEMPERATURE_PAIRS, WritePolicy, classify, model_profile, prepare_command, verify_command_reply, user_control_policy)
+from .heatpump import (TEMPERATURE_PAIRS, WritePolicy, classify, model_profile, prepare_command, status_columns, verify_command_reply, user_control_policy)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -244,11 +244,12 @@ class HWHPAwareCloudDevice(CloudDevice):
                 raise HomeAssistantError("Command not confirmed; it may have executed. No retry.") from err
             # Cloud state can lag behind the ACK, or a late bare ACK can wake
             # the status request. Retry reads only, never the accepted write.
+            columns = status_columns(self.raw_properties)
             for attempt in range(3):
                 if attempt:
                     await asyncio.sleep(1)
                 try:
-                    data = await self.request_status(list(HEATPUMP_COLUMNS))
+                    data = await self.request_status(list(columns))
                 except asyncio.TimeoutError:
                     continue
                 if isinstance(data, dict) and data.get(key) == command["p"][0]:
@@ -258,7 +259,7 @@ class HWHPAwareCloudDevice(CloudDevice):
                     "Command acknowledged, but the applied value could not be confirmed. "
                     "It may have executed; the write was not retried."
                 )
-            for column in HEATPUMP_COLUMNS:
+            for column in columns:
                 self.raw_properties.pop(column, None)
             self.handle_state_update(**data)
             return copy.deepcopy(self.raw_properties)
@@ -274,7 +275,7 @@ class HWHPAwareCloudDevice(CloudDevice):
         alone, which is how a HWHP gives itself away.
         """
         if self.is_heat_pump:
-            return list(HEATPUMP_COLUMNS)
+            return list(status_columns(self.raw_properties))
         if self.is_pool_heat_pump:
             return list(_POOL_PROPS)
         water = self.raw_properties.get(HWHP_PROP_WATER_TEMP)
