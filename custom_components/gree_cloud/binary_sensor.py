@@ -39,6 +39,7 @@ from .coordinator import (
     is_heatpump_device,
 )
 from .entity import GreeCloudEntity
+from .heatpump import numeric, reads_run_states
 
 
 @dataclass(kw_only=True, frozen=True)
@@ -145,6 +146,41 @@ HWHP_BINARY_SENSORS: tuple[GreeCloudBinarySensorEntityDescription, ...] = (
 )
 
 
+def _versati_error(device: Device) -> bool | None:
+    code = numeric(device.raw_properties.get("AllErr"))
+    return None if code is None else code != 0
+
+
+def _versati_flag(key: str, translation_key: str, prop: str, device_class=None) -> GreeCloudBinarySensorEntityDescription:
+    # A series that is asked for the flag gets the entity before the first
+    # answer carrying it; any other unit only once it reports the flag.
+    return GreeCloudBinarySensorEntityDescription(
+        key=key,
+        translation_key=translation_key,
+        device_class=device_class,
+        prop=prop,
+        exists_fn=lambda d: reads_run_states(d.raw_properties) or _flag(d, prop) is not None,
+    )
+
+
+# Versati run states, known from a Versati 5 (#75).
+VERSATI_BINARY_SENSORS: tuple[GreeCloudBinarySensorEntityDescription, ...] = (
+    _versati_flag("versati_defrosting", "defrosting", "SyAnFroRunSta"),
+    _versati_flag("versati_tank_heater", "tank_heater", "WatBoxElcHeRunSta", BinarySensorDeviceClass.RUNNING),
+    _versati_flag("versati_electric_heater_1", "electric_heater_1", "ElcHe1RunSta", BinarySensorDeviceClass.RUNNING),
+    _versati_flag("versati_electric_heater_2", "electric_heater_2", "ElcHe2RunSta", BinarySensorDeviceClass.RUNNING),
+    GreeCloudBinarySensorEntityDescription(
+        key="versati_error",
+        translation_key="error",
+        device_class=BinarySensorDeviceClass.PROBLEM,
+        prop="AllErr",
+        exists_fn=lambda d: reads_run_states(d.raw_properties) or _versati_error(d) is not None,
+        value_fn=_versati_error,
+        attrs_fn=lambda d: {"AllErr": d.raw_properties.get("AllErr")},
+    ),
+)
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: GreeCloudConfigEntry,
@@ -156,8 +192,15 @@ async def async_setup_entry(
     def init_device(coordinator: CloudDeviceDataUpdateCoordinator) -> None:
         """Register the device (pool heat pumps only, #48)."""
         if is_heatpump_device(coordinator):
-            if coordinator.device_kind == "heatpump" and (coordinator.data or {}).get("Pow") in (0, 1):
+            if coordinator.device_kind != "heatpump":
+                return
+            if (coordinator.data or {}).get("Pow") in (0, 1):
                 async_add_entities([HeatPumpPower(coordinator)])
+            async_add_entities(
+                GreeCloudBinarySensor(coordinator=coordinator, description=description)
+                for description in VERSATI_BINARY_SENSORS
+                if description.exists_fn(coordinator.device)
+            )
             return
         if is_pool_device(coordinator):
             descriptions = POOL_BINARY_SENSORS

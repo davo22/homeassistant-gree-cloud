@@ -197,6 +197,15 @@
       "backup_heater": {
         "name": "Resistência de apoio"
       },
+      "tank_heater": {
+        "name": "Resistência do depósito"
+      },
+      "electric_heater_1": {
+        "name": "Resistência elétrica 1"
+      },
+      "electric_heater_2": {
+        "name": "Resistência elétrica 2"
+      },
       "outdoor_fan": {
         "name": "Ventilador exterior"
       },

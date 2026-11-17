@@ -200,6 +200,15 @@
       "backup_heater": {
         "name": "Backup heater"
       },
+      "tank_heater": {
+        "name": "Water tank heater"
+      },
+      "electric_heater_1": {
+        "name": "Electric heater 1"
+      },
+      "electric_heater_2": {
+        "name": "Electric heater 2"
+      },
       "outdoor_fan": {
         "name": "Outdoor fan"
       },

@@ -197,6 +197,15 @@
       "backup_heater": {
         "name": "Heizstab"
       },
+      "tank_heater": {
+        "name": "Heizstab Warmwasserspeicher"
+      },
+      "electric_heater_1": {
+        "name": "Elektroheizung 1"
+      },
+      "electric_heater_2": {
+        "name": "Elektroheizung 2"
+      },
       "outdoor_fan": {
         "name": "Außenventilator"
       },
