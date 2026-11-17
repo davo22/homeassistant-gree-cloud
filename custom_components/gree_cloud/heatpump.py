@@ -197,6 +197,9 @@ def temperature(props: Mapping[str, Any], key: str) -> float | None:
         return None
     if not 0 < high < 255 or not 0 <= low <= 9 or (high == 100 and low == 0):
         return None
+    # A sensor that is not fitted reads -30.0, in Gree+ as well (#75).
+    if high == 70 and low == 0:
+        return None
     result = round(high - 100 + low / 10, 1)
     return result if -50 <= result <= 120 else None
 

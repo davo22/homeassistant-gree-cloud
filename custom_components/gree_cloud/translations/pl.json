@@ -68,7 +68,7 @@
         "name": "Temperatura CWU"
       },
       "heat_pump_outlet_temperature": {
-        "name": "Temperatura na wyjściu pompy ciepła"
+        "name": "Temperatura dodatkowego czujnika wody"
       },
       "heating_room_target": {
         "name": "Zadana temperatura pokoju (grzanie)"
@@ -165,6 +165,9 @@
       },
       "versati_heating": {
         "name": "Ogrzewanie wodne"
+      },
+      "versati_room_heating": {
+        "name": "Termostat pokojowy"
       }
     },
     "select": {
