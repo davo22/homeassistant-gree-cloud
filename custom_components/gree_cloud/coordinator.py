@@ -18,7 +18,7 @@ from greeclimate_davo22.mqtt_client import GreeMqttClient
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -79,7 +79,7 @@ from .const import (
     UPDATE_INTERVAL,
 )
 
-from .heatpump import (TEMPERATURE_PAIRS, WritePolicy, classify, model_profile, prepare_command, status_columns, verify_command_reply, user_control_policy)
+from .heatpump import (TEMPERATURE_PAIRS, WritePolicy, classify, decode_values, model_profile, prepare_command, status_columns, verify_command_reply, user_control_policy)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -170,6 +170,10 @@ _POOL_PROPS = [
 ]
 
 
+# A state without any of these is no state: an acknowledgement, a firmware id.
+_USABLE_STATE_KEYS = ("Pow", "Mod", "HeWatOutTemSet", "SetTem", "WatTmp")
+
+
 class HWHPAwareCloudDevice(CloudDevice):
     """CloudDevice subclass that also requests HWHP-specific properties.
 
@@ -192,6 +196,53 @@ class HWHPAwareCloudDevice(CloudDevice):
         self.model_id = model_id
         self._cooling_observed = False
         self.write_policy = WritePolicy()
+        # A heat pump may report its state by itself instead of answering
+        # status requests (#75): how often it did, whether a request was ever
+        # answered, and who wants to hear about it.
+        self.push_count = 0
+        self.status_answered = False
+        self.push_listener = None
+        self._in_mqtt_callback = False
+
+    @property
+    def lives_on_pushes(self) -> bool:
+        """True for a unit that reports by itself and never answered a request."""
+        return self.push_count > 0 and not self.status_answered
+
+    def _handle_mqtt_message(self, topic, message) -> None:
+        """Tell what the unit sends by itself from what a request returned.
+
+        The library hands a waiting request whatever arrives first. When a
+        second message comes in before the request picks that up, the first
+        one is replaced; a heat pump's state must not get lost that way.
+        """
+        held = self._response_data if self._response_event else None
+        self._in_mqtt_callback = True
+        try:
+            super()._handle_mqtt_message(topic, message)
+            if (
+                self.is_heat_pump
+                and isinstance(held, dict)
+                and self._response_data is not held
+                and (state := self._decode_dat(held))
+            ):
+                self.handle_state_update(**state)
+        finally:
+            self._in_mqtt_callback = False
+
+    def _state_pushed(self) -> None:
+        """Take in a state the heat pump sent without being asked (#75).
+
+        A Versati series 1 leaves status requests unanswered and sends its
+        whole state by itself. That state decides what the unit is, the same
+        way an answer to a request does, and goes straight to the entities.
+        """
+        self.push_count += 1
+        if getattr(self, "device_kind", None) not in ("heatpump", "ac"):
+            self.device_kind = classify(self.raw_properties, mid=self.model_id)
+        self._refresh_write_policy()
+        if self.push_listener is not None:
+            self.push_listener()
 
     @property
     def is_heat_pump(self) -> bool:
@@ -222,7 +273,12 @@ class HWHPAwareCloudDevice(CloudDevice):
                 self.raw_properties.pop(low, None)
                 kwargs.pop(high, None)
                 kwargs.pop(low, None)
+        pushed = self._in_mqtt_callback and any(
+            key in kwargs for key in _USABLE_STATE_KEYS
+        )
         super().handle_state_update(**kwargs)
+        if pushed:
+            self._state_pushed()
 
     async def async_heatpump_command(self, key: str, value: Any) -> dict:
         """One approved write, strict ACK, then readback. Never retry writes."""
@@ -234,6 +290,14 @@ class HWHPAwareCloudDevice(CloudDevice):
                 command = prepare_command(self.raw_properties, self.write_policy, key, value)
             except ValueError as err:
                 raise HomeAssistantError(str(err)) from err
+            pushes = self.push_count
+
+            def pushed() -> bool:
+                """The unit reported the new value by itself since the command."""
+                return (
+                    self.push_count != pushes
+                    and self.raw_properties.get(key) == command["p"][0]
+                )
             # Only allowlisted user commands can reach the transport.
             try:
                 reply = await self.send_command(
@@ -245,23 +309,31 @@ class HWHPAwareCloudDevice(CloudDevice):
             # Cloud state can lag behind the ACK, or a late bare ACK can wake
             # the status request. Retry reads only, never the accepted write.
             columns = status_columns(self.raw_properties)
+            # A unit that reports by itself (#75) confirms the value that way:
+            # its report may end the wait for the acknowledgement, arrive on
+            # its own, or end the wait of the readback.
+            state = decode_values(reply) if reply.get("t") == "dat" else {}
+            data = state if state.get(key) == command["p"][0] else None
             for attempt in range(3):
+                if data is not None or pushed():
+                    break
                 if attempt:
                     await asyncio.sleep(1)
                 try:
-                    data = await self.request_status(list(columns))
+                    answer = await self.request_status(list(columns))
                 except asyncio.TimeoutError:
                     continue
-                if isinstance(data, dict) and data.get(key) == command["p"][0]:
-                    break
-            else:
+                if isinstance(answer, dict) and answer.get(key) == command["p"][0]:
+                    data = answer
+            if data is None and not pushed():
                 raise HomeAssistantError(
                     "Command acknowledged, but the applied value could not be confirmed. "
                     "It may have executed; the write was not retried."
                 )
-            for column in columns:
-                self.raw_properties.pop(column, None)
-            self.handle_state_update(**data)
+            if data:
+                for column in columns:
+                    self.raw_properties.pop(column, None)
+                self.handle_state_update(**data)
             return copy.deepcopy(self.raw_properties)
 
     def _status_columns(self) -> list[str]:
@@ -335,7 +407,8 @@ class HWHPAwareCloudDevice(CloudDevice):
             await self._update_in_chunks()
             return
         async with self.request_lock:
-            data = await self.request_status(self._status_columns())
+            requested = self._status_columns()
+            data = await self.request_status(requested)
             if isinstance(data, dict) and classify(data, mid=self.model_id) == "unknown":
                 if not getattr(self, "_unknown_profile_warned", False):
                     _LOGGER.warning(
@@ -348,9 +421,15 @@ class HWHPAwareCloudDevice(CloudDevice):
             else:
                 self._unknown_profile_warned = False
             if not isinstance(data, dict) or not data or not any(
-                key in data for key in ("Pow", "Mod", "HeWatOutTemSet", "SetTem", "WatTmp")
+                key in data for key in _USABLE_STATE_KEYS
             ):
                 raise ValueError("Cloud returned no usable device state")
+            # An answer holds what was asked for. Anything else that ended the
+            # wait is a state the unit sent by itself (#75).
+            if set(data) <= {*requested, "hid"}:
+                self.status_answered = True
+            else:
+                self.push_count += 1
             # A missing field in the latest poll is unknown, not a stale reading.
             if getattr(self, "device_kind", "unknown") != "ac":
                 for key in self._status_columns():
@@ -453,6 +532,68 @@ class CloudDeviceDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         )
         self.device = device
         self._error_count: int = 0
+        self._unsub_late_announce = None
+        if getattr(device, "is_heat_pump", False):
+            device.push_listener = self._state_pushed
+
+    @callback
+    def _state_pushed(self) -> None:
+        """Publish the state a heat pump sent by itself (#75)."""
+        self._error_count = 0
+        self.async_set_updated_data(copy.deepcopy(self.device.raw_properties))
+
+    @callback
+    def async_announce(self) -> None:
+        """Tell the platforms about the device so they create its entities.
+
+        A heat pump gets its entities once its state shows what it is. One
+        that could not be recognised yet (no answer to the first poll) is
+        polled on and announced again when it is, instead of staying without
+        entities until the next restart (#75).
+        """
+        async_dispatcher_send(self.hass, DISPATCH_DEVICE_DISCOVERED, self)
+        if (
+            is_heatpump_device(self)
+            and self.device_kind != "heatpump"
+            and self._unsub_late_announce is None
+        ):
+            self._unsub_late_announce = self.async_add_listener(
+                self._announce_when_recognised
+            )
+            self.config_entry.async_on_unload(self._cancel_late_announce)
+
+    @callback
+    def _cancel_late_announce(self) -> None:
+        if self._unsub_late_announce is not None:
+            self._unsub_late_announce()
+            self._unsub_late_announce = None
+
+    @callback
+    def _announce_when_recognised(self) -> None:
+        if self.device_kind != "heatpump":
+            return
+        _LOGGER.info(
+            "%s recognised as an air-to-water heat pump; creating its entities",
+            self.name,
+        )
+        async_dispatcher_send(self.hass, DISPATCH_DEVICE_DISCOVERED, self)
+        self._cancel_late_announce()
+
+    def _pushed_state(self, reason: Any) -> dict[str, Any] | None:
+        """The last state of a unit that reports by itself, or None for any other.
+
+        Such a unit leaves status requests unanswered (#75), so an unanswered
+        poll says nothing about it being reachable.
+        """
+        if not getattr(self.device, "lives_on_pushes", False):
+            return None
+        _LOGGER.debug(
+            "%s left the status request unanswered (%s); keeping the state it "
+            "reported by itself",
+            self.name,
+            reason or "timeout",
+        )
+        return copy.deepcopy(self.device.raw_properties)
 
     async def async_heatpump_command(self, key: str, value: Any) -> None:
         """Native entity command path, no optimistic state and no automatic retry."""
@@ -484,9 +625,13 @@ class CloudDeviceDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             return copy.deepcopy(self.device.raw_properties)
 
         except asyncio.TimeoutError as error:
+            if (pushed := self._pushed_state(error)) is not None:
+                return pushed
             self._error_count += 1
             if self._error_count >= MAX_ERRORS:
-                _LOGGER.warning(
+                # Once per outage; a unit that stays away is polled on.
+                _LOGGER.log(
+                    logging.WARNING if self._error_count == MAX_ERRORS else logging.DEBUG,
                     "Cloud device %s is unavailable after %d timeouts",
                     self.name,
                     self._error_count,
@@ -498,6 +643,11 @@ class CloudDeviceDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             return copy.deepcopy(self.device.raw_properties)
 
         except Exception as error:
+            # Somebody else's reply ended the wait (the app is open).
+            if isinstance(error, ValueError) and (
+                pushed := self._pushed_state(error)
+            ) is not None:
+                return pushed
             if _is_mqtt_disconnected(error):
                 _LOGGER.warning(
                     "MQTT disconnected while updating %s — triggering reconnect",
@@ -617,9 +767,11 @@ class CloudDiscoveryService:
                     # come up unavailable and the regular polls keep trying,
                     # so a slow or busy controller recovers without a restart
                     # (#6). Only a failure to create the device drops it.
+                    # A heat pump raises ValueError for an answer that holds
+                    # no state, which is no reason to drop it either (#75).
                     try:
                         await device.bind()
-                    except asyncio.TimeoutError as err:
+                    except (asyncio.TimeoutError, ValueError) as err:
                         _LOGGER.warning(
                             "Cloud device %s did not answer during setup (%s); "
                             "keeping it and retrying on the next polls",
@@ -657,9 +809,7 @@ class CloudDiscoveryService:
                         )
 
                     # Notify about discovered device
-                    async_dispatcher_send(
-                        self.hass, DISPATCH_DEVICE_DISCOVERED, coordinator
-                    )
+                    coordinator.async_announce()
 
                 except Exception as err:
                     _LOGGER.exception(
