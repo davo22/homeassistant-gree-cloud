@@ -2,14 +2,17 @@
 
 from __future__ import annotations
 
+import asyncio
 import logging
 
+import aiohttp
 from greeclimate_davo22.cloud_api import GreeCloudApi
 from greeclimate_davo22.cloud_gateway import GreeCloudGateway
 from greeclimate_davo22.mqtt_client import GreeMqttClient
 
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 
 from .const import CONF_SERVER, DOMAIN, GREE_MQTT_SERVERS, REGION_ALIASES
 from .coordinator import (
@@ -132,7 +135,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: GreeCloudConfigEntry) ->
 
         # Login to cloud
         _LOGGER.debug("Logging in to Gree Cloud")
-        credentials = await api.login()
+        try:
+            credentials = await api.login()
+        except (aiohttp.ClientError, asyncio.TimeoutError) as err:
+            await api.close()
+            raise ConfigEntryNotReady(f"Gree cloud not reachable: {err}") from err
 
         # Create MQTT client
         _LOGGER.debug("Connecting to Gree MQTT broker")
@@ -143,7 +150,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: GreeCloudConfigEntry) ->
                 region,
             )
         mqtt_client = GreeMqttClient(credentials.user_id, credentials.token, server=mqtt_server)
-        await mqtt_client.connect()
+        # The login just succeeded, so a refusal here ("bad user name or
+        # password" included) is the cloud's trouble of the moment. Home
+        # Assistant tries again by itself instead of leaving the entry failed
+        # until somebody reloads it.
+        try:
+            await mqtt_client.connect()
+        except Exception as err:
+            await api.close()
+            raise ConfigEntryNotReady(
+                f"Gree MQTT broker refused the connection: {err}"
+            ) from err
 
         # Legacy gateway for modules with protocol < 3.2, which never join
         # the MQTT broker (see README, "Older Wi-Fi modules").
@@ -177,6 +194,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: GreeCloudConfigEntry) ->
 
         return True
 
+    except ConfigEntryNotReady:
+        raise
     except Exception as err:
         _LOGGER.exception("Failed to setup Gree Climate Cloud: %s", err)
         return False
