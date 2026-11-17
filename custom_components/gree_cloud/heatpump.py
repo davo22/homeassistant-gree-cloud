@@ -74,14 +74,16 @@ class HeatPumpProfile:
     encoding. A matching model ID alone is not permission to write controls.
     """
 
-    control_requirements: Mapping[str, int]
+    control_requirements: Mapping[str, tuple[int, ...]]
     heating_limits: Mapping[str, tuple[float, float]]
     cooling_limits: Mapping[str, tuple[float, float]]
 
 
 HEATPUMP_MODELS: dict[str, HeatPumpProfile] = {
     "9300": HeatPumpProfile(
-        control_requirements={"VersatiSeries": 7, "TemUn": 0},
+        # Series 7 is the unit the controls were verified on (#47); series 1 is
+        # a Versati 5 whose columns, modes and encoding match it (#75).
+        control_requirements={"VersatiSeries": (1, 7), "TemUn": (0,)},
         heating_limits={
             "HeWatOutTemSet": (20, 60),
             "HeHomTemSet": (18, 30),
@@ -179,7 +181,8 @@ def user_control_policy(
     """
     profile = model_profile(mid)
     if profile is None or any(
-        props.get(key) != value for key, value in profile.control_requirements.items()
+        numeric(props.get(key)) not in accepted
+        for key, accepted in profile.control_requirements.items()
     ):
         return WritePolicy()
     limits = dict(profile.heating_limits)
