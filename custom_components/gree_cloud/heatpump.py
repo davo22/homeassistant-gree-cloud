@@ -51,12 +51,40 @@ HEATPUMP_COLUMNS = (
     "RmoHomTemLo",
 )
 
+# A Versati 5 (series 1) has a power flag per heating zone, and Gree+ switches
+# both together with Pow (#75). They are asked for and written on that series
+# only; the series 7 unit of #47 is switched by Pow alone.
+ZONE_POWER_COLUMNS = ("ZonePow1", "ZonePow2")
+ZONE_POWER_SERIES = (1,)
+
 
 def numeric(value: Any) -> float | None:
     """Only accept finite protocol numbers, not nulls, booleans or strings."""
     if isinstance(value, bool) or not isinstance(value, (float, int)):
         return None
     return float(value) if math.isfinite(value) else None
+
+
+def status_columns(props: Mapping[str, Any]) -> tuple[str, ...]:
+    """The columns to ask this unit for, by the series it reported."""
+    if numeric(props.get("VersatiSeries")) in ZONE_POWER_SERIES:
+        return (*HEATPUMP_COLUMNS, *ZONE_POWER_COLUMNS)
+    return HEATPUMP_COLUMNS
+
+
+def power_keys(props: Mapping[str, Any]) -> list[str]:
+    """The keys one power command writes.
+
+    The zone flags go along only while they mirror Pow, which is how the unit
+    reports them without zone control. Zones the user switched separately are
+    left alone.
+    """
+    power = props.get("Pow")
+    if numeric(props.get("VersatiSeries")) in ZONE_POWER_SERIES and all(
+        numeric(props.get(key)) == power for key in ZONE_POWER_COLUMNS
+    ):
+        return ["Pow", *ZONE_POWER_COLUMNS]
+    return ["Pow"]
 
 
 def setpoint(props: Mapping[str, Any], key: str) -> float | None:
@@ -234,7 +262,8 @@ def prepare_command(
     if number is None or not number.is_integer():
         raise ValueError("Command requires an integer")
     if key == "Pow" and props.get(key) in (0, 1) and number in (0, 1):
-        return {"t": "cmd", "opt": [key], "p": [int(number)]}
+        keys = power_keys(props)
+        return {"t": "cmd", "opt": keys, "p": [int(number)] * len(keys)}
     if key == "Mod" and number in policy.modes and number in MODE_NAMES:
         return {"t": "cmd", "opt": [key], "p": [int(number)]}
     # FastHtWter is deliberately excluded until its semantics is validated.
