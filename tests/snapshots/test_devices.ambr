@@ -1286,6 +1286,19 @@
         'translation_key': 'versati_mode',
         'unique_id': 'aa0000000005_versati_mode_control',
       }),
+      'sensor.heat_pump_cop': dict({
+        'attributes': dict({
+          'friendly_name': 'Heat Pump COP',
+          'state_class': 'measurement',
+        }),
+        'category': None,
+        'device': 'Heat Pump',
+        'disabled_by': None,
+        'name': 'COP',
+        'state': '0.0',
+        'translation_key': 'realtime_cop',
+        'unique_id': 'aa0000000005_versati_realtime_cop',
+      }),
       'sensor.heat_pump_dhw_target': dict({
         'attributes': dict({
           'device_class': 'temperature',

@@ -78,6 +78,9 @@
       },
       "tank_coil_temperature": {
         "name": "Tank coil temperature"
+      },
+      "realtime_cop": {
+        "name": "COP"
       }
     },
     "switch": {

@@ -78,6 +78,9 @@
       },
       "room_temperature": {
         "name": "Temperatura pokoju"
+      },
+      "realtime_cop": {
+        "name": "COP"
       }
     },
     "switch": {
