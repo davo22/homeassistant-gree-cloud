@@ -639,6 +639,13 @@ class CloudDeviceDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 raise UpdateFailed(
                     f"Cloud device {self.name} is unavailable, timeout"
                 ) from error
+            if not self.device.has_valid_state and not is_heatpump_device(self):
+                # Never heard from since the start: there is no last state to
+                # keep, only the library's defaults, which would show as "off".
+                # (A heat pump has no entities before its first state.)
+                raise UpdateFailed(
+                    f"Cloud device {self.name} has not answered yet"
+                ) from error
             # Return last known state if within error threshold
             return copy.deepcopy(self.device.raw_properties)
 
@@ -688,8 +695,15 @@ class CloudDeviceDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                     "MQTT disconnected while pushing state to %s — triggering reconnect",
                     self.name,
                 )
+                # Reconnecting reads every unit again, which would replace
+                # what is about to be sent by what the unit still holds.
+                pending = {
+                    name: self.device.raw_properties.get(name)
+                    for name in self.device._dirty
+                }
                 reconnected = await _try_reconnect(self.hass, self.config_entry)
                 if reconnected:
+                    self.device.raw_properties.update(pending)
                     try:
                         return await self.device.push_state_update()
                     except Exception as retry_error:
