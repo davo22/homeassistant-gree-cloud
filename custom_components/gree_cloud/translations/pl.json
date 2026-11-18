@@ -164,10 +164,32 @@
         "name": "Pompa ciepła basenowa"
       },
       "versati_heating": {
-        "name": "Ogrzewanie wodne"
+        "name": "Ogrzewanie wodne",
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "cool": "Chłodzenie",
+              "cool_hot_water": "Chłodzenie + CWU",
+              "heat": "Grzanie",
+              "heat_hot_water": "Grzanie + CWU",
+              "hot_water": "CWU"
+            }
+          }
+        }
       },
       "versati_room_heating": {
-        "name": "Termostat pokojowy"
+        "name": "Termostat pokojowy",
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "cool": "Chłodzenie",
+              "cool_hot_water": "Chłodzenie + CWU",
+              "heat": "Grzanie",
+              "heat_hot_water": "Grzanie + CWU",
+              "hot_water": "CWU"
+            }
+          }
+        }
       }
     },
     "select": {

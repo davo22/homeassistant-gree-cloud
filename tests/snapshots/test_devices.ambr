@@ -805,8 +805,15 @@
           'min_temp': 20,
           'pac_mode': 'heat_hot_water',
           'power': 1,
+          'preset_mode': 'heat_hot_water',
+          'preset_modes': list([
+            'heat',
+            'hot_water',
+            'heat_hot_water',
+          ]),
           'raw_mode': 4,
           'supported_features': list([
+            'PRESET_MODE',
             'TARGET_TEMPERATURE',
             'TURN_OFF',
             'TURN_ON',
@@ -1144,8 +1151,15 @@
           'min_temp': 20,
           'pac_mode': 'heat',
           'power': 0,
+          'preset_mode': 'heat',
+          'preset_modes': list([
+            'heat',
+            'hot_water',
+            'heat_hot_water',
+          ]),
           'raw_mode': 1,
           'supported_features': list([
+            'PRESET_MODE',
             'TARGET_TEMPERATURE',
             'TURN_OFF',
             'TURN_ON',
@@ -1175,8 +1189,15 @@
           'min_temp': 18,
           'pac_mode': 'heat',
           'power': 0,
+          'preset_mode': 'heat',
+          'preset_modes': list([
+            'heat',
+            'hot_water',
+            'heat_hot_water',
+          ]),
           'raw_mode': 1,
           'supported_features': list([
+            'PRESET_MODE',
             'TARGET_TEMPERATURE',
             'TURN_OFF',
             'TURN_ON',
