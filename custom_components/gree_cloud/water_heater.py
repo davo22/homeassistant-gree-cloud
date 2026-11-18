@@ -1,4 +1,4 @@
-"""Support for Gree Cloud Hot Water Heat Pump (HWHP) devices."""
+"""Hot water: Gree Cloud Hot Water Heat Pumps (HWHP) and the tank of a Versati."""
 
 from __future__ import annotations
 
@@ -14,6 +14,7 @@ from homeassistant.components.water_heater import (
 )
 from homeassistant.const import ATTR_TEMPERATURE, PRECISION_WHOLE, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -34,8 +35,14 @@ from .const import (
     HWHP_WMOD_BOOST,
     HWHP_WMOD_HEAT_PUMP,
 )
-from .coordinator import CloudDeviceDataUpdateCoordinator, GreeCloudConfigEntry, is_hwhp_device
+from .coordinator import (
+    CloudDeviceDataUpdateCoordinator,
+    GreeCloudConfigEntry,
+    is_heatpump_device,
+    is_hwhp_device,
+)
 from .entity import GreeCloudEntity
+from .heatpump import setpoint, temperature
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -53,11 +60,30 @@ async def async_setup_entry(
     entry: GreeCloudConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up Gree Cloud HWHP water heater devices from a config entry."""
+    """Set up Gree Cloud water heaters from a config entry."""
+    hot_water_tanks: set[str] = set()
 
     @callback
     def init_device(coordinator: CloudDeviceDataUpdateCoordinator) -> None:
-        """Register the device if it is an HWHP."""
+        """Register the device if it is an HWHP or a heat pump with a tank."""
+        if is_heatpump_device(coordinator):
+            if coordinator.device_kind != "heatpump":
+                return
+
+            @callback
+            def add_hot_water() -> None:
+                """Once the unit reports a tank sensor and a hot water target."""
+                mac = coordinator.device.device_info.mac
+                if mac in hot_water_tanks or not has_hot_water_tank(
+                    coordinator.data or {}, coordinator.device.write_policy
+                ):
+                    return
+                hot_water_tanks.add(mac)
+                async_add_entities([GreeHeatPumpWaterHeater(coordinator)])
+
+            add_hot_water()
+            entry.async_on_unload(coordinator.async_add_listener(add_hot_water))
+            return
         if not is_hwhp_device(coordinator):
             return
         _LOGGER.debug(
@@ -72,6 +98,83 @@ async def async_setup_entry(
     entry.async_on_unload(
         async_dispatcher_connect(hass, DISPATCH_DEVICE_DISCOVERED, init_device)
     )
+
+
+def has_hot_water_tank(props, policy) -> bool:
+    """Whether the unit has a tank sensor and a hot water target that may be set."""
+    return (
+        temperature(props, "dhw_temperature") is not None
+        and "WatBoxTemSet" in policy.approved
+        and "WatBoxTemSet" in policy.limits
+    )
+
+
+class GreeHeatPumpWaterHeater(GreeCloudEntity, WaterHeaterEntity):
+    """The hot water tank of a Versati: its temperature and its target (#75).
+
+    Whether hot water is made at all is part of the unit's mode, which the
+    mode select sets; here it is only shown.
+    """
+
+    _attr_translation_key = "versati_dhw"
+    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_target_temperature_step = 1
+    _attr_supported_features = WaterHeaterEntityFeature.TARGET_TEMPERATURE
+
+    _setpoint_key = "WatBoxTemSet"
+
+    def __init__(self, coordinator: CloudDeviceDataUpdateCoordinator) -> None:
+        super().__init__(coordinator)
+        self._attr_unique_id = (
+            f"{coordinator.device.device_info.mac}_{self._attr_translation_key}"
+        )
+
+    @property
+    def supported_features(self) -> WaterHeaterEntityFeature:
+        policy = self.coordinator.device.write_policy
+        if self._setpoint_key in policy.approved and self._setpoint_key in policy.limits:
+            return WaterHeaterEntityFeature.TARGET_TEMPERATURE
+        return WaterHeaterEntityFeature(0)
+
+    @property
+    def _limits(self) -> tuple[float, float]:
+        return self.coordinator.device.write_policy.limits.get(self._setpoint_key, (40, 60))
+
+    @property
+    def min_temp(self) -> float:
+        return self._limits[0]
+
+    @property
+    def max_temp(self) -> float:
+        return self._limits[1]
+
+    @property
+    def current_temperature(self) -> float | None:
+        return temperature(self.coordinator.data or {}, "dhw_temperature")
+
+    @property
+    def target_temperature(self) -> float | None:
+        return setpoint(self.coordinator.data or {}, self._setpoint_key)
+
+    @property
+    def current_operation(self) -> str | None:
+        props = self.coordinator.data or {}
+        if props.get("Pow") == 0:
+            return STATE_OFF
+        if props.get("Pow") != 1:
+            return None
+        mode = props.get("Mod")
+        if mode in (2, 3, 4):
+            return STATE_HEAT_PUMP
+        # Heating or cooling only: the unit runs, the hot water does not.
+        return STATE_OFF if mode in (1, 5) else None
+
+    async def async_set_temperature(self, **kwargs: Any) -> None:
+        if ATTR_TEMPERATURE not in kwargs:
+            raise HomeAssistantError(f"Missing parameter {ATTR_TEMPERATURE}")
+        await self.coordinator.async_heatpump_command(
+            self._setpoint_key, kwargs[ATTR_TEMPERATURE]
+        )
 
 
 class GreeCloudWaterHeaterEntity(GreeCloudEntity, WaterHeaterEntity):
