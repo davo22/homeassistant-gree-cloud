@@ -16,9 +16,4 @@ jobs:
           cache: pip
           cache-dependency-path: requirements_test.txt
       - run: pip install -r requirements_test.txt
-      - run: |
-          ls -la tests tests/snapshots
-          head -c 300 tests/snapshots/test_devices.ambr
-          git status --short | head
-          python -m pytest -q tests/test_devices.py -x -vv -k split_ac 2>&1 | grep -v '^E  ' | tail -60
-          python -m pytest -q
+      - run: python -m pytest -q

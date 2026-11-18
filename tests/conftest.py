@@ -16,6 +16,8 @@ from pytest_homeassistant_custom_component.common import (
     MockConfigEntry,
     async_fire_time_changed,
 )
+from pytest_homeassistant_custom_component.syrupy import HomeAssistantSnapshotExtension
+from syrupy.assertion import SnapshotAssertion
 
 from custom_components.gree_cloud.const import CONF_SERVER, DOMAIN, UPDATE_INTERVAL
 from custom_components.gree_cloud.coordinator import HWHPAwareCloudDevice
@@ -128,3 +130,14 @@ async def settle(hass: HomeAssistant, cloud: FakeCloud) -> None:
     await hass.async_block_till_done(wait_background_tasks=True)
     await cloud.settle()
     await hass.async_block_till_done(wait_background_tasks=True)
+
+
+@pytest.fixture
+def snapshot(snapshot: SnapshotAssertion) -> SnapshotAssertion:
+    """Snapshots in Home Assistant's format, in ``tests/snapshots``.
+
+    The harness has the same fixture, but whether it or syrupy's own wins
+    depends on the order the plugins happen to be loaded in.
+    """
+    return snapshot.use_extension(HomeAssistantSnapshotExtension)
+
