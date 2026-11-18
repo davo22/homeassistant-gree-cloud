@@ -359,6 +359,8 @@ class GreeCloudClimateEntity(GreeCloudEntity, ClimateEntity):
         self._external_sensor: str | None = coordinator.config_entry.options.get(
             CONF_EXTERNAL_TEMPERATURE_SENSORS, {}
         ).get(coordinator.device.device_info.mac)
+        # The unit may be set to Fahrenheit already; do not wait for a change.
+        self._apply_temperature_unit()
 
     async def async_added_to_hass(self) -> None:
         """Follow the external temperature sensor, if one is configured."""
@@ -368,9 +370,18 @@ class GreeCloudClimateEntity(GreeCloudEntity, ClimateEntity):
                 async_track_state_change_event(
                     self.hass,
                     [self._external_sensor],
-                    lambda _event: self.async_write_ha_state(),
+                    self._external_sensor_changed,
                 )
             )
+
+    @callback
+    def _external_sensor_changed(self, _event: Any) -> None:
+        """Show the new reading right away.
+
+        Must be a callback: Home Assistant runs a plain function in a worker
+        thread, where writing the state is refused.
+        """
+        self.async_write_ha_state()
 
     def _external_temperature(self) -> float | None:
         """Return the external sensor's reading in Celsius, or None if unusable."""
@@ -603,6 +614,11 @@ class GreeCloudClimateEntity(GreeCloudEntity, ClimateEntity):
 
     def _handle_coordinator_update(self) -> None:
         """Update the state of the entity."""
+        self._apply_temperature_unit()
+        super()._handle_coordinator_update()
+
+    def _apply_temperature_unit(self) -> None:
+        """Show temperatures in the unit the device is set to."""
         units = self.coordinator.device.temperature_units
         if (
             units == TemperatureUnits.C
@@ -620,5 +636,3 @@ class GreeCloudClimateEntity(GreeCloudEntity, ClimateEntity):
             self._attr_temperature_unit = UnitOfTemperature.FAHRENHEIT
             self._attr_min_temp = TEMP_MIN_F
             self._attr_max_temp = TEMP_MAX_F
-
-        super()._handle_coordinator_update()
