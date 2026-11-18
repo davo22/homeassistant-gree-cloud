@@ -216,6 +216,19 @@ def realtime_cop(props: Mapping[str, Any]) -> float | None:
     return value / 100
 
 
+def energy_today(props: Mapping[str, Any]) -> float | None:
+    """Electricity used since midnight in kWh, sent in tenths.
+
+    On a Versati 5 it equals today's entry of the unit's list of days, and that
+    list added up to 159 two days before Gree+ showed 16.2 kWh for the month
+    (#75). It is not asked for: only units that report it by themselves have it.
+    """
+    value = numeric(props.get("EleToday"))
+    if value is None or not value.is_integer() or not 0 <= value <= 10000:
+        return None
+    return value / 10
+
+
 @dataclass(frozen=True)
 class WritePolicy:
     """Allowlisted user controls with limits; never an arbitrary protocol writer."""
