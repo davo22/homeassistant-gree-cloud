@@ -58,6 +58,7 @@ from .heatpump import (
     SETPOINTS,
     TEMPERATURE_PAIRS,
     cooling_confirmed,
+    realtime_cop,
     setpoint,
     temperature,
 )
@@ -264,6 +265,14 @@ HEATPUMP_SENSORS: tuple[GreeCloudSensorEntityDescription, ...] = (
     *(
         _heatpump_sensor_description(key, key, measurement=True)
         for key in TEMPERATURE_PAIRS
+    ),
+    GreeCloudSensorEntityDescription(
+        key="versati_realtime_cop",
+        translation_key="realtime_cop",
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=2,
+        value_fn=lambda device: realtime_cop(device.raw_properties),
+        exists_fn=lambda device: realtime_cop(device.raw_properties) is not None,
     ),
 )
 

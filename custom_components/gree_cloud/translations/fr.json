@@ -78,6 +78,9 @@
       },
       "tank_coil_temperature": {
         "name": "Température échangeur du ballon"
+      },
+      "realtime_cop": {
+        "name": "COP"
       }
     },
     "switch": {

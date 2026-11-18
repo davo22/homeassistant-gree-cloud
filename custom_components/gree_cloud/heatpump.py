@@ -204,6 +204,18 @@ def temperature(props: Mapping[str, Any], key: str) -> float | None:
     return result if -50 <= result <= 120 else None
 
 
+def realtime_cop(props: Mapping[str, Any]) -> float | None:
+    """The COP the unit reports while it runs, sent in hundredths.
+
+    A Versati 5 heating water of 26 C reported 395 to 416 (#75), and 0 while
+    idle. It is not asked for: only units that report it by themselves have it.
+    """
+    value = numeric(props.get("RealtimeCOP"))
+    if value is None or not value.is_integer() or not 0 <= value <= 2000:
+        return None
+    return value / 100
+
+
 @dataclass(frozen=True)
 class WritePolicy:
     """Allowlisted user controls with limits; never an arbitrary protocol writer."""

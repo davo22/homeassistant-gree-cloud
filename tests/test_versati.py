@@ -455,6 +455,32 @@ async def test_series1_hot_water_tank(hass: HomeAssistant, cloud, series1) -> No
     assert (tank.attributes["current_temperature"], tank.attributes["temperature"]) == (48.2, 55)
 
 
+async def test_series1_cop(hass: HomeAssistant, cloud, series1) -> None:
+    """The unit reports it in hundredths: 410 while heating was a COP of 4.1 (#75)."""
+    unit = await series1(**ZONES_ON, RealtimeCOP=410)
+    sensor = "sensor.heat_pump_cop"
+    assert er.async_get(hass).async_get(sensor).unique_id == "aa0000000005_versati_realtime_cop"
+    assert hass.states.get(sensor).state == "4.1"
+    assert "unit_of_measurement" not in hass.states.get(sensor).attributes
+
+    await cloud.push(unit, RealtimeCOP=395)
+    await settle(hass, cloud)
+    assert hass.states.get(sensor).state == "3.95"
+
+    # Idle, as Gree+ shows it.
+    await cloud.push(unit, **ZONES_OFF, RealtimeCOP=0)
+    await settle(hass, cloud)
+    assert hass.states.get(sensor).state == "0.0"
+
+
+async def test_no_cop_sensor_on_a_unit_that_does_not_report_it(
+    hass: HomeAssistant, cloud, series7: FakeUnit
+) -> None:
+    """It is not asked for either: the status request stays as it was."""
+    assert hass.states.get("sensor.versati_cop") is None
+    assert not any("cop" in entity for entity in hass.states.async_entity_ids("sensor"))
+
+
 async def test_series1_heating_from_hot_water_only(hass: HomeAssistant, cloud, series1) -> None:
     unit = await series1(Mod=2)
     await call(hass, "climate", "set_hvac_mode", ROOM1, hvac_mode="heat")
