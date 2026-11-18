@@ -244,6 +244,11 @@
       "cooling_room_target": {
         "name": "Cooling room target"
       }
+    },
+    "water_heater": {
+      "versati_dhw": {
+        "name": "Hot water"
+      }
     }
   },
   "options": {

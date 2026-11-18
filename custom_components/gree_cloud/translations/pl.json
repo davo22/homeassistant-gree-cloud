@@ -255,6 +255,11 @@
       "heating_water_target": {
         "name": "Zadana temperatura wody (grzanie)"
       }
+    },
+    "water_heater": {
+      "versati_dhw": {
+        "name": "Ciepła woda"
+      }
     }
   },
   "options": {

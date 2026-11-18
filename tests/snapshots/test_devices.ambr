@@ -1010,6 +1010,28 @@
         'translation_key': 'versati_power',
         'unique_id': 'aa0000000006_versati_power_control',
       }),
+      'water_heater.versati_hot_water': dict({
+        'attributes': dict({
+          'current_temperature': 47.5,
+          'friendly_name': 'Versati Hot water',
+          'max_temp': 60,
+          'min_temp': 40,
+          'supported_features': list([
+            'TARGET_TEMPERATURE',
+          ]),
+          'target_temp_high': None,
+          'target_temp_low': None,
+          'target_temp_step': 1,
+          'temperature': 48.0,
+        }),
+        'category': None,
+        'device': 'Versati',
+        'disabled_by': None,
+        'name': 'Hot water',
+        'state': 'heat_pump',
+        'translation_key': 'versati_dhw',
+        'unique_id': 'aa0000000006_versati_dhw',
+      }),
     }),
   })
 # ---
@@ -1357,6 +1379,28 @@
         'state': 'off',
         'translation_key': 'versati_power',
         'unique_id': 'aa0000000005_versati_power_control',
+      }),
+      'water_heater.heat_pump_hot_water': dict({
+        'attributes': dict({
+          'current_temperature': 54.8,
+          'friendly_name': 'Heat Pump Hot water',
+          'max_temp': 60,
+          'min_temp': 40,
+          'supported_features': list([
+            'TARGET_TEMPERATURE',
+          ]),
+          'target_temp_high': None,
+          'target_temp_low': None,
+          'target_temp_step': 1,
+          'temperature': 50.0,
+        }),
+        'category': None,
+        'device': 'Heat Pump',
+        'disabled_by': None,
+        'name': 'Hot water',
+        'state': 'off',
+        'translation_key': 'versati_dhw',
+        'unique_id': 'aa0000000005_versati_dhw',
       }),
     }),
   })

@@ -244,6 +244,11 @@
       "cooling_room_target": {
         "name": "Consigne ambiante refroidissement"
       }
+    },
+    "water_heater": {
+      "versati_dhw": {
+        "name": "Eau chaude sanitaire"
+      }
     }
   },
   "options": {

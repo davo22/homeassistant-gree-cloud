@@ -26,12 +26,14 @@ from .fake_cloud import FakeUnit
 WATER7 = "climate.versati_hydraulic_heating"
 MODE7 = "select.versati_heat_pump_mode"
 POWER7 = "switch.versati_global_heat_pump_power"
+TANK7 = "water_heater.versati_hot_water"
 
 # Series 1
 WATER1 = "climate.heat_pump_hydraulic_heating"
 ROOM1 = "climate.heat_pump_room_thermostat"
 MODE1 = "select.heat_pump_heat_pump_mode"
 POWER1 = "switch.heat_pump_global_heat_pump_power"
+TANK1 = "water_heater.heat_pump_hot_water"
 
 ZONES_ON = {"Pow": 1, "ZonePow1": 1, "ZonePow2": 1}
 ZONES_OFF = {"Pow": 0, "ZonePow1": 0, "ZonePow2": 0}
@@ -74,6 +76,7 @@ def series1(hass: HomeAssistant, cloud, setup_integration):
         ("number", "set_value", "number.versati_heating_water_target", {"value": 42}, [{"HeWatOutTemSet": 42}]),
         ("number", "set_value", "number.versati_heating_room_target", {"value": 22}, [{"HeHomTemSet": 22}]),
         ("number", "set_value", "number.versati_dhw_target", {"value": 50}, [{"WatBoxTemSet": 50}]),
+        ("water_heater", "set_temperature", TANK7, {"temperature": 52}, [{"WatBoxTemSet": 52}]),
         ("select", "select_option", MODE7, {"option": "hot_water"}, [{"Mod": 2}]),
         ("select", "select_option", MODE7, {"option": "heat"}, [{"Mod": 1}]),
         ("switch", "turn_off", POWER7, {}, [{"Pow": 0}]),
@@ -170,6 +173,8 @@ async def test_mode_and_setpoint_in_one_call_are_refused(
         ("number", "set_value", "number.versati_dhw_target", {"value": 61}),
         ("number", "set_value", "number.versati_dhw_target", {"value": 39}),
         ("number", "set_value", "number.versati_heating_room_target", {"value": 31}),
+        ("water_heater", "set_temperature", TANK7, {"temperature": 61}),
+        ("water_heater", "set_temperature", TANK7, {"temperature": 39}),
     ],
 )
 async def test_a_setpoint_outside_the_limits_is_never_sent(
@@ -236,13 +241,64 @@ async def test_an_unverified_unit_is_read_only(
     assert shown.state == "heat"
     assert shown.attributes["writes_enabled"] is False
     assert shown.attributes["supported_features"] == 0
-    for domain in ("number", "select", "switch"):
+    for domain in ("number", "select", "switch", "water_heater"):
         assert hass.states.async_entity_ids(domain) == []
 
     unit.forget()
     with pytest.raises(HomeAssistantError):
         await call(hass, "climate", "set_hvac_mode", WATER7, hvac_mode="off")
     assert unit.commands == []
+
+
+async def test_hot_water_tank(hass: HomeAssistant, cloud, series7: FakeUnit) -> None:
+    """The tank by its own temperature and target, apart from the heating water."""
+    assert er.async_get(hass).async_get(TANK7).unique_id == "aa0000000006_versati_dhw"
+
+    tank = hass.states.get(TANK7)
+    assert (tank.state, tank.attributes["current_temperature"], tank.attributes["temperature"]) == ("heat_pump", 47.5, 48)
+    assert (tank.attributes["min_temp"], tank.attributes["max_temp"]) == (40, 60)
+
+    await call(hass, "water_heater", "set_temperature", TANK7, temperature=52)
+    assert hass.states.get(TANK7).attributes["temperature"] == 52
+    assert hass.states.get("number.versati_dhw_target").state == "52.0"
+    # The heating water is another thermostat with another target.
+    assert hass.states.get(WATER7).attributes["temperature"] == 40
+
+
+@pytest.mark.parametrize(
+    ("state", "shown"),
+    [
+        ({"Pow": 1, "Mod": 2}, "heat_pump"),
+        ({"Pow": 1, "Mod": 3}, "heat_pump"),
+        ({"Pow": 1, "Mod": 4}, "heat_pump"),
+        # Running, but for the heating or the cooling only.
+        ({"Pow": 1, "Mod": 1}, "off"),
+        ({"Pow": 1, "Mod": 5}, "off"),
+        ({"Pow": 0, "Mod": 4}, "off"),
+    ],
+)
+async def test_hot_water_is_on_in_the_modes_that_include_it(
+    hass: HomeAssistant, cloud, setup_integration, state: dict[str, Any], shown: str
+) -> None:
+    cloud.add("versati_series7", state=state)
+    await setup_integration()
+    assert hass.states.get(TANK7).state == shown
+
+
+async def test_no_hot_water_entity_without_a_tank_sensor(
+    hass: HomeAssistant, cloud, setup_integration, poll
+) -> None:
+    """It appears, once, when the sensor starts reporting."""
+    unit = cloud.add("versati_series7", state={"WatBoxTemHi": 70, "WatBoxTemLo": 0})
+    await setup_integration()
+    assert hass.states.get(WATER7) is not None
+    assert hass.states.get(TANK7) is None
+
+    unit.state.update(WatBoxTemHi=147, WatBoxTemLo=5)
+    await poll()
+    assert hass.states.get(TANK7).attributes["current_temperature"] == 47.5
+    await poll()
+    assert hass.states.async_entity_ids("water_heater") == [TANK7]
 
 
 async def test_an_unknown_model_is_not_a_heat_pump(
@@ -284,6 +340,7 @@ async def test_series1_thermostats(hass: HomeAssistant, cloud, series1) -> None:
         ("climate", "set_temperature", ROOM1, {"temperature": 22}, [{"HeHomTemSet": 22}]),
         ("climate", "set_temperature", WATER1, {"temperature": 42}, [{"HeWatOutTemSet": 42}]),
         ("number", "set_value", "number.heat_pump_dhw_target", {"value": 52}, [{"WatBoxTemSet": 52}]),
+        ("water_heater", "set_temperature", TANK1, {"temperature": 52}, [{"WatBoxTemSet": 52}]),
         ("select", "select_option", MODE1, {"option": "heat_hot_water"}, [{"Mod": 4}]),
     ],
 )
@@ -336,6 +393,21 @@ async def test_series1_zones_switched_separately_are_left_alone(
     await call(hass, "switch", "turn_off", POWER1)
     assert unit.commands == [{"Pow": 0}]
     assert unit.state["ZonePow1"] == 1
+
+
+async def test_series1_hot_water_tank(hass: HomeAssistant, cloud, series1) -> None:
+    """Tank temperature and hot water target, as Gree+ shows them (#75)."""
+    unit = await series1(Pow=1, ZonePow1=1, ZonePow2=1, Mod=4)
+    assert er.async_get(hass).async_get(TANK1).unique_id == "aa0000000005_versati_dhw"
+
+    tank = hass.states.get(TANK1)
+    assert (tank.state, tank.attributes["current_temperature"], tank.attributes["temperature"]) == ("heat_pump", 54.8, 50)
+    assert (tank.attributes["min_temp"], tank.attributes["max_temp"]) == (40, 60)
+
+    await cloud.push(unit, WatBoxTemHi=148, WatBoxTemLo=2, WatBoxTemSet=55)
+    await settle(hass, cloud)
+    tank = hass.states.get(TANK1)
+    assert (tank.attributes["current_temperature"], tank.attributes["temperature"]) == (48.2, 55)
 
 
 async def test_series1_heating_from_hot_water_only(hass: HomeAssistant, cloud, series1) -> None:
