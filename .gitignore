@@ -43,3 +43,8 @@ Thumbs.db
 
 # venv
 .venv
+
+# Tests
+.coverage
+.pytest_cache/
+.ruff_cache/

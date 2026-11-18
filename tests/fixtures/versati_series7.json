@@ -1,0 +1,37 @@
+{
+  "description": "Gree Versati air-to-water heat pump (model 9300, VersatiSeries 7), the unit the controls were verified on in #47: running in heating + hot water. It answers status requests and has no zone power flags.",
+  "record": {
+    "name": "Versati",
+    "mac": "aa0000000006",
+    "key": "VersatiSvnKey006",
+    "model": null,
+    "version": "V3.5.M",
+    "mid": "9300",
+    "parent_mac": null
+  },
+  "hid": "362001068811+U-WB06DRV1.26.bin",
+  "state": {
+    "Pow": 1,
+    "Mod": 4,
+    "TemUn": 0,
+    "VersatiSeries": 7,
+    "HeWatOutTemSet": 40,
+    "HeHomTemSet": 21,
+    "WatBoxTemSet": 48,
+    "CoWatOutTemSet": 18,
+    "CoHomTemSet": 24,
+    "AllInWatTemHi": 131,
+    "AllInWatTemLo": 4,
+    "AllOutWatTemHi": 136,
+    "AllOutWatTemLo": 2,
+    "HepOutWatTemHi": 137,
+    "HepOutWatTemLo": 0,
+    "WatBoxTemHi": 147,
+    "WatBoxTemLo": 5,
+    "RmoHomTemHi": 100,
+    "RmoHomTemLo": 0,
+    "AllErr": 0,
+    "Quiet": 0,
+    "FastHtWter": 0
+  }
+}

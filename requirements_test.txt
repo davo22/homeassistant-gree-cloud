@@ -1,0 +1,4 @@
+# Everything the test suite needs. The Home Assistant version comes with the
+# harness; bump both lines deliberately, in a pull request of their own.
+pytest-homeassistant-custom-component==0.13.375
+greeclimate-davo22==2.7.6
