@@ -84,6 +84,9 @@
       },
       "energy_today": {
         "name": "Énergie aujourd'hui"
+      },
+      "weather_dependent_target": {
+        "name": "Consigne selon la météo"
       }
     },
     "switch": {

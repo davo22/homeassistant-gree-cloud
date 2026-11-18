@@ -493,12 +493,30 @@ async def test_series1_energy_today(hass: HomeAssistant, cloud, series1) -> None
     assert hass.states.get(sensor).state == "0.0"
 
 
-async def test_no_cop_or_energy_sensor_on_a_unit_that_does_not_report_them(
+async def test_series1_weather_dependent_target(hass: HomeAssistant, cloud, series1) -> None:
+    """The unit reports 40 as WDTemSet (#75); shown, never written."""
+    unit = await series1()
+    sensor = "sensor.heat_pump_weather_dependent_target"
+    assert er.async_get(hass).async_get(sensor).unique_id == "aa0000000005_versati_WDTemSet"
+    shown = hass.states.get(sensor)
+    assert float(shown.state) == 40
+    assert shown.attributes["unit_of_measurement"] == "°C"
+    assert shown.attributes["device_class"] == "temperature"
+
+    await cloud.push(unit, WDTemSet=35)
+    await settle(hass, cloud)
+    assert float(hass.states.get(sensor).state) == 35
+    assert unit.commands == []
+    assert not any("weather" in entity for entity in hass.states.async_entity_ids() if entity != sensor)
+
+
+async def test_no_cop_energy_or_weather_sensor_on_a_unit_that_does_not_report_them(
     hass: HomeAssistant, cloud, series7: FakeUnit
 ) -> None:
     """They are not asked for either: the status request stays as it was."""
     sensors = hass.states.async_entity_ids("sensor")
-    assert not any("cop" in entity or "energy" in entity for entity in sensors)
+    assert not any("cop" in entity or "energy" in entity or "weather" in entity for entity in sensors)
+    assert not any("WDTemSet" in request for request in series7.status_requests)
 
 
 async def test_series1_heating_from_hot_water_only(hass: HomeAssistant, cloud, series1) -> None:

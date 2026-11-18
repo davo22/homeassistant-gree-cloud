@@ -267,6 +267,9 @@ HEATPUMP_SENSORS: tuple[GreeCloudSensorEntityDescription, ...] = (
         _heatpump_sensor_description(key, key, measurement=True)
         for key in TEMPERATURE_PAIRS
     ),
+    # A Versati 5 reports it by itself (#75). It is not asked for, so the status
+    # request stays as it was, and it is read only.
+    _heatpump_sensor_description("WDTemSet", "weather_dependent_target"),
     GreeCloudSensorEntityDescription(
         key="versati_realtime_cop",
         translation_key="realtime_cop",

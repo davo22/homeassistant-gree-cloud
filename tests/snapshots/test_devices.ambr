@@ -1416,6 +1416,20 @@
         'translation_key': 'water_outlet_temperature',
         'unique_id': 'aa0000000005_versati_water_outlet_temperature',
       }),
+      'sensor.heat_pump_weather_dependent_target': dict({
+        'attributes': dict({
+          'device_class': 'temperature',
+          'friendly_name': 'Heat Pump Weather-dependent target',
+          'unit_of_measurement': '°C',
+        }),
+        'category': None,
+        'device': 'Heat Pump',
+        'disabled_by': None,
+        'name': 'Weather-dependent target',
+        'state': '40.0',
+        'translation_key': 'weather_dependent_target',
+        'unique_id': 'aa0000000005_versati_WDTemSet',
+      }),
       'switch.heat_pump_global_heat_pump_power': dict({
         'attributes': dict({
           'device_class': 'switch',
