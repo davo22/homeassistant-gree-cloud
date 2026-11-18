@@ -1328,6 +1328,21 @@
         'translation_key': 'dhw_temperature',
         'unique_id': 'aa0000000005_versati_dhw_temperature',
       }),
+      'sensor.heat_pump_energy_today': dict({
+        'attributes': dict({
+          'device_class': 'energy',
+          'friendly_name': 'Heat Pump Energy today',
+          'state_class': 'total_increasing',
+          'unit_of_measurement': 'kWh',
+        }),
+        'category': None,
+        'device': 'Heat Pump',
+        'disabled_by': None,
+        'name': 'Energy today',
+        'state': '0.1',
+        'translation_key': 'energy_today',
+        'unique_id': 'aa0000000005_versati_energy_today',
+      }),
       'sensor.heat_pump_heating_room_target': dict({
         'attributes': dict({
           'device_class': 'temperature',

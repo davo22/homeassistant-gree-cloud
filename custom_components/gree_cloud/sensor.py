@@ -58,6 +58,7 @@ from .heatpump import (
     SETPOINTS,
     TEMPERATURE_PAIRS,
     cooling_confirmed,
+    energy_today,
     realtime_cop,
     setpoint,
     temperature,
@@ -273,6 +274,17 @@ HEATPUMP_SENSORS: tuple[GreeCloudSensorEntityDescription, ...] = (
         suggested_display_precision=2,
         value_fn=lambda device: realtime_cop(device.raw_properties),
         exists_fn=lambda device: realtime_cop(device.raw_properties) is not None,
+    ),
+    # Starts again from zero every day, which a total_increasing sensor allows.
+    GreeCloudSensorEntityDescription(
+        key="versati_energy_today",
+        translation_key="energy_today",
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        suggested_display_precision=1,
+        value_fn=lambda device: energy_today(device.raw_properties),
+        exists_fn=lambda device: energy_today(device.raw_properties) is not None,
     ),
 )
 
