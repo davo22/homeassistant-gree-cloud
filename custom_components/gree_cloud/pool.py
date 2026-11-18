@@ -157,7 +157,8 @@ class GreeCloudPoolClimateEntity(GreeCloudEntity, ClimateEntity):
     _attr_hvac_modes = [HVACMode.OFF, HVACMode.HEAT, HVACMode.COOL, HVACMode.AUTO]
     _attr_name = None
     _attr_translation_key = "pool"
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_temperature_unit = UnitOfTemperature.CELSIUS  # Home Assistant before 2026.11
     _attr_target_temperature_step = 0.5
     _attr_precision = PRECISION_HALVES
 
@@ -193,24 +194,28 @@ class GreeCloudPoolClimateEntity(GreeCloudEntity, ClimateEntity):
         if mode == HVACMode.HEAT:
             return HVACAction.HEATING
         # Auto: the compressor runs toward the setpoint from whichever side.
-        current, target = self.current_temperature, self.target_temperature
+        current, target = self.native_current_temperature, self.native_target_temperature
         if current is not None and target is not None and current > target:
             return HVACAction.COOLING
         return HVACAction.HEATING
 
     @property
-    def current_temperature(self) -> float | None:
+    def native_current_temperature(self) -> float | None:
         """Water inlet temperature (the pool side)."""
         return pool_temperature(self._props, POOL_PROP_IN_TEM_INT, POOL_PROP_IN_TEM_DEC)
 
     @property
-    def target_temperature(self) -> float | None:
+    def native_target_temperature(self) -> float | None:
         """Setpoint from SetTemInt + SetTemDec tenths."""
         whole = _number(self._props.get(POOL_PROP_SET_TEM_INT))
         if whole is None or whole <= 0:
             return None
         tenths = _number(self._props.get(POOL_PROP_SET_TEM_DEC)) or 0
         return round(whole + tenths / 10, 1)
+
+    # Home Assistant before 2026.11 reads the temperatures by these names
+    current_temperature = native_current_temperature
+    target_temperature = native_target_temperature
 
     def _limits(self) -> tuple[float, float]:
         """Setpoint limits for the current mode, as reported by the unit."""

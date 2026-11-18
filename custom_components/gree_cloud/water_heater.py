@@ -117,7 +117,8 @@ class GreeHeatPumpWaterHeater(GreeCloudEntity, WaterHeaterEntity):
     """
 
     _attr_translation_key = "versati_dhw"
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_temperature_unit = UnitOfTemperature.CELSIUS  # Home Assistant before 2026.11
     _attr_target_temperature_step = 1
     _attr_supported_features = WaterHeaterEntityFeature.TARGET_TEMPERATURE
 
@@ -149,12 +150,16 @@ class GreeHeatPumpWaterHeater(GreeCloudEntity, WaterHeaterEntity):
         return self._limits[1]
 
     @property
-    def current_temperature(self) -> float | None:
+    def native_current_temperature(self) -> float | None:
         return temperature(self.coordinator.data or {}, "dhw_temperature")
 
     @property
-    def target_temperature(self) -> float | None:
+    def native_target_temperature(self) -> float | None:
         return setpoint(self.coordinator.data or {}, self._setpoint_key)
+
+    # Home Assistant before 2026.11 reads the temperatures by these names
+    current_temperature = native_current_temperature
+    target_temperature = native_target_temperature
 
     @property
     def current_operation(self) -> str | None:
@@ -181,7 +186,8 @@ class GreeCloudWaterHeaterEntity(GreeCloudEntity, WaterHeaterEntity):
     """Representation of a Gree Cloud Hot Water Heat Pump."""
 
     _attr_precision = PRECISION_WHOLE
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_temperature_unit = UnitOfTemperature.CELSIUS  # Home Assistant before 2026.11
     _attr_min_temp = HWHP_TEMP_MIN
     _attr_max_temp = HWHP_TEMP_MAX
     _attr_target_temperature_step = 1
@@ -223,7 +229,7 @@ class GreeCloudWaterHeaterEntity(GreeCloudEntity, WaterHeaterEntity):
         return attrs
 
     @property
-    def current_temperature(self) -> float | None:
+    def native_current_temperature(self) -> float | None:
         """Return the current water temperature reported by the device."""
         raw = self.coordinator.device.raw_properties.get(HWHP_PROP_WATER_TEMP)
         if raw is None:
@@ -231,7 +237,7 @@ class GreeCloudWaterHeaterEntity(GreeCloudEntity, WaterHeaterEntity):
         return raw - HWHP_TEMP_ENCODING_OFFSET
 
     @property
-    def target_temperature(self) -> float | None:
+    def native_target_temperature(self) -> float | None:
         """Return the target water temperature."""
         props = self.coordinator.device.raw_properties
         int_part = props.get(HWHP_PROP_SET_TEM_INT)
@@ -239,6 +245,10 @@ class GreeCloudWaterHeaterEntity(GreeCloudEntity, WaterHeaterEntity):
             return None
         dec_part = props.get(HWHP_PROP_SET_TEM_DEC, 0)
         return int_part + dec_part / 10
+
+    # Home Assistant before 2026.11 reads the temperatures by these names
+    current_temperature = native_current_temperature
+    target_temperature = native_target_temperature
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set a new target water temperature."""

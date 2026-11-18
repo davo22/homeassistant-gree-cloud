@@ -196,7 +196,8 @@ class GreeHeatPumpClimate(GreeCloudEntity, ClimateEntity):
     """Hydraulic circuit with per-device write gate, never air/air properties."""
 
     _attr_translation_key = "versati_heating"
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_temperature_unit = UnitOfTemperature.CELSIUS  # Home Assistant before 2026.11
     _attr_supported_features = ClimateEntityFeature(0)
     _attr_hvac_modes = [HVACMode.OFF, HVACMode.HEAT]
     _enable_turn_on_off_backwards_compatibility = False
@@ -280,12 +281,16 @@ class GreeHeatPumpClimate(GreeCloudEntity, ClimateEntity):
     _attr_target_temperature_step = 1
 
     @property
-    def target_temperature(self):
+    def native_target_temperature(self):
         return setpoint(self.coordinator.data or {}, self._setpoint_key)
 
     @property
-    def current_temperature(self):
+    def native_current_temperature(self):
         return temperature(self.coordinator.data or {}, self._current_key)
+
+    # Home Assistant before 2026.11 reads the temperatures by these names
+    current_temperature = native_current_temperature
+    target_temperature = native_target_temperature
 
     @property
     def extra_state_attributes(self):
@@ -369,7 +374,8 @@ class GreeCloudClimateEntity(GreeCloudEntity, ClimateEntity):
     _attr_swing_horizontal_modes = [*HORIZONTAL_SWING_MODES]
     _attr_name = None
     _attr_translation_key = "climate"
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_temperature_unit = UnitOfTemperature.CELSIUS  # Home Assistant before 2026.11
     _attr_min_temp = TEMP_MIN
     _attr_max_temp = TEMP_MAX
 
@@ -452,7 +458,7 @@ class GreeCloudClimateEntity(GreeCloudEntity, ClimateEntity):
         return TARGET_TEMPERATURE_STEP_HALF if self._supports_half_degree else TARGET_TEMPERATURE_STEP
 
     @property
-    def current_temperature(self) -> float:
+    def native_current_temperature(self) -> float:
         """Return the current temperature: the external sensor if configured
         and readable, otherwise the unit's own reading."""
         external = self._external_temperature()
@@ -461,9 +467,13 @@ class GreeCloudClimateEntity(GreeCloudEntity, ClimateEntity):
         return self.coordinator.device.current_temperature
 
     @property
-    def target_temperature(self) -> float:
+    def native_target_temperature(self) -> float:
         """Return the target temperature for the device."""
         return self.coordinator.device.target_temperature
+
+    # Home Assistant before 2026.11 reads the temperatures by these names
+    current_temperature = native_current_temperature
+    target_temperature = native_target_temperature
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
@@ -644,17 +654,19 @@ class GreeCloudClimateEntity(GreeCloudEntity, ClimateEntity):
         units = self.coordinator.device.temperature_units
         if (
             units == TemperatureUnits.C
-            and self._attr_temperature_unit != UnitOfTemperature.CELSIUS
+            and self._attr_native_temperature_unit != UnitOfTemperature.CELSIUS
         ):
             _LOGGER.debug("Setting temperature unit to Celsius")
-            self._attr_temperature_unit = UnitOfTemperature.CELSIUS
+            self._attr_native_temperature_unit = UnitOfTemperature.CELSIUS
+            self._attr_temperature_unit = UnitOfTemperature.CELSIUS  # Home Assistant before 2026.11
             self._attr_min_temp = TEMP_MIN
             self._attr_max_temp = TEMP_MAX
         elif (
             units == TemperatureUnits.F
-            and self._attr_temperature_unit != UnitOfTemperature.FAHRENHEIT
+            and self._attr_native_temperature_unit != UnitOfTemperature.FAHRENHEIT
         ):
             _LOGGER.debug("Setting temperature unit to Fahrenheit")
-            self._attr_temperature_unit = UnitOfTemperature.FAHRENHEIT
+            self._attr_native_temperature_unit = UnitOfTemperature.FAHRENHEIT
+            self._attr_temperature_unit = UnitOfTemperature.FAHRENHEIT  # Home Assistant before 2026.11
             self._attr_min_temp = TEMP_MIN_F
             self._attr_max_temp = TEMP_MAX_F

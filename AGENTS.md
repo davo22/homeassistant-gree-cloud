@@ -45,6 +45,10 @@ The tests pin these; a diff in any of them needs a reason in the pull request:
   of device.
 - **The library pin:** `manifest.json` and `requirements_test.txt` name the same
   `greeclimate-davo22` version.
+- **Temperatures under two names:** climate and water heater classes provide
+  `native_…` (read by Home Assistant 2026.11 and later) together with the old
+  name (read by earlier versions). CI runs one Home Assistant version, so a
+  change there is also checked on a running Home Assistant of the other kind.
 
 ## Devices and protocol values
 
