@@ -79,6 +79,7 @@ def series1(hass: HomeAssistant, cloud, setup_integration):
         ("water_heater", "set_temperature", TANK7, {"temperature": 52}, [{"WatBoxTemSet": 52}]),
         ("select", "select_option", MODE7, {"option": "hot_water"}, [{"Mod": 2}]),
         ("select", "select_option", MODE7, {"option": "heat"}, [{"Mod": 1}]),
+        ("climate", "set_preset_mode", WATER7, {"preset_mode": "hot_water"}, [{"Mod": 2}]),
         ("switch", "turn_off", POWER7, {}, [{"Pow": 0}]),
     ],
 )
@@ -145,15 +146,56 @@ async def test_hot_water_only_shows_the_heating_as_off(
     assert hass.states.get(MODE7).state == "hot_water"
 
 
+@pytest.mark.parametrize(
+    ("domain", "service", "entity", "data"),
+    [
+        ("select", "select_option", MODE7, {"option": "hot_water"}),
+        ("climate", "set_preset_mode", WATER7, {"preset_mode": "hot_water"}),
+    ],
+)
 async def test_the_mode_never_switches_the_unit_on(
-    hass: HomeAssistant, cloud, setup_integration
+    hass: HomeAssistant,
+    cloud,
+    setup_integration,
+    domain: str,
+    service: str,
+    entity: str,
+    data: dict[str, Any],
 ) -> None:
     unit = cloud.add("versati_series7", state={"Pow": 0})
     await setup_integration()
     unit.forget()
-    await call(hass, "select", "select_option", MODE7, option="hot_water")
+    await call(hass, domain, service, entity, **data)
     assert unit.commands == [{"Mod": 2}]
     assert unit.state["Pow"] == 0
+
+
+async def test_the_thermostat_offers_the_modes_of_the_unit(
+    hass: HomeAssistant, cloud, series7: FakeUnit
+) -> None:
+    """As presets, the same ones as the mode select, and the two follow each other."""
+    shown = hass.states.get(WATER7)
+    assert shown.attributes["preset_modes"] == hass.states.get(MODE7).attributes["options"]
+    assert shown.attributes["preset_modes"] == ["heat", "hot_water", "heat_hot_water"]
+    assert shown.attributes["preset_mode"] == "heat_hot_water"
+
+    await call(hass, "climate", "set_preset_mode", WATER7, preset_mode="heat")
+    assert hass.states.get(WATER7).attributes["preset_mode"] == "heat"
+    assert hass.states.get(MODE7).state == "heat"
+
+    # Hot water only: the heating circuit is off, the unit is not.
+    await call(hass, "select", "select_option", MODE7, option="hot_water")
+    shown = hass.states.get(WATER7)
+    assert (shown.state, shown.attributes["preset_mode"]) == ("off", "hot_water")
+    assert series7.state["Pow"] == 1
+
+
+async def test_a_mode_the_unit_does_not_have_is_never_sent(
+    hass: HomeAssistant, cloud, series7: FakeUnit
+) -> None:
+    with pytest.raises((ServiceValidationError, HomeAssistantError)):
+        await call(hass, "climate", "set_preset_mode", WATER7, preset_mode="cool")
+    assert series7.received == []
 
 
 async def test_mode_and_setpoint_in_one_call_are_refused(
@@ -241,6 +283,7 @@ async def test_an_unverified_unit_is_read_only(
     assert shown.state == "heat"
     assert shown.attributes["writes_enabled"] is False
     assert shown.attributes["supported_features"] == 0
+    assert "preset_modes" not in shown.attributes
     for domain in ("number", "select", "switch", "water_heater"):
         assert hass.states.async_entity_ids(domain) == []
 
@@ -342,6 +385,8 @@ async def test_series1_thermostats(hass: HomeAssistant, cloud, series1) -> None:
         ("number", "set_value", "number.heat_pump_dhw_target", {"value": 52}, [{"WatBoxTemSet": 52}]),
         ("water_heater", "set_temperature", TANK1, {"temperature": 52}, [{"WatBoxTemSet": 52}]),
         ("select", "select_option", MODE1, {"option": "heat_hot_water"}, [{"Mod": 4}]),
+        ("climate", "set_preset_mode", ROOM1, {"preset_mode": "heat_hot_water"}, [{"Mod": 4}]),
+        ("climate", "set_preset_mode", WATER1, {"preset_mode": "hot_water"}, [{"Mod": 2}]),
     ],
 )
 async def test_series1_command(

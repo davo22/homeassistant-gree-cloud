@@ -153,10 +153,32 @@
         "name": "Bomba de calor de piscina"
       },
       "versati_heating": {
-        "name": "Aquecimento hidráulico"
+        "name": "Aquecimento hidráulico",
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "cool": "Arrefecimento",
+              "cool_hot_water": "Arrefecimento + AQS",
+              "heat": "Aquecimento",
+              "heat_hot_water": "Aquecimento + AQS",
+              "hot_water": "AQS"
+            }
+          }
+        }
       },
       "versati_room_heating": {
-        "name": "Termóstato ambiente"
+        "name": "Termóstato ambiente",
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "cool": "Arrefecimento",
+              "cool_hot_water": "Arrefecimento + AQS",
+              "heat": "Aquecimento",
+              "heat_hot_water": "Aquecimento + AQS",
+              "hot_water": "AQS"
+            }
+          }
+        }
       }
     },
     "select": {

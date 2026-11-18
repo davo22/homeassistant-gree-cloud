@@ -227,7 +227,21 @@ class GreeHeatPumpClimate(GreeCloudEntity, ClimateEntity):
             features |= ClimateEntityFeature.TARGET_TEMPERATURE
         if "Pow" in policy.approved:
             features |= ClimateEntityFeature.TURN_ON | ClimateEntityFeature.TURN_OFF
+        if self.preset_modes:
+            features |= ClimateEntityFeature.PRESET_MODE
         return features
+
+    @property
+    def preset_modes(self):
+        """The unit's own modes, the ones the mode select offers (#75)."""
+        policy = self.coordinator.device.write_policy
+        if "Mod" not in policy.approved:
+            return None
+        return [MODE_NAMES[mode] for mode in sorted(policy.modes) if mode in MODE_NAMES]
+
+    @property
+    def preset_mode(self):
+        return MODE_NAMES.get((self.coordinator.data or {}).get("Mod"))
 
     @property
     def hvac_mode(self):
@@ -307,6 +321,14 @@ class GreeHeatPumpClimate(GreeCloudEntity, ClimateEntity):
             await self.coordinator.async_heatpump_command("Mod", modes[hvac_mode])
         if (self.coordinator.data or {}).get("Pow") == 0:
             await self.coordinator.async_heatpump_command("Pow", 1)
+
+    async def async_set_preset_mode(self, preset_mode):
+        """The mode alone, as the mode select: it never switches the unit on."""
+        if preset_mode not in (self.preset_modes or ()):
+            raise HomeAssistantError("Unsupported mode")
+        await self.coordinator.async_heatpump_command(
+            "Mod", next(key for key, value in MODE_NAMES.items() if value == preset_mode)
+        )
 
     async def async_turn_on(self):
         if "Pow" not in self.coordinator.device.write_policy.approved:

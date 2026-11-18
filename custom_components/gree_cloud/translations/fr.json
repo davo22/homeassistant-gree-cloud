@@ -153,10 +153,32 @@
         "name": "Pompe à chaleur de piscine"
       },
       "versati_heating": {
-        "name": "Chauffage hydraulique"
+        "name": "Chauffage hydraulique",
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "heat": "Chauffage",
+              "hot_water": "ECS",
+              "cool": "Refroidissement",
+              "heat_hot_water": "Chauffage + ECS",
+              "cool_hot_water": "Refroidissement + ECS"
+            }
+          }
+        }
       },
       "versati_room_heating": {
-        "name": "Thermostat d'ambiance"
+        "name": "Thermostat d'ambiance",
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "heat": "Chauffage",
+              "hot_water": "ECS",
+              "cool": "Refroidissement",
+              "heat_hot_water": "Chauffage + ECS",
+              "cool_hot_water": "Refroidissement + ECS"
+            }
+          }
+        }
       }
     },
     "select": {

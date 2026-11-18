@@ -153,10 +153,32 @@
         "name": "Pool-Wärmepumpe"
       },
       "versati_heating": {
-        "name": "Wasserheizung"
+        "name": "Wasserheizung",
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "cool": "Kühlen",
+              "cool_hot_water": "Kühlen + Warmwasser",
+              "heat": "Heizen",
+              "heat_hot_water": "Heizen + Warmwasser",
+              "hot_water": "Warmwasser"
+            }
+          }
+        }
       },
       "versati_room_heating": {
-        "name": "Raumthermostat"
+        "name": "Raumthermostat",
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "cool": "Kühlen",
+              "cool_hot_water": "Kühlen + Warmwasser",
+              "heat": "Heizen",
+              "heat_hot_water": "Heizen + Warmwasser",
+              "hot_water": "Warmwasser"
+            }
+          }
+        }
       }
     },
     "select": {

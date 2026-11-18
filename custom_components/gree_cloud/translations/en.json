@@ -153,10 +153,32 @@
         "name": "Pool heat pump"
       },
       "versati_heating": {
-        "name": "Hydraulic heating"
+        "name": "Hydraulic heating",
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "heat": "Heat",
+              "hot_water": "Hot water",
+              "cool": "Cool",
+              "heat_hot_water": "Heat + hot water",
+              "cool_hot_water": "Cool + hot water"
+            }
+          }
+        }
       },
       "versati_room_heating": {
-        "name": "Room thermostat"
+        "name": "Room thermostat",
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "heat": "Heat",
+              "hot_water": "Hot water",
+              "cool": "Cool",
+              "heat_hot_water": "Heat + hot water",
+              "cool_hot_water": "Cool + hot water"
+            }
+          }
+        }
       }
     },
     "select": {
