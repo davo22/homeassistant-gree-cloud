@@ -1,0 +1,36 @@
+{
+  "description": "Gree swimming-pool heat pump (cloud model 9302, e.g. GRS-CP11Pd/NbA-K), built from the captures in #48: heating, target 36 C, inlet 22.5 C, outlet 24 C. It answers 0 for columns it does not have.",
+  "record": {
+    "name": "Pool",
+    "mac": "aa0000000004",
+    "key": "PoolHeatPumpKey4",
+    "model": null,
+    "version": "V3.2.M",
+    "mid": "9302",
+    "parent_mac": null
+  },
+  "hid": "362001065634+U-WB04BRT13V1.39.bin",
+  "unknown_columns": "zero",
+  "state": {
+    "Pow": 1,
+    "Wmod": 0,
+    "PoolFunc": 0,
+    "SetTemInt": 36,
+    "SetTemDec": 0,
+    "InTemInt": 122,
+    "InTemDec": 5,
+    "OutTemInt": 124,
+    "OutTemDec": 0,
+    "HeatTemMin": 115,
+    "HeatTemMax": 140,
+    "CoolTemMin": 108,
+    "CoolTemMax": 135,
+    "PumpStatus": 1,
+    "ComStatus": 1,
+    "Defrost": 0,
+    "AuxStatus": 0,
+    "AllErr": 0,
+    "Wstate": 1,
+    "FlagPool": 0
+  }
+}

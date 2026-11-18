@@ -1,0 +1,46 @@
+{
+  "description": "Indoor unit of a multi-head (VRF) system behind one old controller (#6): the heads carry the module's version V1.1.0.0, so they live on the legacy TLS gateway. Their ids do not derive from the module MAC. Unsupported numeric fields come back as an empty string and the room temperature as InTem. The controller answers status requests of at most five columns that name the unit as 'mac', and commands that name it as 'sub'.",
+  "record": {
+    "name": "Head",
+    "mac": "bb0000000001",
+    "key": "VrfControllerKey",
+    "model": null,
+    "version": "V1.1.0.0",
+    "mid": null,
+    "parent_mac": "aa0000000007"
+  },
+  "hid": null,
+  "transport": "gateway",
+  "max_columns": 5,
+  "status_addressing": [
+    "module"
+  ],
+  "command_addressing": [
+    "sub"
+  ],
+  "state": {
+    "Pow": 1,
+    "Mod": 1,
+    "SetTem": 24,
+    "TemSen": "",
+    "InTem": 66,
+    "WdSpd": 2,
+    "TemUn": 0,
+    "TemRec": 0,
+    "Add0.5": 0,
+    "SwUpDn": 1,
+    "SwingLfRig": 0,
+    "Air": "",
+    "Blo": 0,
+    "Health": "",
+    "SwhSlp": 0,
+    "SlpMod": 0,
+    "Lig": 1,
+    "Quiet": 0,
+    "Tur": 0,
+    "StHt": "",
+    "SvSt": 0,
+    "HeatCoolType": 0,
+    "WatTmp": 0
+  }
+}
