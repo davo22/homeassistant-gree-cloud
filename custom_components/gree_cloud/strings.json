@@ -84,6 +84,9 @@
       },
       "energy_today": {
         "name": "Energy today"
+      },
+      "weather_dependent_target": {
+        "name": "Weather-dependent target"
       }
     },
     "switch": {

@@ -84,6 +84,9 @@
       },
       "energy_today": {
         "name": "Energie heute"
+      },
+      "weather_dependent_target": {
+        "name": "Witterungsgeführter Sollwert"
       }
     },
     "switch": {

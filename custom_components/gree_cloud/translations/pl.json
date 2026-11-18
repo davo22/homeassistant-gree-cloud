@@ -84,6 +84,9 @@
       },
       "energy_today": {
         "name": "Energia dzisiaj"
+      },
+      "weather_dependent_target": {
+        "name": "Zadana temperatura pogodowa"
       }
     },
     "switch": {
