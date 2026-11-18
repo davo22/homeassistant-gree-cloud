@@ -17,6 +17,7 @@ Please delete options that are not relevant.
 ## How Has This Been Tested?
 Please describe the tests that you ran to verify your changes.
 
+- [ ] Automated tests added or updated for this change (`python -m pytest -q` passes)
 - [ ] Tested with real Gree device
 - [ ] Tested config flow
 - [ ] Tested climate entity

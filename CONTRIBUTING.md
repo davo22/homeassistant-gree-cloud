@@ -32,7 +32,7 @@ Be respectful, inclusive, and constructive in all interactions.
 1. Fork the repository
 2. Create a feature branch: `git checkout -b feature/your-feature-name`
 3. Make your changes following the code style guidelines
-4. Test your changes thoroughly
+4. Add automated tests for the change and run the suite (see [Testing](#testing))
 5. Commit with clear, descriptive messages
 6. Push to your fork
 7. Create a Pull Request
@@ -93,6 +93,20 @@ def function_name(param1: str, param2: int) -> bool:
 ```
 
 ## Testing
+
+### Automated tests
+
+Every change of behaviour comes with an automated test in the same pull
+request; the rules are in [AGENTS.md](AGENTS.md) and apply to everyone.
+
+```bash
+python3.14 -m venv .venv && .venv/bin/pip install -r requirements_test.txt
+.venv/bin/python -m pytest -q
+```
+
+The suite runs the integration against a fake Gree cloud, needs no device or
+account, and runs on every pull request. [tests/README.md](tests/README.md)
+explains how to write a test and how to add a device.
 
 ### Manual Testing
 

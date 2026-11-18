@@ -25,7 +25,9 @@ ln -s $(pwd)/custom_components/gree_cloud /path/to/your/homeassistant/config/cus
 
 ### Testing
 
-To test the integration:
+Automated tests: see [tests/README.md](tests/README.md); the rules for changes are in [AGENTS.md](AGENTS.md).
+
+To test the integration by hand:
 
 1. Enable debug logging in `configuration.yaml`:
 ```yaml
