@@ -250,6 +250,9 @@ class FakeMqttSession:
 
     async def subscribe(self, topic: str, qos: int = 0) -> None:
         self._check("subscribe")
+        if topic.partition("/")[0] in self.cloud.refused_topics:
+            self.cloud.refused.append(topic)
+            raise aiomqtt.MqttCodeError(135, "Could not subscribe")
         self.subscriptions.add(topic)
 
     async def unsubscribe(self, topic: str) -> None:
@@ -300,6 +303,10 @@ class FakeCloud:
     sessions: list[FakeMqttSession] = field(default_factory=list)
     # (topic, envelope) of everything published to the broker.
     published: list[tuple[str, dict[str, Any]]] = field(default_factory=list)
+    # Kinds of topic ("request") the broker lets nobody subscribe to, and the
+    # subscriptions it turned down.
+    refused_topics: set[str] = field(default_factory=set)
+    refused: list[str] = field(default_factory=list)
     # {"route", "tcid", "pack"} of every legacy gateway request.
     gateway_requests: list[dict[str, Any]] = field(default_factory=list)
     # Modules the legacy gateway reports offline (QueryOnline).
@@ -344,6 +351,17 @@ class FakeCloud:
         for session in self.sessions:
             await session.settle()
 
+    async def app_request(self, unit: FakeUnit, pack: dict[str, Any]) -> None:
+        """Let another client (the Gree+ app) ask *unit* something.
+
+        Only what a listener on the unit's request topic gets to see: the unit
+        does not act on it.
+        """
+        encrypted, _ = unit.cipher.encrypt(pack)
+        envelope = {"t": "pack", "i": 0, "uid": 0, "cid": "app", "tcid": unit.mac, "pack": encrypted}
+        self._broadcast(f"request/{unit.module_mac}", envelope)
+        await self.settle()
+
     def drop_connection(self) -> None:
         """Cut the broker connection; publishing now fails with code 4."""
         for session in self.sessions:
@@ -366,6 +384,9 @@ class FakeCloud:
         kind, _, module = topic.partition("/")
         if kind != "request":
             return
+        # The broker hands a request to whoever listens on that topic, the
+        # sender included (seen on a running Home Assistant).
+        self._broadcast(topic, envelope)
         found = self._mqtt_target(module, envelope)
         if found is None:
             return
