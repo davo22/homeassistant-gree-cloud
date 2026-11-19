@@ -1,5 +1,5 @@
 {
-  "description": "Gree Versati 5 air-to-water heat pump (model 9300, VersatiSeries 1), the state it pushed by itself in #75: off, heating mode, room sensor fitted, no heat pump outlet sensor (70/0). This series never answers status requests; it reports every change by itself.",
+  "description": "Gree Versati 5 air-to-water heat pump (model 9300, VersatiSeries 1), the state it pushed by itself in #75: off, heating mode, room sensor fitted, no heat pump outlet sensor (70/0). This series never answers status requests. Asked to report (what Gree+ does once a minute), it acknowledges and sends its whole state; it also reports every change by itself.",
   "record": {
     "name": "Heat Pump",
     "mac": "aa0000000005",
@@ -12,6 +12,7 @@
   "hid": "362001068811+U-WB06DRV1.26.bin",
   "answers_status": false,
   "reports_changes": true,
+  "reports_on_request": true,
   "state": {
     "AllErr": 0,
     "AllInWatTemHi": 122,

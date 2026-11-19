@@ -73,6 +73,10 @@ class FakeUnit:
         self.answers_status: bool = fixture.get("answers_status", True)
         # Sends its whole state by itself after a command changed it.
         self.reports_changes: bool = fixture.get("reports_changes", False)
+        # Acknowledges a request for a report and then sends its whole state.
+        self.reports_on_request: bool = fixture.get("reports_on_request", False)
+        # ...the other way round: the state first, the acknowledgement after.
+        self.reports_before_ack: bool = False
         self.acks_commands: bool = True
         self.executes_commands: bool = True
         self.command_result: int = 200
@@ -150,7 +154,18 @@ class FakeUnit:
             return self._answer_status(pack["cols"])
         if pack.get("t") == "cmd":
             return self._answer_command(pack["opt"], pack["p"])
+        if self.asked_to_report(pack):
+            return {"t": "res", "r": 200}
         return None
+
+    def asked_to_report(self, pack: dict[str, Any]) -> bool:
+        """True for a request for a report that this unit follows."""
+        return self.reports_on_request and pack.get("t") == "freqCount"
+
+    @property
+    def report_requests(self) -> list[dict[str, Any]]:
+        """The requests for a report received so far."""
+        return [pack for pack in self.received if pack.get("t") == "freqCount"]
 
     def _answer_status(self, cols: list[str]) -> dict[str, Any] | None:
         if not self.answers_status:
@@ -393,13 +408,17 @@ class FakeCloud:
         unit, pack = found
         before = dict(unit.state)
         reply = unit.answer(pack)
+        reports = unit.asked_to_report(pack)
+        if reports and unit.reports_before_ack:
+            self._report(unit)
+            reports = False
         if reply is not None:
             encrypted, _ = unit.cipher.encrypt(reply)
             self._broadcast(
                 f"response/{module}/{envelope['cid']}",
                 {"t": "pack", "i": 0, "uid": 0, "cid": unit.mac, "tcid": envelope["cid"], "pack": encrypted},
             )
-        if unit.reports_changes and unit.state != before:
+        if reports or (unit.reports_changes and unit.state != before):
             self._report(unit)
 
     def _mqtt_target(self, module: str, envelope: dict[str, Any]) -> tuple[FakeUnit, dict[str, Any]] | None:
