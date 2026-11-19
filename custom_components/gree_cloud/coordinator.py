@@ -203,11 +203,62 @@ class HWHPAwareCloudDevice(CloudDevice):
         self.status_answered = False
         self.push_listener = None
         self._in_mqtt_callback = False
+        self._requests_heard_on = None
+        self._request_log_tries = 0
 
     @property
     def lives_on_pushes(self) -> bool:
         """True for a unit that reports by itself and never answered a request."""
         return self.push_count > 0 and not self.status_answered
+
+    @property
+    def request_log_due(self) -> bool:
+        """True when the requests to this unit should be logged and are not yet."""
+        client = self._mqtt_client
+        return (
+            client is not None
+            and client is not self._requests_heard_on
+            and self._request_log_tries < 3
+            and self.lives_on_pushes
+            and _LOGGER.isEnabledFor(logging.DEBUG)
+        )
+
+    async def async_hear_requests(self) -> None:
+        """Debug aid: log what other clients ask a unit that lives on pushes.
+
+        A Versati series 1 reports only while Gree+ is open (#75): each report
+        follows something the app sent. With debug logging on, the requests to
+        such a unit are written to the log, to learn which one makes it report.
+        Nothing is sent to the unit, and nothing changes without debug logging.
+        """
+        if not self.request_log_due:
+            return
+        client = self._requests_heard_on = self._mqtt_client
+        # Asked again after a reconnect, but not for ever if the broker minds.
+        self._request_log_tries += 1
+        topic = f"request/{self._parent_mac}"
+        try:
+            await client._client.subscribe(topic, qos=0)
+        except Exception as error:  # noqa: BLE001 - a debug aid must never break a poll
+            _LOGGER.debug("%s: cannot listen on %s (%s)", self.device_info.name, topic, error)
+        else:
+            _LOGGER.debug("%s: listening on %s", self.device_info.name, topic)
+
+    def _log_request(self, message) -> None:
+        """Write a request seen on the unit's request topic to the debug log."""
+        if not _LOGGER.isEnabledFor(logging.DEBUG):
+            return
+        try:
+            pack = self.device_cipher.decrypt(message.pack) if message.pack else None
+        except Exception:  # noqa: BLE001 - not every client uses the unit's key
+            pack = f"undecoded {message.pack!r}"
+        _LOGGER.debug(
+            "%s: request seen (cid %s, to %s): %s",
+            self.device_info.name,
+            message.cid,
+            message.tcid,
+            pack,
+        )
 
     def _handle_mqtt_message(self, topic, message) -> None:
         """Tell what the unit sends by itself from what a request returned.
@@ -216,6 +267,10 @@ class HWHPAwareCloudDevice(CloudDevice):
         second message comes in before the request picks that up, the first
         one is replaced; a heat pump's state must not get lost that way.
         """
+        if topic.startswith("request/"):
+            if self._parent_mac in topic:
+                self._log_request(message)
+            return
         held = self._response_data if self._response_event else None
         self._in_mqtt_callback = True
         try:
@@ -541,6 +596,10 @@ class CloudDeviceDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """Publish the state a heat pump sent by itself (#75)."""
         self._error_count = 0
         self.async_set_updated_data(copy.deepcopy(self.device.raw_properties))
+        if self.device.request_log_due:
+            self.config_entry.async_create_background_task(
+                self.hass, self.device.async_hear_requests(), "gree_cloud request log"
+            )
 
     @callback
     def async_announce(self) -> None:
@@ -616,6 +675,8 @@ class CloudDeviceDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             self.name,
             self._error_count,
         )
+        if getattr(self.device, "request_log_due", False):
+            await self.device.async_hear_requests()
         try:
             await self.device.update_state()
             self._error_count = 0
