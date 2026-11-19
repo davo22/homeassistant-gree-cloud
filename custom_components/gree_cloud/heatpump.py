@@ -66,6 +66,13 @@ RUN_STATE_COLUMNS = (
     "SyAnFroRunSta",
 )
 
+# The function buttons of Gree+ on that unit, by the property each one was
+# seen to change (#75): Silence, Compensation mode, Disinfect and Rapid. The
+# unit reports them by itself; they are not asked for, so the status request
+# stays as it was. Offered on the same series only, where the unit reports
+# them as 0 or 1.
+FUNCTION_SWITCHES = ("Quiet", "SvSt", "SwDisFct", "FastHtWter")
+
 
 def numeric(value: Any) -> float | None:
     """Only accept finite protocol numbers, not nulls, booleans or strings."""
@@ -216,6 +223,17 @@ def realtime_cop(props: Mapping[str, Any]) -> float | None:
     return value / 100
 
 
+def weather_dependent_target(props: Mapping[str, Any]) -> float | None:
+    """The water or room target the unit works out from the outdoor temperature.
+
+    With the weather-dependent mode switched off (``SvSt`` 0) the unit repeats
+    the manual target of the running mode under this name (#75): no value then.
+    """
+    if numeric(props.get("SvSt")) == 0:
+        return None
+    return setpoint(props, "WDTemSet")
+
+
 def energy_today(props: Mapping[str, Any]) -> float | None:
     """Electricity used since midnight in kWh, sent in tenths.
 
@@ -266,6 +284,10 @@ def user_control_policy(
     approved = set(limits)
     if numeric(props.get("Pow")) in (0, 1):
         approved.add("Pow")
+    if reads_run_states(props):
+        approved.update(
+            key for key in FUNCTION_SWITCHES if numeric(props.get(key)) in (0, 1)
+        )
     modes = {1, 4} if "HeWatOutTemSet" in limits else set()
     if "WatBoxTemSet" in limits:
         modes.add(2)
@@ -308,7 +330,8 @@ def prepare_command(
         return {"t": "cmd", "opt": keys, "p": [int(number)] * len(keys)}
     if key == "Mod" and number in policy.modes and number in MODE_NAMES:
         return {"t": "cmd", "opt": [key], "p": [int(number)]}
-    # FastHtWter is deliberately excluded until its semantics is validated.
+    if key in FUNCTION_SWITCHES and number in (0, 1):
+        return {"t": "cmd", "opt": [key], "p": [int(number)]}
     raise ValueError("Unsupported or unsafe command")
 
 

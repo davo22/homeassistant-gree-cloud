@@ -1430,6 +1430,32 @@
         'translation_key': 'weather_dependent_target',
         'unique_id': 'aa0000000005_versati_WDTemSet',
       }),
+      'switch.heat_pump_disinfection': dict({
+        'attributes': dict({
+          'device_class': 'switch',
+          'friendly_name': 'Heat Pump Disinfection',
+        }),
+        'category': None,
+        'device': 'Heat Pump',
+        'disabled_by': None,
+        'name': 'Disinfection',
+        'state': 'off',
+        'translation_key': 'versati_disinfection',
+        'unique_id': 'aa0000000005_versati_disinfection',
+      }),
+      'switch.heat_pump_fast_hot_water': dict({
+        'attributes': dict({
+          'device_class': 'switch',
+          'friendly_name': 'Heat Pump Fast hot water',
+        }),
+        'category': None,
+        'device': 'Heat Pump',
+        'disabled_by': None,
+        'name': 'Fast hot water',
+        'state': 'off',
+        'translation_key': 'versati_fast_hot_water',
+        'unique_id': 'aa0000000005_versati_fast_hot_water',
+      }),
       'switch.heat_pump_global_heat_pump_power': dict({
         'attributes': dict({
           'device_class': 'switch',
@@ -1442,6 +1468,32 @@
         'state': 'off',
         'translation_key': 'versati_power',
         'unique_id': 'aa0000000005_versati_power_control',
+      }),
+      'switch.heat_pump_quiet_mode': dict({
+        'attributes': dict({
+          'device_class': 'switch',
+          'friendly_name': 'Heat Pump Quiet mode',
+        }),
+        'category': None,
+        'device': 'Heat Pump',
+        'disabled_by': None,
+        'name': 'Quiet mode',
+        'state': 'off',
+        'translation_key': 'versati_quiet',
+        'unique_id': 'aa0000000005_versati_quiet',
+      }),
+      'switch.heat_pump_weather_dependent_mode': dict({
+        'attributes': dict({
+          'device_class': 'switch',
+          'friendly_name': 'Heat Pump Weather-dependent mode',
+        }),
+        'category': None,
+        'device': 'Heat Pump',
+        'disabled_by': None,
+        'name': 'Weather-dependent mode',
+        'state': 'on',
+        'translation_key': 'versati_weather_dependent',
+        'unique_id': 'aa0000000005_versati_weather_dependent',
       }),
       'water_heater.heat_pump_hot_water': dict({
         'attributes': dict({
@@ -1864,6 +1916,32 @@
         'translation_key': 'weather_dependent_target',
         'unique_id': 'aa0000000005_versati_WDTemSet',
       }),
+      'switch.heat_pump_disinfection': dict({
+        'attributes': dict({
+          'device_class': 'switch',
+          'friendly_name': 'Heat Pump Disinfection',
+        }),
+        'category': None,
+        'device': 'Heat Pump',
+        'disabled_by': None,
+        'name': 'Disinfection',
+        'state': 'off',
+        'translation_key': 'versati_disinfection',
+        'unique_id': 'aa0000000005_versati_disinfection',
+      }),
+      'switch.heat_pump_fast_hot_water': dict({
+        'attributes': dict({
+          'device_class': 'switch',
+          'friendly_name': 'Heat Pump Fast hot water',
+        }),
+        'category': None,
+        'device': 'Heat Pump',
+        'disabled_by': None,
+        'name': 'Fast hot water',
+        'state': 'off',
+        'translation_key': 'versati_fast_hot_water',
+        'unique_id': 'aa0000000005_versati_fast_hot_water',
+      }),
       'switch.heat_pump_global_heat_pump_power': dict({
         'attributes': dict({
           'device_class': 'switch',
@@ -1876,6 +1954,32 @@
         'state': 'off',
         'translation_key': 'versati_power',
         'unique_id': 'aa0000000005_versati_power_control',
+      }),
+      'switch.heat_pump_quiet_mode': dict({
+        'attributes': dict({
+          'device_class': 'switch',
+          'friendly_name': 'Heat Pump Quiet mode',
+        }),
+        'category': None,
+        'device': 'Heat Pump',
+        'disabled_by': None,
+        'name': 'Quiet mode',
+        'state': 'off',
+        'translation_key': 'versati_quiet',
+        'unique_id': 'aa0000000005_versati_quiet',
+      }),
+      'switch.heat_pump_weather_dependent_mode': dict({
+        'attributes': dict({
+          'device_class': 'switch',
+          'friendly_name': 'Heat Pump Weather-dependent mode',
+        }),
+        'category': None,
+        'device': 'Heat Pump',
+        'disabled_by': None,
+        'name': 'Weather-dependent mode',
+        'state': 'on',
+        'translation_key': 'versati_weather_dependent',
+        'unique_id': 'aa0000000005_versati_weather_dependent',
       }),
       'water_heater.heat_pump_hot_water': dict({
         'attributes': dict({

@@ -110,6 +110,18 @@
       },
       "versati_power": {
         "name": "Zasilanie całej pompy ciepła"
+      },
+      "versati_quiet": {
+        "name": "Tryb cichy"
+      },
+      "versati_weather_dependent": {
+        "name": "Tryb pogodowy"
+      },
+      "versati_disinfection": {
+        "name": "Dezynfekcja"
+      },
+      "versati_fast_hot_water": {
+        "name": "Szybkie grzanie wody"
       }
     },
     "climate": {

@@ -101,6 +101,18 @@
         "state": {
           "off": "mdi:volume-off"
         }
+      },
+      "versati_quiet": {
+        "default": "mdi:volume-off"
+      },
+      "versati_weather_dependent": {
+        "default": "mdi:home-thermometer-outline"
+      },
+      "versati_disinfection": {
+        "default": "mdi:bacteria-outline"
+      },
+      "versati_fast_hot_water": {
+        "default": "mdi:water-boiler"
       }
     },
     "select": {

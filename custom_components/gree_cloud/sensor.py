@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 
 from greeclimate_davo22.device import Device
 
@@ -62,6 +62,7 @@ from .heatpump import (
     realtime_cop,
     setpoint,
     temperature,
+    weather_dependent_target,
 )
 
 
@@ -269,7 +270,10 @@ HEATPUMP_SENSORS: tuple[GreeCloudSensorEntityDescription, ...] = (
     ),
     # A Versati 5 reports it by itself (#75). It is not asked for, so the status
     # request stays as it was, and it is read only.
-    _heatpump_sensor_description("WDTemSet", "weather_dependent_target"),
+    replace(
+        _heatpump_sensor_description("WDTemSet", "weather_dependent_target"),
+        value_fn=lambda device: weather_dependent_target(device.raw_properties),
+    ),
     GreeCloudSensorEntityDescription(
         key="versati_realtime_cop",
         translation_key="realtime_cop",

@@ -35,6 +35,14 @@ MODE1 = "select.heat_pump_heat_pump_mode"
 POWER1 = "switch.heat_pump_global_heat_pump_power"
 TANK1 = "water_heater.heat_pump_hot_water"
 
+# The function buttons of Gree+ on a series 1 unit, by the property behind each.
+FUNCTIONS1 = {
+    "switch.heat_pump_quiet_mode": "Quiet",
+    "switch.heat_pump_weather_dependent_mode": "SvSt",
+    "switch.heat_pump_disinfection": "SwDisFct",
+    "switch.heat_pump_fast_hot_water": "FastHtWter",
+}
+
 ZONES_ON = {"Pow": 1, "ZonePow1": 1, "ZonePow2": 1}
 ZONES_OFF = {"Pow": 0, "ZonePow1": 0, "ZonePow2": 0}
 
@@ -387,6 +395,10 @@ async def test_series1_thermostats(hass: HomeAssistant, cloud, series1) -> None:
         ("select", "select_option", MODE1, {"option": "heat_hot_water"}, [{"Mod": 4}]),
         ("climate", "set_preset_mode", ROOM1, {"preset_mode": "heat_hot_water"}, [{"Mod": 4}]),
         ("climate", "set_preset_mode", WATER1, {"preset_mode": "hot_water"}, [{"Mod": 2}]),
+        ("switch", "turn_on", "switch.heat_pump_quiet_mode", {}, [{"Quiet": 1}]),
+        ("switch", "turn_off", "switch.heat_pump_weather_dependent_mode", {}, [{"SvSt": 0}]),
+        ("switch", "turn_on", "switch.heat_pump_disinfection", {}, [{"SwDisFct": 1}]),
+        ("switch", "turn_on", "switch.heat_pump_fast_hot_water", {}, [{"FastHtWter": 1}]),
     ],
 )
 async def test_series1_command(
@@ -507,7 +519,101 @@ async def test_series1_weather_dependent_target(hass: HomeAssistant, cloud, seri
     await settle(hass, cloud)
     assert float(hass.states.get(sensor).state) == 35
     assert unit.commands == []
-    assert not any("weather" in entity for entity in hass.states.async_entity_ids() if entity != sensor)
+    # The mode has a switch; the target itself has no control.
+    assert [entity for entity in hass.states.async_entity_ids() if "weather" in entity and entity != sensor] == [
+        "switch.heat_pump_weather_dependent_mode"
+    ]
+
+
+async def test_series1_weather_dependent_target_only_while_that_mode_is_on(
+    hass: HomeAssistant, cloud, series1
+) -> None:
+    """Switched off, the unit repeats the manual target under that name (#75)."""
+    unit = await series1()
+    sensor = "sensor.heat_pump_weather_dependent_target"
+    await cloud.push(unit, SvSt=0, WDTemSet=21)
+    await settle(hass, cloud)
+    assert hass.states.get(sensor).state == "unknown"
+
+    await cloud.push(unit, SvSt=1, WDTemSet=38)
+    await settle(hass, cloud)
+    assert float(hass.states.get(sensor).state) == 38
+
+
+async def test_series1_function_switches(hass: HomeAssistant, cloud, series1) -> None:
+    """Silence, Compensation mode, Disinfect and Rapid of Gree+ (#75)."""
+    unit = await series1()
+    registry = er.async_get(hass)
+    assert {entity: registry.async_get(entity).unique_id for entity in FUNCTIONS1} == {
+        "switch.heat_pump_quiet_mode": "aa0000000005_versati_quiet",
+        "switch.heat_pump_weather_dependent_mode": "aa0000000005_versati_weather_dependent",
+        "switch.heat_pump_disinfection": "aa0000000005_versati_disinfection",
+        "switch.heat_pump_fast_hot_water": "aa0000000005_versati_fast_hot_water",
+    }
+    assert {entity: hass.states.get(entity).state for entity in FUNCTIONS1} == {
+        "switch.heat_pump_quiet_mode": "off",
+        "switch.heat_pump_weather_dependent_mode": "on",
+        "switch.heat_pump_disinfection": "off",
+        "switch.heat_pump_fast_hot_water": "off",
+    }
+
+    # Switched in the app or at the unit.
+    await cloud.push(unit, Quiet=1, SvSt=0, SwDisFct=1, FastHtWter=1)
+    await settle(hass, cloud)
+    assert {hass.states.get(entity).state for entity in FUNCTIONS1} == {"on", "off"}
+    assert hass.states.get("switch.heat_pump_weather_dependent_mode").state == "off"
+    assert unit.commands == []
+
+    # From here: one command each, nothing else written along.
+    for entity, key in FUNCTIONS1.items():
+        unit.forget()
+        await call(hass, "switch", "turn_off" if key != "SvSt" else "turn_on", entity)
+        assert unit.commands == [{key: 0 if key != "SvSt" else 1}]
+    assert {entity: hass.states.get(entity).state for entity in FUNCTIONS1} == {
+        "switch.heat_pump_quiet_mode": "off",
+        "switch.heat_pump_weather_dependent_mode": "on",
+        "switch.heat_pump_disinfection": "off",
+        "switch.heat_pump_fast_hot_water": "off",
+    }
+    assert hass.states.get(POWER1).state == "off"
+
+
+async def test_series1_function_switch_the_unit_did_not_apply_is_an_error(
+    hass: HomeAssistant, cloud, series1
+) -> None:
+    """Acknowledged and not applied: an error, the switch stays, one write."""
+    unit = await series1()
+    unit.refuses = {"FastHtWter"}
+    with pytest.raises(HomeAssistantError, match="the applied value could not be confirmed"):
+        await call(hass, "switch", "turn_on", "switch.heat_pump_fast_hot_water")
+    assert unit.commands == [{"FastHtWter": 1}]
+    assert hass.states.get("switch.heat_pump_fast_hot_water").state == "off"
+
+
+async def test_series1_function_switch_only_for_a_flag_the_unit_reports(
+    hass: HomeAssistant, cloud, setup_integration
+) -> None:
+    unit = cloud.add("versati_series1", state={"Quiet": 2})
+    del unit.state["FastHtWter"]
+    await setup_integration()
+    await settle(hass, cloud)
+    assert sorted(hass.states.async_entity_ids("switch")) == [
+        "switch.heat_pump_disinfection",
+        POWER1,
+        "switch.heat_pump_weather_dependent_mode",
+    ]
+
+
+async def test_series7_has_no_function_switches(
+    hass: HomeAssistant, cloud, setup_integration
+) -> None:
+    """Also when its first state is one it sent by itself, flags included."""
+    unit = cloud.add("versati_series7", answers_status=False)
+    assert {"Quiet", "FastHtWter"} <= set(unit.state)
+    await setup_integration()
+    await cloud.push(unit)
+    await settle(hass, cloud)
+    assert hass.states.async_entity_ids("switch") == [POWER7]
 
 
 async def test_no_cop_energy_or_weather_sensor_on_a_unit_that_does_not_report_them(

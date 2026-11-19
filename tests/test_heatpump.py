@@ -5,6 +5,7 @@ from __future__ import annotations
 import pytest
 
 from custom_components.gree_cloud.heatpump import (
+    FUNCTION_SWITCHES,
     HEATPUMP_COLUMNS,
     RUN_STATE_COLUMNS,
     ZONE_POWER_COLUMNS,
@@ -19,6 +20,7 @@ from custom_components.gree_cloud.heatpump import (
     temperature,
     user_control_policy,
     verify_command_reply,
+    weather_dependent_target,
 )
 
 from .fake_cloud import load_fixture
@@ -128,7 +130,45 @@ def test_policy_for_recorded_units() -> None:
         "WatBoxTemSet": (40, 60),
     }
     assert policy.modes == {1, 2, 4}
-    assert user_control_policy(SERIES_1, mid="9300") == policy
+    # Series 1 has the function buttons of Gree+ on top (#75).
+    series1 = user_control_policy(SERIES_1, mid="9300")
+    assert series1.approved == policy.approved | {"Quiet", "SvSt", "SwDisFct", "FastHtWter"}
+    assert (series1.limits, series1.modes) == (policy.limits, policy.modes)
+
+
+@pytest.mark.parametrize("key", FUNCTION_SWITCHES)
+def test_function_switch_is_offered_only_for_a_reported_flag(key: str) -> None:
+    for props in (
+        {**SERIES_1, key: 2},
+        {**SERIES_1, key: None},
+        {k: v for k, v in SERIES_1.items() if k != key},
+        # Reported, but by a series it was not seen on.
+        {**SERIES_1, "VersatiSeries": 7},
+    ):
+        policy = user_control_policy(props, mid="9300")
+        assert key not in policy.approved
+        assert "Pow" in policy.approved
+        with pytest.raises(ValueError):
+            prepare_command(props, policy, key, 1)
+
+
+@pytest.mark.parametrize("key", FUNCTION_SWITCHES)
+def test_prepare_function_switch_command(key: str) -> None:
+    policy = user_control_policy(SERIES_1, mid="9300")
+    assert prepare_command(SERIES_1, policy, key, 1) == {"t": "cmd", "opt": [key], "p": [1]}
+    assert prepare_command(SERIES_1, policy, key, 0) == {"t": "cmd", "opt": [key], "p": [0]}
+    for value in (2, -1, 0.5, None, "1"):
+        with pytest.raises(ValueError):
+            prepare_command(SERIES_1, policy, key, value)
+
+
+def test_weather_dependent_target() -> None:
+    assert weather_dependent_target(SERIES_1) == 40
+    # Switched off, the unit repeats the manual target under this name.
+    assert weather_dependent_target({**SERIES_1, "SvSt": 0, "WDTemSet": 21}) is None
+    assert weather_dependent_target({"WDTemSet": 38}) == 38
+    assert weather_dependent_target({"SvSt": 1, "WDTemSet": 0}) is None
+    assert weather_dependent_target(SERIES_7) is None
 
 
 def test_policy_with_cooling_evidence() -> None:

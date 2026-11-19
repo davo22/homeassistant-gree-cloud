@@ -110,6 +110,18 @@
       },
       "versati_power": {
         "name": "Global heat pump power"
+      },
+      "versati_quiet": {
+        "name": "Quiet mode"
+      },
+      "versati_weather_dependent": {
+        "name": "Weather-dependent mode"
+      },
+      "versati_disinfection": {
+        "name": "Disinfection"
+      },
+      "versati_fast_hot_water": {
+        "name": "Fast hot water"
       }
     },
     "climate": {
