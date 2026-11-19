@@ -27,13 +27,15 @@ async def test_requests_to_a_unit_living_on_pushes_are_logged(
     hass: HomeAssistant, cloud, setup_integration, poll, caplog: pytest.LogCaptureFixture
 ) -> None:
     caplog.set_level(logging.DEBUG, logger=LOGGER)
-    unit = cloud.add("versati_series1")
+    # Silent during setup: nothing shows yet what it is.
+    unit = cloud.add("versati_series1", reports_on_request=False)
     await setup_integration()
     assert requests_heard(cloud) == set()
 
     # The first report shows what the unit is; from then on its requests are heard.
     await cloud.push(unit)
     assert requests_heard(cloud) == {TOPIC}
+    unit.reports_on_request = True
     unit.forget()
 
     await cloud.app_request(unit, APP_REQUEST)
@@ -45,7 +47,7 @@ async def test_requests_to_a_unit_living_on_pushes_are_logged(
     assert caplog.text.count(f"listening on {TOPIC}") == 1
     # Listening sends the unit nothing: the poll is the one request it got.
     assert unit.commands == []
-    assert len(unit.status_requests) == 1
+    assert [pack["t"] for pack in unit.received] == ["freqCount"]
     assert hass.states.get(WATER).state != "unavailable"
 
 

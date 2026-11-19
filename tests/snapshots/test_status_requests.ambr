@@ -499,52 +499,10 @@
 # ---
 # name: test_status_requests[versati_series1][regular poll]
   list([
-    list([
-      'Pow',
-      'Mod',
-      'HeWatOutTemSet',
-      'HeHomTemSet',
-      'WatBoxTemSet',
-      'CoWatOutTemSet',
-      'CoHomTemSet',
-      'VersatiSeries',
-      'TemUn',
-      'AllInWatTemHi',
-      'AllInWatTemLo',
-      'AllOutWatTemHi',
-      'AllOutWatTemLo',
-      'HepOutWatTemHi',
-      'HepOutWatTemLo',
-      'WatBoxTemHi',
-      'WatBoxTemLo',
-      'RmoHomTemHi',
-      'RmoHomTemLo',
-    ]),
   ])
 # ---
 # name: test_status_requests[versati_series1][setup]
   list([
-    list([
-      'Pow',
-      'Mod',
-      'HeWatOutTemSet',
-      'HeHomTemSet',
-      'WatBoxTemSet',
-      'CoWatOutTemSet',
-      'CoHomTemSet',
-      'VersatiSeries',
-      'TemUn',
-      'AllInWatTemHi',
-      'AllInWatTemLo',
-      'AllOutWatTemHi',
-      'AllOutWatTemLo',
-      'HepOutWatTemHi',
-      'HepOutWatTemLo',
-      'WatBoxTemHi',
-      'WatBoxTemLo',
-      'RmoHomTemHi',
-      'RmoHomTemLo',
-    ]),
     list([
       'Pow',
       'Mod',

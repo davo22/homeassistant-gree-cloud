@@ -30,11 +30,21 @@ async def test_device(
 async def test_versati_series1(
     hass: HomeAssistant, cloud, setup_integration, snapshot: SnapshotAssertion
 ) -> None:
-    """A Versati 5 never answers a status request; it reports by itself (#75)."""
-    unit = cloud.add("versati_series1")
+    """A Versati 5 that stays silent during setup gets its entities with its first report (#75)."""
+    unit = cloud.add("versati_series1", reports_on_request=False)
     entry = await setup_integration()
     assert describe(hass, entry) == snapshot(name="before the first report")
     await cloud.push(unit)
+    await settle(hass, cloud)
+    assert describe(hass, entry) == snapshot(name="after the first report")
+
+
+async def test_versati_series1_asked_to_report(
+    hass: HomeAssistant, cloud, setup_integration, snapshot: SnapshotAssertion
+) -> None:
+    """It never answers a status request; asked to report, it does, and that is the same."""
+    cloud.add("versati_series1")
+    entry = await setup_integration()
     await settle(hass, cloud)
     assert describe(hass, entry) == snapshot(name="after the first report")
 

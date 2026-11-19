@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import copy
 from dataclasses import dataclass
 from datetime import timedelta
@@ -173,6 +174,15 @@ _POOL_PROPS = [
 # A state without any of these is no state: an acknowledgement, a firmware id.
 _USABLE_STATE_KEYS = ("Pow", "Mod", "HeWatOutTemSet", "SetTem", "WatTmp")
 
+# What Gree+ sends a Versati series 1 once a minute while it shows the unit
+# (#75). The unit acknowledges it and then reports its whole state by itself,
+# and its changes for the time being; left alone it reports nothing.
+REPORT_REQUEST = {"t": "freqCount", "opt": ["SendFreq"], "p": [1]}
+# The only series seen to work this way.
+REPORT_ON_REQUEST_SERIES = (1,)
+# How long a unit that was never heard from gets to acknowledge that request.
+FIRST_REPORT_TIMEOUT = 5
+
 
 class HWHPAwareCloudDevice(CloudDevice):
     """CloudDevice subclass that also requests HWHP-specific properties.
@@ -212,6 +222,15 @@ class HWHPAwareCloudDevice(CloudDevice):
         return self.push_count > 0 and not self.status_answered
 
     @property
+    def reports_on_request(self) -> bool:
+        """True for a unit that is asked to report instead of being asked its state."""
+        return (
+            self.lives_on_pushes
+            and self.uses_mqtt
+            and self.raw_properties.get("VersatiSeries") in REPORT_ON_REQUEST_SERIES
+        )
+
+    @property
     def request_log_due(self) -> bool:
         """True when the requests to this unit should be logged and are not yet."""
         client = self._mqtt_client
@@ -243,6 +262,32 @@ class HWHPAwareCloudDevice(CloudDevice):
             _LOGGER.debug("%s: cannot listen on %s (%s)", self.device_info.name, topic, error)
         else:
             _LOGGER.debug("%s: listening on %s", self.device_info.name, topic)
+
+    async def _ask_for_report(self, timeout: float | None = None) -> bool:
+        """Ask the unit to report its state by itself; tell whether it reacted.
+
+        The report is no reply: it arrives like any state the unit sends by
+        itself, a moment after the acknowledgement.
+        """
+        request = {**REPORT_REQUEST, "mac": self._child_mac}
+        try:
+            reply = await self._mqtt_request(
+                request, self._command_timeout if timeout is None else timeout
+            )
+        except asyncio.TimeoutError:
+            _LOGGER.debug(
+                "%s did not react to the request for a report", self.device_info.name
+            )
+            return False
+        # Now and then the report is there before the acknowledgement and ends
+        # the wait in its place.
+        if isinstance(reply, dict) and (state := self._decode_dat(reply)):
+            self._in_mqtt_callback = True
+            try:
+                self.handle_state_update(**state)
+            finally:
+                self._in_mqtt_callback = False
+        return True
 
     def _log_request(self, message) -> None:
         """Write a request seen on the unit's request topic to the debug log."""
@@ -462,8 +507,22 @@ class HWHPAwareCloudDevice(CloudDevice):
             await self._update_in_chunks()
             return
         async with self.request_lock:
+            if self.reports_on_request and await self._ask_for_report():
+                # Its state comes as a report; a status request gets no answer.
+                return
             requested = self._status_columns()
-            data = await self.request_status(requested)
+            try:
+                data = await self.request_status(requested)
+            except asyncio.TimeoutError:
+                if self.uses_mqtt and not self.push_count and not self.status_answered:
+                    # Never heard from, so it may be a unit that reports only
+                    # when asked to: without this it would have no entities
+                    # after a restart until somebody opens the app (#75).
+                    with contextlib.suppress(Exception):
+                        await self._ask_for_report(
+                            min(self._command_timeout, FIRST_REPORT_TIMEOUT)
+                        )
+                raise
             if isinstance(data, dict) and classify(data, mid=self.model_id) == "unknown":
                 if not getattr(self, "_unknown_profile_warned", False):
                     _LOGGER.warning(
