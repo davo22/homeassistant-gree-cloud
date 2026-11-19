@@ -110,6 +110,18 @@
       },
       "versati_power": {
         "name": "Alimentation globale PAC"
+      },
+      "versati_quiet": {
+        "name": "Mode silencieux"
+      },
+      "versati_weather_dependent": {
+        "name": "Mode selon la météo"
+      },
+      "versati_disinfection": {
+        "name": "Désinfection"
+      },
+      "versati_fast_hot_water": {
+        "name": "Eau chaude rapide"
       }
     },
     "climate": {

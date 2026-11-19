@@ -110,6 +110,18 @@
       },
       "versati_power": {
         "name": "Alimentação geral da bomba de calor"
+      },
+      "versati_quiet": {
+        "name": "Modo silencioso"
+      },
+      "versati_weather_dependent": {
+        "name": "Modo em função do clima"
+      },
+      "versati_disinfection": {
+        "name": "Desinfeção"
+      },
+      "versati_fast_hot_water": {
+        "name": "Água quente rápida"
       }
     },
     "climate": {

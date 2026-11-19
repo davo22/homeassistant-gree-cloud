@@ -110,6 +110,18 @@
       },
       "versati_power": {
         "name": "Wärmepumpe Hauptschalter"
+      },
+      "versati_quiet": {
+        "name": "Flüstermodus"
+      },
+      "versati_weather_dependent": {
+        "name": "Witterungsgeführter Betrieb"
+      },
+      "versati_disinfection": {
+        "name": "Desinfektion"
+      },
+      "versati_fast_hot_water": {
+        "name": "Schnelle Warmwasserbereitung"
       }
     },
     "climate": {

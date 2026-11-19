@@ -111,6 +111,32 @@ HEATPUMP_POWER_SWITCH = GreeCloudSwitchEntityDescription(
 )
 
 
+def _versati_flag(key: str) -> Callable[[Device], bool | None]:
+    def is_on(device: Device) -> bool | None:
+        value = device.raw_properties.get(key)
+        return bool(value) if value in (0, 1) else None
+
+    return is_on
+
+
+# The function buttons of Gree+ on a Versati 5 (#75): Silence, Compensation
+# mode, Disinfect and Rapid.
+HEATPUMP_FUNCTION_SWITCHES: tuple[GreeCloudSwitchEntityDescription, ...] = tuple(
+    GreeCloudSwitchEntityDescription(
+        key=f"versati_{name}",
+        translation_key=f"versati_{name}",
+        get_value_fn=_versati_flag(command_key),
+        command_key=command_key,
+    )
+    for command_key, name in (
+        ("Quiet", "quiet"),
+        ("SvSt", "weather_dependent"),
+        ("SwDisFct", "disinfection"),
+        ("FastHtWter", "fast_hot_water"),
+    )
+)
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: GreeCloudConfigEntry,
@@ -124,8 +150,12 @@ async def async_setup_entry(
         if is_heatpump_device(coordinator):
             if coordinator.device_kind != "heatpump":
                 return
-            if "Pow" in coordinator.device.write_policy.approved:
-                async_add_entities([GreeCloudSwitch(coordinator, HEATPUMP_POWER_SWITCH)])
+            approved = coordinator.device.write_policy.approved
+            async_add_entities(
+                GreeCloudSwitch(coordinator, description)
+                for description in (HEATPUMP_POWER_SWITCH, *HEATPUMP_FUNCTION_SWITCHES)
+                if description.command_key in approved
+            )
             return
         if is_hwhp_device(coordinator) or is_pool_device(coordinator):
             return

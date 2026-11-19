@@ -124,6 +124,7 @@ Created for Gree Versati model 9300 air-to-water heat pumps, including Arthur Ma
 - **Temperature Sensors**: Water inlet, water outlet and the optional water sensor; tank and room temperatures only when usable measurements are available; COP, today's energy use and the weather-dependent target on units that report them
 - **Setpoint Controls**: Heating water, heating room (18–30°C), domestic hot water (40–60°C), and cooling water/room when supported; also exposed as sensors
 - **Power**: global power switch and power-state binary sensor.
+- **Functions**: switches for quiet mode, weather-dependent mode, disinfection and fast hot water (Silence, Compensation mode, Disinfect and Rapid in Gree+), on a Versati 5
 - **Operation Modes**: Heating, domestic hot water (DHW), combined heating/DHW, and cooling modes when supported, through a separate select entity and as presets on the thermostats
 
 ### Sensors (air conditioners)
