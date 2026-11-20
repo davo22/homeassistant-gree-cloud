@@ -398,7 +398,6 @@ async def test_series1_thermostats(hass: HomeAssistant, cloud, series1) -> None:
         ("switch", "turn_on", "switch.heat_pump_quiet_mode", {}, [{"Quiet": 1}]),
         ("switch", "turn_off", "switch.heat_pump_weather_dependent_mode", {}, [{"SvSt": 0}]),
         ("switch", "turn_on", "switch.heat_pump_disinfection", {}, [{"SwDisFct": 1}]),
-        ("switch", "turn_on", "switch.heat_pump_fast_hot_water", {}, [{"FastHtWter": 1}]),
     ],
 )
 async def test_series1_command(
@@ -542,7 +541,7 @@ async def test_series1_weather_dependent_target_only_while_that_mode_is_on(
 
 async def test_series1_function_switches(hass: HomeAssistant, cloud, series1) -> None:
     """Silence, Compensation mode, Disinfect and Rapid of Gree+ (#75)."""
-    unit = await series1()
+    unit = await series1(Mod=4)
     registry = er.async_get(hass)
     assert {entity: registry.async_get(entity).unique_id for entity in FUNCTIONS1} == {
         "switch.heat_pump_quiet_mode": "aa0000000005_versati_quiet",
@@ -582,12 +581,61 @@ async def test_series1_function_switch_the_unit_did_not_apply_is_an_error(
     hass: HomeAssistant, cloud, series1
 ) -> None:
     """Acknowledged and not applied: an error, the switch stays, one write."""
-    unit = await series1()
+    unit = await series1(Mod=2)
     unit.refuses = {"FastHtWter"}
     with pytest.raises(HomeAssistantError, match="the applied value could not be confirmed"):
         await call(hass, "switch", "turn_on", "switch.heat_pump_fast_hot_water")
     assert unit.commands == [{"FastHtWter": 1}]
     assert hass.states.get("switch.heat_pump_fast_hot_water").state == "off"
+
+
+@pytest.mark.parametrize(
+    ("mode", "rapid", "compensation"),
+    [
+        (1, "unavailable", "on"),  # Heat
+        (2, "off", "unavailable"),  # Hot water
+        (3, "off", "on"),  # Cool + hot water
+        (4, "off", "on"),  # Heat + hot water
+        (5, "unavailable", "on"),  # Cool
+    ],
+)
+async def test_series1_function_switches_follow_the_mode(
+    hass: HomeAssistant, cloud, series1, mode: int, rapid: str, compensation: str
+) -> None:
+    """Gree+ greys Rapid out without hot water in the mode, and Compensation
+    mode in Hot water mode (#75). The other two are always offered."""
+    await series1(Mod=mode)
+    assert {entity: hass.states.get(entity).state for entity in FUNCTIONS1} == {
+        "switch.heat_pump_quiet_mode": "off",
+        "switch.heat_pump_weather_dependent_mode": compensation,
+        "switch.heat_pump_disinfection": "off",
+        "switch.heat_pump_fast_hot_water": rapid,
+    }
+
+
+async def test_series1_function_switch_comes_and_goes_with_the_mode(
+    hass: HomeAssistant, cloud, series1
+) -> None:
+    unit = await series1(Mod=1, FastHtWter=1)
+    rapid = "switch.heat_pump_fast_hot_water"
+    assert hass.states.get(rapid).state == "unavailable"
+
+    # Nothing is written to a function the mode does not offer.
+    await call(hass, "switch", "turn_off", rapid)
+    assert unit.commands == []
+
+    await cloud.push(unit, Mod=2)
+    await settle(hass, cloud)
+    assert hass.states.get(rapid).state == "on"
+    await call(hass, "switch", "turn_off", rapid)
+    assert unit.commands == [{"FastHtWter": 0}]
+
+
+async def test_series1_function_switches_with_a_mode_the_integration_does_not_know(
+    hass: HomeAssistant, cloud, series1
+) -> None:
+    await series1(Mod=9)
+    assert {hass.states.get(entity).state for entity in FUNCTIONS1} == {"on", "off"}
 
 
 async def test_series1_function_switch_only_for_a_flag_the_unit_reports(

@@ -72,6 +72,8 @@ RUN_STATE_COLUMNS = (
 # stays as it was. Offered on the same series only, where the unit reports
 # them as 0 or 1.
 FUNCTION_SWITCHES = ("Quiet", "SvSt", "SwDisFct", "FastHtWter")
+# The modes in which the unit makes hot water.
+HOT_WATER_MODES = (2, 3, 4)
 
 
 def numeric(value: Any) -> float | None:
@@ -221,6 +223,22 @@ def realtime_cop(props: Mapping[str, Any]) -> float | None:
     if value is None or not value.is_integer() or not 0 <= value <= 2000:
         return None
     return value / 100
+
+
+def function_offered(props: Mapping[str, Any], key: str) -> bool:
+    """Whether Gree+ offers the function in the unit's mode (#75).
+
+    Rapid needs hot water in the mode, and Compensation mode is not offered
+    while the unit makes nothing but hot water.
+    """
+    mode = props.get("Mod")
+    if mode not in MODE_NAMES:
+        return True
+    if key == "FastHtWter":
+        return mode in HOT_WATER_MODES
+    if key == "SvSt":
+        return mode != 2
+    return True
 
 
 def weather_dependent_target(props: Mapping[str, Any]) -> float | None:
