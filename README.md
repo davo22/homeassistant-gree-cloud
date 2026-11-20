@@ -120,9 +120,9 @@ Created for Gree Versati model 9300 air-to-water heat pumps, including Arthur Ma
 - **Temperature Control**: Water target with 1° step; heating 20–60°C, cooling 5–25°C when supported
 - **Current Temperature**: Outlet water temperature
 - **Room thermostat**: a second thermostat on the room sensor and the room target (18–30°C), on units that report a room temperature
-- **Hot water**: a water heater entity with the tank temperature and the hot water target (40–60°C), on units that report a tank temperature. On a Versati 5 its operation is Off, Heat pump or Fast hot water: Off takes hot water out of the unit's mode, the other two put it in, without or with Rapid
+- **Hot water**: a water heater entity with the tank temperature and the hot water target (40–60°C, up to 80°C on a Versati 5), on units that report a tank temperature. On a Versati 5 its operation is Off, Heat pump or Fast hot water: Off takes hot water out of the unit's mode, the other two put it in, without or with Rapid
 - **Temperature Sensors**: Water inlet, water outlet and the optional water sensor; tank and room temperatures only when usable measurements are available; COP, today's energy use and the weather-dependent target on units that report them
-- **Setpoint Controls**: Heating water, heating room (18–30°C), domestic hot water (40–60°C), and cooling water/room when supported; also exposed as sensors
+- **Setpoint Controls**: Heating water, heating room (18–30°C), domestic hot water (40–60°C, up to 80°C on a Versati 5), and cooling water/room when supported; also exposed as sensors
 - **Power**: global power switch and power-state binary sensor.
 - **Functions**: switches for quiet mode, weather-dependent mode, disinfection and fast hot water (Silence, Compensation mode, Disinfect and Rapid in Gree+), on a Versati 5. Fast hot water is only offered while the mode includes hot water, weather-dependent mode not in Hot water mode
 - **Operation Modes**: Heating, domestic hot water (DHW), combined heating/DHW, and cooling modes when supported, through a separate select entity and as presets on the thermostats
