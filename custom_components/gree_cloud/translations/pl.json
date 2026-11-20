@@ -301,7 +301,17 @@
     },
     "water_heater": {
       "versati_dhw": {
-        "name": "Ciepła woda"
+        "name": "Ciepła woda",
+        "state": {
+          "performance": "Szybkie grzanie wody"
+        },
+        "state_attributes": {
+          "operation_mode": {
+            "state": {
+              "performance": "Szybkie grzanie wody"
+            }
+          }
+        }
       }
     }
   },

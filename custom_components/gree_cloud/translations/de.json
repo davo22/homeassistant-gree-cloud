@@ -290,7 +290,17 @@
     },
     "water_heater": {
       "versati_dhw": {
-        "name": "Warmwasser"
+        "name": "Warmwasser",
+        "state": {
+          "performance": "Schnelle Warmwasserbereitung"
+        },
+        "state_attributes": {
+          "operation_mode": {
+            "state": {
+              "performance": "Schnelle Warmwasserbereitung"
+            }
+          }
+        }
       }
     }
   },

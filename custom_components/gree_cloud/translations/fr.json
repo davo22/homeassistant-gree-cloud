@@ -290,7 +290,17 @@
     },
     "water_heater": {
       "versati_dhw": {
-        "name": "Eau chaude sanitaire"
+        "name": "Eau chaude sanitaire",
+        "state": {
+          "performance": "Eau chaude rapide"
+        },
+        "state_attributes": {
+          "operation_mode": {
+            "state": {
+              "performance": "Eau chaude rapide"
+            }
+          }
+        }
       }
     }
   },
