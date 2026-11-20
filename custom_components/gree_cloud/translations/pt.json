@@ -290,7 +290,17 @@
     },
     "water_heater": {
       "versati_dhw": {
-        "name": "Água quente sanitária"
+        "name": "Água quente sanitária",
+        "state": {
+          "performance": "Água quente rápida"
+        },
+        "state_attributes": {
+          "operation_mode": {
+            "state": {
+              "performance": "Água quente rápida"
+            }
+          }
+        }
       }
     }
   },

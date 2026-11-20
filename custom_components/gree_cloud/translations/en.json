@@ -290,7 +290,17 @@
     },
     "water_heater": {
       "versati_dhw": {
-        "name": "Hot water"
+        "name": "Hot water",
+        "state": {
+          "performance": "Fast hot water"
+        },
+        "state_attributes": {
+          "operation_mode": {
+            "state": {
+              "performance": "Fast hot water"
+            }
+          }
+        }
       }
     }
   },

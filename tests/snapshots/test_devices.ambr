@@ -1501,7 +1501,15 @@
           'friendly_name': 'Heat Pump Hot water',
           'max_temp': 60,
           'min_temp': 40,
+          'operation_list': list([
+            'off',
+            'heat_pump',
+            'performance',
+          ]),
+          'operation_mode': 'off',
           'supported_features': list([
+            'ON_OFF',
+            'OPERATION_MODE',
             'TARGET_TEMPERATURE',
           ]),
           'target_temp_high': None,
@@ -1987,7 +1995,15 @@
           'friendly_name': 'Heat Pump Hot water',
           'max_temp': 60,
           'min_temp': 40,
+          'operation_list': list([
+            'off',
+            'heat_pump',
+            'performance',
+          ]),
+          'operation_mode': 'off',
           'supported_features': list([
+            'ON_OFF',
+            'OPERATION_MODE',
             'TARGET_TEMPERATURE',
           ]),
           'target_temp_high': None,

@@ -42,7 +42,7 @@ from .coordinator import (
     is_hwhp_device,
 )
 from .entity import GreeCloudEntity
-from .heatpump import setpoint, temperature
+from .heatpump import HOT_WATER_MODES, setpoint, temperature
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -112,8 +112,10 @@ def has_hot_water_tank(props, policy) -> bool:
 class GreeHeatPumpWaterHeater(GreeCloudEntity, WaterHeaterEntity):
     """The hot water tank of a Versati: its temperature and its target (#75).
 
-    Whether hot water is made at all is part of the unit's mode, which the
-    mode select sets; here it is only shown.
+    Whether hot water is made at all is part of the unit's mode. On a unit
+    with the Rapid function the operation sets both: off takes hot water out
+    of the mode, the other two put it in, with or without Rapid. The unit's
+    power is never touched from here.
     """
 
     _attr_translation_key = "versati_dhw"
@@ -123,6 +125,10 @@ class GreeHeatPumpWaterHeater(GreeCloudEntity, WaterHeaterEntity):
     _attr_supported_features = WaterHeaterEntityFeature.TARGET_TEMPERATURE
 
     _setpoint_key = "WatBoxTemSet"
+    # Hot water joins or leaves the mode: Heat <-> Heat + hot water,
+    # Cool <-> Cool + hot water.
+    _with_hot_water = {1: 4, 5: 3}
+    _without_hot_water = {4: 1, 3: 5}
 
     def __init__(self, coordinator: CloudDeviceDataUpdateCoordinator) -> None:
         super().__init__(coordinator)
@@ -131,11 +137,28 @@ class GreeHeatPumpWaterHeater(GreeCloudEntity, WaterHeaterEntity):
         )
 
     @property
+    def _sets_operation(self) -> bool:
+        """A unit with the Rapid function whose mode may be set (#75)."""
+        approved = self.coordinator.device.write_policy.approved
+        return "Mod" in approved and "FastHtWter" in approved
+
+    @property
     def supported_features(self) -> WaterHeaterEntityFeature:
         policy = self.coordinator.device.write_policy
+        features = WaterHeaterEntityFeature(0)
         if self._setpoint_key in policy.approved and self._setpoint_key in policy.limits:
-            return WaterHeaterEntityFeature.TARGET_TEMPERATURE
-        return WaterHeaterEntityFeature(0)
+            features |= WaterHeaterEntityFeature.TARGET_TEMPERATURE
+        if self._sets_operation:
+            features |= (
+                WaterHeaterEntityFeature.OPERATION_MODE | WaterHeaterEntityFeature.ON_OFF
+            )
+        return features
+
+    @property
+    def operation_list(self) -> list[str] | None:
+        if not self._sets_operation:
+            return None
+        return [STATE_OFF, STATE_HEAT_PUMP, STATE_PERFORMANCE]
 
     @property
     def _limits(self) -> tuple[float, float]:
@@ -169,10 +192,50 @@ class GreeHeatPumpWaterHeater(GreeCloudEntity, WaterHeaterEntity):
         if props.get("Pow") != 1:
             return None
         mode = props.get("Mod")
-        if mode in (2, 3, 4):
+        if mode in HOT_WATER_MODES:
+            if self._sets_operation and props.get("FastHtWter") == 1:
+                return STATE_PERFORMANCE
             return STATE_HEAT_PUMP
         # Heating or cooling only: the unit runs, the hot water does not.
         return STATE_OFF if mode in (1, 5) else None
+
+    async def async_set_operation_mode(self, operation_mode: str) -> None:
+        if operation_mode not in (self.operation_list or ()):
+            raise HomeAssistantError(f"Unsupported operation {operation_mode}")
+        props = self.coordinator.data or {}
+        mode = props.get("Mod")
+        if operation_mode == STATE_OFF:
+            if self.current_operation == STATE_OFF:
+                return
+            await self._async_change_mode(
+                self._without_hot_water.get(mode),
+                "In Hot water mode the heat pump makes nothing else; "
+                "switch the heat pump off instead",
+            )
+            return
+        if props.get("Pow") != 1:
+            raise HomeAssistantError("The heat pump is off; switch it on first")
+        if mode not in HOT_WATER_MODES:
+            await self._async_change_mode(
+                self._with_hot_water.get(mode),
+                "The unit has no mode that adds hot water to its current one",
+            )
+        rapid = int(operation_mode == STATE_PERFORMANCE)
+        if (self.coordinator.data or {}).get("FastHtWter") != rapid:
+            await self.coordinator.async_heatpump_command("FastHtWter", rapid)
+
+    async def _async_change_mode(self, mode: int | None, refusal: str) -> None:
+        if mode not in self.coordinator.device.write_policy.modes:
+            raise HomeAssistantError(refusal)
+        await self.coordinator.async_heatpump_command("Mod", mode)
+
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        if self.current_operation in (STATE_HEAT_PUMP, STATE_PERFORMANCE):
+            return
+        await self.async_set_operation_mode(STATE_HEAT_PUMP)
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        await self.async_set_operation_mode(STATE_OFF)
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         if ATTR_TEMPERATURE not in kwargs:
