@@ -1219,7 +1219,7 @@
         'attributes': dict({
           'device_class': 'temperature',
           'friendly_name': 'Heat Pump DHW target',
-          'max': 60,
+          'max': 80,
           'min': 40,
           'mode': 'box',
           'step': 1,
@@ -1499,7 +1499,7 @@
         'attributes': dict({
           'current_temperature': 54.8,
           'friendly_name': 'Heat Pump Hot water',
-          'max_temp': 60,
+          'max_temp': 80,
           'min_temp': 40,
           'operation_list': list([
             'off',
@@ -1713,7 +1713,7 @@
         'attributes': dict({
           'device_class': 'temperature',
           'friendly_name': 'Heat Pump DHW target',
-          'max': 60,
+          'max': 80,
           'min': 40,
           'mode': 'box',
           'step': 1,
@@ -1993,7 +1993,7 @@
         'attributes': dict({
           'current_temperature': 54.8,
           'friendly_name': 'Heat Pump Hot water',
-          'max_temp': 60,
+          'max_temp': 80,
           'min_temp': 40,
           'operation_list': list([
             'off',

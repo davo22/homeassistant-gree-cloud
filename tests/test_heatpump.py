@@ -133,7 +133,9 @@ def test_policy_for_recorded_units() -> None:
     # Series 1 has the function buttons of Gree+ on top (#75).
     series1 = user_control_policy(SERIES_1, mid="9300")
     assert series1.approved == policy.approved | {"Quiet", "SvSt", "SwDisFct", "FastHtWter"}
-    assert (series1.limits, series1.modes) == (policy.limits, policy.modes)
+    assert series1.modes == policy.modes
+    # ... and hot water up to 80, as Gree+ offers on it.
+    assert series1.limits == {**policy.limits, "WatBoxTemSet": (40, 80)}
 
 
 @pytest.mark.parametrize("key", FUNCTION_SWITCHES)

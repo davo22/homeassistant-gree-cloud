@@ -458,12 +458,38 @@ async def test_series1_hot_water_tank(hass: HomeAssistant, cloud, series1) -> No
 
     tank = hass.states.get(TANK1)
     assert (tank.state, tank.attributes["current_temperature"], tank.attributes["temperature"]) == ("heat_pump", 54.8, 50)
-    assert (tank.attributes["min_temp"], tank.attributes["max_temp"]) == (40, 60)
+    # Gree+ lets this unit go up to 80; a series 7 stays at 60.
+    assert (tank.attributes["min_temp"], tank.attributes["max_temp"]) == (40, 80)
 
     await cloud.push(unit, WatBoxTemHi=148, WatBoxTemLo=2, WatBoxTemSet=55)
     await settle(hass, cloud)
     tank = hass.states.get(TANK1)
     assert (tank.attributes["current_temperature"], tank.attributes["temperature"]) == (48.2, 55)
+
+
+@pytest.mark.parametrize(
+    ("domain", "service", "entity", "name"),
+    [
+        ("water_heater", "set_temperature", TANK1, "temperature"),
+        ("number", "set_value", "number.heat_pump_dhw_target", "value"),
+    ],
+)
+async def test_series1_hot_water_up_to_80(
+    hass: HomeAssistant, cloud, series1, domain: str, service: str, entity: str, name: str
+) -> None:
+    unit = await series1()
+    await call(hass, domain, service, entity, **{name: 80})
+    assert unit.commands == [{"WatBoxTemSet": 80}]
+    unit.forget()
+    with pytest.raises((HomeAssistantError, ServiceValidationError)):
+        await call(hass, domain, service, entity, **{name: 81})
+    assert unit.commands == []
+
+
+async def test_series7_hot_water_stays_at_60(hass: HomeAssistant, cloud, series7: FakeUnit) -> None:
+    with pytest.raises((HomeAssistantError, ServiceValidationError)):
+        await call(hass, "water_heater", "set_temperature", TANK7, temperature=61)
+    assert series7.commands == []
 
 
 async def test_series1_cop(hass: HomeAssistant, cloud, series1) -> None:

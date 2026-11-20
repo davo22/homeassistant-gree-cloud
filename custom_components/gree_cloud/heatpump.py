@@ -128,6 +128,10 @@ class HeatPumpProfile:
     control_requirements: Mapping[str, tuple[int, ...]]
     heating_limits: Mapping[str, tuple[float, float]]
     cooling_limits: Mapping[str, tuple[float, float]]
+    # Limits that differ for one VersatiSeries, each from evidence of that unit.
+    series_limits: Mapping[int, Mapping[str, tuple[float, float]]] = field(
+        default_factory=dict
+    )
 
 
 HEATPUMP_MODELS: dict[str, HeatPumpProfile] = {
@@ -141,6 +145,8 @@ HEATPUMP_MODELS: dict[str, HeatPumpProfile] = {
             "WatBoxTemSet": (40, 60),
         },
         cooling_limits={"CoWatOutTemSet": (5, 25), "CoHomTemSet": (18, 30)},
+        # Gree+ lets a Versati 5 set hot water up to 80, and the unit took 62 (#75).
+        series_limits={1: {"WatBoxTemSet": (40, 80)}},
     ),
 }
 
@@ -284,6 +290,7 @@ def user_control_policy(
     Ranges are conservative: water 20..60, DHW 40..60, room 18..30 C.
     Gree Versati IV owner manual section 3.3 documents room 18..30 and DHW
     40..80; we deliberately do not extend the community water maximum to 65/80.
+    Hot water goes up to 80 only on series 1, where Gree+ was seen to offer it.
     """
     profile = model_profile(mid)
     if profile is None or any(
@@ -294,6 +301,7 @@ def user_control_policy(
     limits = dict(profile.heating_limits)
     if cooling:
         limits.update(profile.cooling_limits)
+    limits.update(profile.series_limits.get(props.get("VersatiSeries"), {}))
     limits = {
         key: bounds
         for key, bounds in limits.items()
