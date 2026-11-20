@@ -115,7 +115,8 @@ class GreeHeatPumpWaterHeater(GreeCloudEntity, WaterHeaterEntity):
     Whether hot water is made at all is part of the unit's mode. On a unit
     with the Rapid function the operation sets both: off takes hot water out
     of the mode, the other two put it in, with or without Rapid. The unit's
-    power is never touched from here.
+    power is touched only in Hot water mode, where hot water is all the unit
+    makes: there off and on are its power button.
     """
 
     _attr_translation_key = "versati_dhw"
@@ -207,14 +208,20 @@ class GreeHeatPumpWaterHeater(GreeCloudEntity, WaterHeaterEntity):
         if operation_mode == STATE_OFF:
             if self.current_operation == STATE_OFF:
                 return
+            if mode == 2:
+                # Hot water is all the unit makes: off is its power button.
+                await self.coordinator.async_heatpump_command("Pow", 0)
+                return
             await self._async_change_mode(
                 self._without_hot_water.get(mode),
-                "In Hot water mode the heat pump makes nothing else; "
-                "switch the heat pump off instead",
+                "The unit has no mode that leaves hot water out of its current one",
             )
             return
         if props.get("Pow") != 1:
-            raise HomeAssistantError("The heat pump is off; switch it on first")
+            # Switched on from here only where that starts nothing but hot water.
+            if props.get("Pow") != 0 or mode != 2:
+                raise HomeAssistantError("The heat pump is off; switch it on first")
+            await self.coordinator.async_heatpump_command("Pow", 1)
         if mode not in HOT_WATER_MODES:
             await self._async_change_mode(
                 self._with_hot_water.get(mode),

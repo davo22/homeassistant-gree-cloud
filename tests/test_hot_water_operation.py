@@ -3,7 +3,8 @@
 Hot water is part of the unit's mode, and Rapid ("Fast hot water") is a flag
 next to it. The hot water entity sets both: off takes hot water out of the
 mode, heat pump and performance put it in, without and with Rapid. The unit's
-power is never switched from here, and nothing is written that is already so.
+power is switched from here only in Hot water mode, where hot water is all the
+unit makes, and nothing is written that is already so.
 """
 
 from __future__ import annotations
@@ -109,21 +110,63 @@ async def test_on_and_off(hass: HomeAssistant, cloud, series1) -> None:
     assert hass.states.get(TANK).state == "off"
 
 
-async def test_hot_water_only_cannot_lose_the_hot_water(hass: HomeAssistant, cloud, series1) -> None:
+OFF = {"Pow": 0, "ZonePow1": 0, "ZonePow2": 0}
+
+
+@pytest.mark.parametrize("service", ["set_operation_mode", "turn_off"])
+async def test_hot_water_only_is_switched_off_as_a_whole(
+    hass: HomeAssistant, cloud, series1, service: str
+) -> None:
+    """In Hot water mode there is no mode without hot water: off is the power."""
     unit = await series1(**RUNNING, Mod=2)
-    with pytest.raises(HomeAssistantError, match="switch the heat pump off instead"):
-        await call(hass, "water_heater", "set_operation_mode", TANK, operation_mode="off")
-    with pytest.raises(HomeAssistantError, match="switch the heat pump off instead"):
-        await call(hass, "water_heater", "turn_off", TANK)
+    data = {"operation_mode": "off"} if service == "set_operation_mode" else {}
+    await call(hass, "water_heater", service, TANK, **data)
+    assert unit.commands == [OFF]
+    assert hass.states.get(TANK).state == "off"
+
+    unit.forget()
+    await call(hass, "water_heater", service, TANK, **data)
     assert unit.commands == []
-    assert hass.states.get(TANK).state == "heat_pump"
+
+
+@pytest.mark.parametrize(
+    ("state", "service", "data", "commands", "shown"),
+    [
+        ({}, "turn_on", {}, [RUNNING], "heat_pump"),
+        ({}, "set_operation_mode", {"operation_mode": "heat_pump"}, [RUNNING], "heat_pump"),
+        (
+            {},
+            "set_operation_mode",
+            {"operation_mode": "performance"},
+            [RUNNING, {"FastHtWter": 1}],
+            "performance",
+        ),
+        # Rapid left on from before is taken off again.
+        (
+            {"FastHtWter": 1},
+            "set_operation_mode",
+            {"operation_mode": "heat_pump"},
+            [RUNNING, {"FastHtWter": 0}],
+            "heat_pump",
+        ),
+    ],
+)
+async def test_hot_water_only_is_switched_on_again(
+    hass: HomeAssistant, cloud, series1, state, service: str, data, commands, shown: str
+) -> None:
+    unit = await series1(**OFF, Mod=2, **state)
+    await call(hass, "water_heater", service, TANK, **data)
+    assert unit.commands == commands
+    assert hass.states.get(TANK).state == shown
 
 
 @pytest.mark.parametrize("operation", ["heat_pump", "performance"])
-async def test_the_operation_never_switches_the_unit_on(
-    hass: HomeAssistant, cloud, series1, operation: str
+@pytest.mark.parametrize("mode", [1, 4])
+async def test_the_operation_never_starts_the_heating(
+    hass: HomeAssistant, cloud, series1, operation: str, mode: int
 ) -> None:
-    unit = await series1(Pow=0, Mod=1)
+    """Switching the unit on in these modes would heat the house as well."""
+    unit = await series1(Pow=0, Mod=mode)
     with pytest.raises(HomeAssistantError, match="switch it on first"):
         await call(hass, "water_heater", "set_operation_mode", TANK, operation_mode=operation)
     with pytest.raises(HomeAssistantError, match="switch it on first"):
