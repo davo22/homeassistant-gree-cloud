@@ -28,6 +28,7 @@ from .coordinator import (
     is_heatpump_device,
 )
 from .entity import GreeCloudEntity
+from .heatpump import function_offered
 
 
 @dataclass(kw_only=True, frozen=True)
@@ -37,6 +38,7 @@ class GreeCloudSwitchEntityDescription(SwitchEntityDescription):
     get_value_fn: Callable[[Device], bool | None]
     set_value_fn: Callable[[Device, bool], None] | None = None
     command_key: str | None = None
+    available_fn: Callable[[Device], bool] | None = None
 
 
 def _set_light(device: Device, value: bool) -> None:
@@ -119,6 +121,10 @@ def _versati_flag(key: str) -> Callable[[Device], bool | None]:
     return is_on
 
 
+def _versati_offered(key: str) -> Callable[[Device], bool]:
+    return lambda device: function_offered(device.raw_properties, key)
+
+
 # The function buttons of Gree+ on a Versati 5 (#75): Silence, Compensation
 # mode, Disinfect and Rapid.
 HEATPUMP_FUNCTION_SWITCHES: tuple[GreeCloudSwitchEntityDescription, ...] = tuple(
@@ -127,6 +133,7 @@ HEATPUMP_FUNCTION_SWITCHES: tuple[GreeCloudSwitchEntityDescription, ...] = tuple
         translation_key=f"versati_{name}",
         get_value_fn=_versati_flag(command_key),
         command_key=command_key,
+        available_fn=_versati_offered(command_key),
     )
     for command_key, name in (
         ("Quiet", "quiet"),
@@ -192,6 +199,14 @@ class GreeCloudSwitch(GreeCloudEntity, SwitchEntity):
         super().__init__(coordinator)
         self.entity_description = description
         self._attr_unique_id = f"{coordinator.device.device_info.mac}_{description.key}"
+
+    @property
+    def available(self) -> bool:
+        """A function the unit's mode does not offer is unavailable, as in Gree+."""
+        available_fn = self.entity_description.available_fn
+        return super().available and (
+            available_fn is None or available_fn(self.coordinator.device)
+        )
 
     @property
     def is_on(self) -> bool | None:
