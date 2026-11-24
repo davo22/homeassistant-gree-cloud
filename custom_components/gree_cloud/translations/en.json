@@ -269,6 +269,12 @@
       },
       "holiday_mode": {
         "name": "Holiday mode"
+      },
+      "timer_1": {
+        "name": "Timer 1"
+      },
+      "timer_2": {
+        "name": "Timer 2"
       }
     },
     "number": {

@@ -278,6 +278,12 @@
       "holiday_mode": {
         "name": "Tryb urlopowy"
       },
+      "timer_1": {
+        "name": "Harmonogram 1"
+      },
+      "timer_2": {
+        "name": "Harmonogram 2"
+      },
       "versati_power": {
         "name": "Zasilanie pompy ciepła"
       }

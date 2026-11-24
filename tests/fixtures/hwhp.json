@@ -1,5 +1,5 @@
 {
-  "description": "Gree Hombask hot water heat pump (U-WB04BRT13 V1.47, protocol V3.2.M), built from the status push in #74: off, idle, 53 C in the tank, target 55 C. It answers 0 for columns it does not have.",
+  "description": "Gree Hombask hot water heat pump (U-WB04BRT13 V1.47, protocol V3.2.M), built from the status push in #74: off, idle, 53 C in the tank, target 55 C. It answers 0 for columns it does not have. compEng1Flag is not in that push; the reporter described it later in #74 as 0/1, 0 while the unit is idle.",
   "record": {
     "name": "Water Heater",
     "mac": "aa0000000003",
@@ -36,6 +36,7 @@
     "outFanLowFlag": 0,
     "fourWay1Flag": 0,
     "pumpFlag": 0,
+    "compEng1Flag": 0,
     "AllErr": 0,
     "ErrHeat": 0,
     "JFerr": 0,
@@ -50,6 +51,10 @@
     "Wtmr1EndHr": 14,
     "Wtmr1EndMin": 0,
     "Sch2": 0,
+    "Wtmr2StartHr": 8,
+    "Wtmr2StartMin": 0,
+    "Wtmr2EndHr": 14,
+    "Wtmr2EndMin": 0,
     "ModelType": 30729
   }
 }

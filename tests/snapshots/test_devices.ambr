@@ -201,6 +201,19 @@
         'translation_key': 'backup_heater',
         'unique_id': 'aa0000000003_Backup heater',
       }),
+      'binary_sensor.water_heater_compressor': dict({
+        'attributes': dict({
+          'device_class': 'running',
+          'friendly_name': 'Water Heater Compressor',
+        }),
+        'category': None,
+        'device': 'Water Heater',
+        'disabled_by': None,
+        'name': 'Compressor',
+        'state': 'off',
+        'translation_key': 'compressor_running',
+        'unique_id': 'aa0000000003_Compressor',
+      }),
       'binary_sensor.water_heater_defrosting': dict({
         'attributes': dict({
           'friendly_name': 'Water Heater Defrosting',
@@ -292,6 +305,34 @@
         'state': 'off',
         'translation_key': 'pump_running',
         'unique_id': 'aa0000000003_Pump',
+      }),
+      'binary_sensor.water_heater_timer_1': dict({
+        'attributes': dict({
+          'end': '14:00',
+          'friendly_name': 'Water Heater Timer 1',
+          'start': '10:30',
+        }),
+        'category': None,
+        'device': 'Water Heater',
+        'disabled_by': None,
+        'name': 'Timer 1',
+        'state': 'on',
+        'translation_key': 'timer_1',
+        'unique_id': 'aa0000000003_Timer 1',
+      }),
+      'binary_sensor.water_heater_timer_2': dict({
+        'attributes': dict({
+          'end': '14:00',
+          'friendly_name': 'Water Heater Timer 2',
+          'start': '08:00',
+        }),
+        'category': None,
+        'device': 'Water Heater',
+        'disabled_by': None,
+        'name': 'Timer 2',
+        'state': 'off',
+        'translation_key': 'timer_2',
+        'unique_id': 'aa0000000003_Timer 2',
       }),
       'sensor.water_heater_discharge_temperature': dict({
         'attributes': dict({

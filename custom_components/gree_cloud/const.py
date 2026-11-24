@@ -67,6 +67,22 @@ HWHP_PROP_DISINFECT_ON = "DisinfectSwitch"
 HWHP_PROP_DISINFECT_RUNNING = "DisinfectStatus"
 HWHP_PROP_HOLIDAY = "HolidaySwitch"
 HWHP_ERROR_PROPS = ("AllErr", "ErrHeat", "JFerr", "BwErr")
+# 0/1, follows the unit starting and stopping heating within a minute (#74).
+HWHP_PROP_COMPRESSOR = "compEng1Flag"
+# The two timers of the app: ``Sch<n>`` is 0/1 for enabled, the window is in
+# ``Wtmr<n>StartHr`` / ``StartMin`` / ``EndHr`` / ``EndMin``.
+HWHP_TIMERS = (1, 2)
+
+
+def hwhp_timer_props(number: int) -> tuple[str, str, str, str, str]:
+    """Enabled flag, start hour, start minute, end hour, end minute."""
+    return (
+        f"Sch{number}",
+        f"Wtmr{number}StartHr",
+        f"Wtmr{number}StartMin",
+        f"Wtmr{number}EndHr",
+        f"Wtmr{number}EndMin",
+    )
 
 # Energy metering (AC units).
 # ElcAll is a cumulative counter in tenths of a kWh; it does not reset daily.

@@ -77,3 +77,28 @@ async def test_readings_follow_the_unit(hass: HomeAssistant, cloud, unit: FakeUn
     shown = hass.states.get(HEATER)
     assert shown.attributes["current_temperature"] == 61
     assert shown.attributes["heating_status"] == "heating"
+
+
+async def test_compressor_follows_the_unit(hass: HomeAssistant, cloud, unit: FakeUnit, poll) -> None:
+    """The unit has no power reading; the compressor flag is what tells it is drawing (#74)."""
+    compressor = "binary_sensor.water_heater_compressor"
+    assert hass.states.get(compressor).state == "off"
+    unit.state.update(compEng1Flag=1)
+    await poll()
+    assert hass.states.get(compressor).state == "on"
+
+
+async def test_timers_of_the_app(hass: HomeAssistant, cloud, unit: FakeUnit, poll) -> None:
+    """On when the timer is enabled, with its window; the recorded unit has timer 1 on."""
+    first = hass.states.get("binary_sensor.water_heater_timer_1")
+    assert first.state == "on"
+    assert (first.attributes["start"], first.attributes["end"]) == ("10:30", "14:00")
+    second = hass.states.get("binary_sensor.water_heater_timer_2")
+    assert second.state == "off"
+    assert (second.attributes["start"], second.attributes["end"]) == ("08:00", "14:00")
+
+    unit.state.update(Sch2=1, Wtmr2StartHr=6, Wtmr2StartMin=15)
+    await poll()
+    second = hass.states.get("binary_sensor.water_heater_timer_2")
+    assert second.state == "on"
+    assert second.attributes["start"] == "06:15"

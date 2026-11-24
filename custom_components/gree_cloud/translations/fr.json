@@ -269,6 +269,12 @@
       },
       "holiday_mode": {
         "name": "Mode vacances"
+      },
+      "timer_1": {
+        "name": "Programmation 1"
+      },
+      "timer_2": {
+        "name": "Programmation 2"
       }
     },
     "number": {
