@@ -184,6 +184,18 @@
       },
       "holiday_mode": {
         "default": "mdi:palm-tree"
+      },
+      "timer_1": {
+        "default": "mdi:timer-off-outline",
+        "state": {
+          "on": "mdi:timer-outline"
+        }
+      },
+      "timer_2": {
+        "default": "mdi:timer-off-outline",
+        "state": {
+          "on": "mdi:timer-outline"
+        }
       }
     }
   }

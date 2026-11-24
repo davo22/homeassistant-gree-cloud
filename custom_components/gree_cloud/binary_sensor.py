@@ -20,6 +20,7 @@ from .const import (
     DISPATCH_DEVICE_DISCOVERED,
     HWHP_ERROR_PROPS,
     HWHP_PROP_BACKUP_HEATER,
+    HWHP_PROP_COMPRESSOR,
     HWHP_PROP_DEFROST,
     HWHP_PROP_DISINFECT_ON,
     HWHP_PROP_DISINFECT_RUNNING,
@@ -27,6 +28,8 @@ from .const import (
     HWHP_PROP_FAN_LOW,
     HWHP_PROP_HOLIDAY,
     HWHP_PROP_PUMP,
+    HWHP_TIMERS,
+    hwhp_timer_props,
     POOL_PROP_COMPRESSOR_STATUS,
     POOL_PROP_DEFROST,
     POOL_PROP_PUMP_STATUS,
@@ -118,8 +121,36 @@ def _hwhp_flag(key: str, translation_key: str, prop: str, device_class=None) -> 
     )
 
 
+def _clock(device: Device, hour_prop: str, minute_prop: str) -> str | None:
+    """``HH:MM`` from two raw properties, None unless both are a valid time."""
+    hour = device.raw_properties.get(hour_prop)
+    minute = device.raw_properties.get(minute_prop)
+    for value in (hour, minute):
+        if isinstance(value, bool) or not isinstance(value, int):
+            return None
+    if not (0 <= hour <= 23 and 0 <= minute <= 59):
+        return None
+    return f"{hour:02d}:{minute:02d}"
+
+
+def _hwhp_timer(number: int) -> GreeCloudBinarySensorEntityDescription:
+    """A timer of the app: on when enabled, its window as attributes."""
+    enabled, start_hour, start_minute, end_hour, end_minute = hwhp_timer_props(number)
+    return GreeCloudBinarySensorEntityDescription(
+        key=f"Timer {number}",
+        translation_key=f"timer_{number}",
+        prop=enabled,
+        exists_fn=_reports(enabled),
+        attrs_fn=lambda device: {
+            "start": _clock(device, start_hour, start_minute),
+            "end": _clock(device, end_hour, end_minute),
+        },
+    )
+
+
 # Hot water heat pump state (#74).
 HWHP_BINARY_SENSORS: tuple[GreeCloudBinarySensorEntityDescription, ...] = (
+    _hwhp_flag("Compressor", "compressor_running", HWHP_PROP_COMPRESSOR, BinarySensorDeviceClass.RUNNING),
     _hwhp_flag("Backup heater", "backup_heater", HWHP_PROP_BACKUP_HEATER, BinarySensorDeviceClass.RUNNING),
     GreeCloudBinarySensorEntityDescription(
         key="Outdoor fan",
@@ -143,6 +174,7 @@ HWHP_BINARY_SENSORS: tuple[GreeCloudBinarySensorEntityDescription, ...] = (
     _hwhp_flag("Disinfection enabled", "disinfection_enabled", HWHP_PROP_DISINFECT_ON),
     _hwhp_flag("Disinfecting", "disinfecting", HWHP_PROP_DISINFECT_RUNNING, BinarySensorDeviceClass.RUNNING),
     _hwhp_flag("Holiday mode", "holiday_mode", HWHP_PROP_HOLIDAY),
+    *(_hwhp_timer(number) for number in HWHP_TIMERS),
 )
 
 

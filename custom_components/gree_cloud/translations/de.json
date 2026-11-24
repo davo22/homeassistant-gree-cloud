@@ -267,6 +267,12 @@
       "holiday_mode": {
         "name": "Urlaubsmodus"
       },
+      "timer_1": {
+        "name": "Timer 1"
+      },
+      "timer_2": {
+        "name": "Timer 2"
+      },
       "versati_power": {
         "name": "Wärmepumpe Betrieb"
       }

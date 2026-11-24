@@ -267,6 +267,12 @@
       "holiday_mode": {
         "name": "Modo férias"
       },
+      "timer_1": {
+        "name": "Temporizador 1"
+      },
+      "timer_2": {
+        "name": "Temporizador 2"
+      },
       "versati_power": {
         "name": "Alimentação da bomba de calor"
       }

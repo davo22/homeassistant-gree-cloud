@@ -37,6 +37,9 @@ from .const import (
     HWHP_PROP_WATER_TEMP,
     HWHP_ERROR_PROPS,
     HWHP_PROP_BACKUP_HEATER,
+    HWHP_PROP_COMPRESSOR,
+    HWHP_TIMERS,
+    hwhp_timer_props,
     HWHP_PROP_BOTTOM_TEMP,
     HWHP_PROP_COIL_TEMP,
     HWHP_PROP_DEFROST,
@@ -112,6 +115,8 @@ _HWHP_DETAIL_PROPS = [
     HWHP_PROP_DISINFECT_RUNNING,
     HWHP_PROP_HOLIDAY,
     *HWHP_ERROR_PROPS,
+    HWHP_PROP_COMPRESSOR,
+    *(prop for number in HWHP_TIMERS for prop in hwhp_timer_props(number)),
 ]
 
 # Extra properties reported by AC units, surfaced by the sensor platform. The
